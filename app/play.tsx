@@ -11,24 +11,24 @@ export default function PlayScreen() {
       <Text style={styles.back} onPress={() => router.back()}>← HOME</Text>
       <View style={styles.hero}>
         <Text style={styles.title}>Choose your chaos.</Text>
-        <Text style={styles.copy}>Play Split locally now, or enter the new two-device online flow.</Text>
+        <Text style={styles.copy}>Play Split locally on one device or online on two devices.</Text>
       </View>
 
       <View style={styles.stack}>
         <View style={styles.card}>
-          <View style={styles.badge}><Text style={styles.badgeText}>ORIGINAL · STABLE</Text></View>
+          <View style={styles.badge}><Text style={styles.badgeText}>ORIGINAL · LOCAL</Text></View>
           <Text style={styles.mode}>Split</Text>
-          <Text style={styles.modeCopy}>Two players on one device. HEAD first, BODY second, then reveal and align.</Text>
+          <Text style={styles.modeCopy}>Domi draws HEAD, then Sarah draws BODY on the same device. Reveal and align at the end.</Text>
           <View style={styles.metaRow}>
             <Text style={styles.meta}>2 PLAYERS</Text>
             <Text style={styles.meta}>LOCAL</Text>
             <Text style={styles.meta}>PASS DEVICE</Text>
           </View>
-          <CrocatButton onPress={() => router.push('/lobby')}>CREATE LOCAL GAME</CrocatButton>
+          <CrocatButton onPress={() => router.push('/lobby')}>PLAY LOCAL</CrocatButton>
         </View>
 
         <View style={[styles.card, styles.onlineCard]}>
-          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.1.0 · ONLINE DEV</Text></View>
+          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.1.0 · ONLINE</Text></View>
           <Text style={styles.mode}>Split Online</Text>
           <Text style={styles.modeCopy}>Create a room code, join from a second device and draw HEAD + BODY at the same time.</Text>
           <View style={styles.metaRow}>
