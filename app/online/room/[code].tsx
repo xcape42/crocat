@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
 import { Screen } from '@/src/components/Screen';
 import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { currentUser, ensureGuest } from '@/src/features/multiplayer/auth';
@@ -254,7 +255,7 @@ export default function OnlineRoomScreen() {
       <Text style={styles.back} onPress={leave}>← HOME / LEAVE</Text>
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
-        <Text style={styles.code}>{String(code).toUpperCase()}</Text>
+        <RoomCodeDisplay code={String(code)} />
         <Text style={styles.copy}>Share this code. Roles are randomized every round. HEAD chooses the prompt, then both draw at the same time.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
@@ -329,7 +330,6 @@ const styles = StyleSheet.create({
   back: { color: colors.muted, fontWeight: '800', letterSpacing: 1 },
   header: { marginTop: spacing.xl, marginBottom: spacing.xl },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.5, fontSize: 11 },
-  code: { marginTop: 6, fontSize: 54, fontWeight: '900', letterSpacing: 5, color: colors.ink },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
   players: { gap: 12 },
