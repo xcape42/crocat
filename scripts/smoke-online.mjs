@@ -22,7 +22,39 @@ async function guest(name) {
 const first = (data) => Array.isArray(data) ? data[0] : data;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function waitForRealtimeJoin(domi, roomId, sarahUserId) {
+async function subscribePresence(supabase, roomId, user, onJoin) {
+  const channel = supabase.channel(`room:${roomId}`, {
+    config: { presence: { key: user.id } },
+  });
+
+  if (onJoin) {
+    channel.on('presence', { event: 'join' }, ({ key }) => {
+      if (String(key) !== user.id) onJoin(String(key));
+    });
+  }
+
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Presence subscription timed out')), 10000);
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        clearTimeout(timer);
+        await channel.track({
+          user_id: user.id,
+          display_name: String(user.user_metadata?.display_name ?? 'Guest'),
+          online_at: new Date().toISOString(),
+        });
+        resolve();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        clearTimeout(timer);
+        reject(new Error(`Presence channel failed: ${status}`));
+      }
+    });
+  });
+
+  return channel;
+}
+
+async function waitForHostPresenceJoin(domi, domiUser, sarah, sarahUser, roomId) {
   let resolveJoin;
   let rejectJoin;
   const joined = new Promise((resolve, reject) => {
@@ -30,34 +62,24 @@ async function waitForRealtimeJoin(domi, roomId, sarahUserId) {
     rejectJoin = reject;
   });
 
-  const channel = domi
-    .channel(`smoke-room:${roomId}:${Date.now()}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` },
-      (payload) => {
-        if (payload.new?.user_id === sarahUserId) resolveJoin();
-      },
-    );
-
-  await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Host realtime subscription timed out')), 10000);
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        clearTimeout(timer);
-        resolve();
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        clearTimeout(timer);
-        reject(new Error(`Host realtime channel failed: ${status}`));
-      }
-    });
+  const domiChannel = await subscribePresence(domi, roomId, domiUser, (joinedUserId) => {
+    if (joinedUserId === sarahUser.id) resolveJoin();
   });
 
-  const timeout = setTimeout(() => rejectJoin(new Error('Host did not receive Sarah room_players INSERT')), 10000);
+  const timeout = setTimeout(
+    () => rejectJoin(new Error('Host did not receive Sarah Presence join')),
+    10000,
+  );
 
-  return {
-    joined: joined.finally(() => clearTimeout(timeout)),
-    close: () => domi.removeChannel(channel),
+  const sarahChannel = await subscribePresence(sarah, roomId, sarahUser);
+
+  await joined.finally(() => clearTimeout(timeout));
+
+  return async () => {
+    await Promise.all([
+      domi.removeChannel(domiChannel),
+      sarah.removeChannel(sarahChannel),
+    ]);
   };
 }
 
@@ -83,7 +105,7 @@ async function submitPair(domi, sarah, roundId, suffix) {
 }
 
 async function main() {
-  const { supabase: domi } = await guest('Domi');
+  const { supabase: domi, user: domiUser } = await guest('Domi');
   const { supabase: sarah, user: sarahUser } = await guest('Sarah');
 
   const created = await domi.rpc('create_room', {
@@ -96,8 +118,6 @@ async function main() {
     throw new Error('create_room returned an invalid room ticket');
   }
 
-  const hostRealtime = await waitForRealtimeJoin(domi, room.room_id, sarahUser.id);
-
   const joined = await sarah.rpc('join_room', {
     p_code: room.room_code,
     p_display_name: 'Sarah',
@@ -105,8 +125,17 @@ async function main() {
   if (joined.error) throw joined.error;
   if (first(joined.data)?.player_role !== 'BODY') throw new Error('Sarah did not receive BODY');
 
-  await hostRealtime.joined;
-  await hostRealtime.close();
+  const closePresence = await waitForHostPresenceJoin(domi, domiUser, sarah, sarahUser, room.room_id);
+
+  const hostPlayers = await domi.from('room_players')
+    .select('user_id,display_name')
+    .eq('room_id', room.room_id);
+  if (hostPlayers.error) throw hostPlayers.error;
+  if ((hostPlayers.data ?? []).length !== 2) {
+    throw new Error('Host could not refresh both room members after Presence join');
+  }
+
+  await closePresence();
 
   for (const supabase of [domi, sarah]) {
     const ready = await supabase.rpc('set_ready', { p_room_id: room.room_id, p_ready: true });
