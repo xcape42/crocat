@@ -68,7 +68,6 @@ export default function FinalizeScreen() {
           bodyTransform={bodyTransform}
           interactive
           onMovePart={nudgePart}
-          maxHeightRatio={compact ? 0.42 : 0.50}
         />
       </View>
 
