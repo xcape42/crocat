@@ -77,8 +77,7 @@ AS $function$
     '[]'::jsonb
   )
   from chosen;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.start_round_impl(p_room_id uuid)
  RETURNS SETOF game_rounds
@@ -177,8 +176,7 @@ begin
 
   return next v_round;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.select_prompt_impl(p_round_id uuid, p_term text)
  RETURNS SETOF game_rounds
@@ -231,8 +229,7 @@ begin
 
   return next v_round;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.reroll_prompt_impl(p_round_id uuid)
  RETURNS SETOF game_rounds
@@ -295,8 +292,7 @@ begin
 
   return next v_round;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.advance_prompt_impl(p_round_id uuid)
  RETURNS SETOF game_rounds
@@ -355,8 +351,7 @@ begin
 
   return next v_round;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.submit_drawing_impl(p_round_id uuid, p_role text, p_drawing jsonb)
  RETURNS void
@@ -411,8 +406,7 @@ begin
     submitted = true,
     created_at = now();
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.resume_drawing_impl(p_round_id uuid)
  RETURNS void
@@ -442,8 +436,7 @@ begin
 
   if not found then raise exception 'No submitted drawing to resume'; end if;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.advance_drawing_impl(p_round_id uuid)
  RETURNS void
@@ -496,8 +489,7 @@ begin
   set ready = false
   where room_id = v_round.room_id;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.save_transform_impl(p_round_id uuid, p_role text, p_transform jsonb)
  RETURNS void
@@ -564,8 +556,7 @@ begin
 
   if not found then raise exception 'Submission not found'; end if;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.advance_phase_impl(p_room_id uuid)
  RETURNS SETOF game_rounds
@@ -691,8 +682,7 @@ begin
     end if;
   end if;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION private.leave_room_impl(p_room_id uuid)
  RETURNS void
@@ -737,43 +727,37 @@ begin
   set ready = false
   where room_id = p_room_id;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.select_prompt(p_round_id uuid, p_term text)
  RETURNS SETOF game_rounds
  LANGUAGE sql
  SET search_path TO 'public', 'private', 'pg_temp'
-AS $function$ select * from private.select_prompt_impl(p_round_id, p_term); $function$
-
+AS $function$ select * from private.select_prompt_impl(p_round_id, p_term); $function$;
 
 CREATE OR REPLACE FUNCTION public.reroll_prompt(p_round_id uuid)
  RETURNS SETOF game_rounds
  LANGUAGE sql
  SET search_path TO 'public', 'private', 'pg_temp'
-AS $function$ select * from private.reroll_prompt_impl(p_round_id); $function$
-
+AS $function$ select * from private.reroll_prompt_impl(p_round_id); $function$;
 
 CREATE OR REPLACE FUNCTION public.advance_prompt(p_round_id uuid)
  RETURNS SETOF game_rounds
  LANGUAGE sql
  SET search_path TO 'public', 'private', 'pg_temp'
-AS $function$ select * from private.advance_prompt_impl(p_round_id); $function$
-
+AS $function$ select * from private.advance_prompt_impl(p_round_id); $function$;
 
 CREATE OR REPLACE FUNCTION public.resume_drawing(p_round_id uuid)
  RETURNS void
  LANGUAGE sql
  SET search_path TO 'public', 'private', 'pg_temp'
-AS $function$ select private.resume_drawing_impl(p_round_id); $function$
-
+AS $function$ select private.resume_drawing_impl(p_round_id); $function$;
 
 CREATE OR REPLACE FUNCTION public.advance_drawing(p_round_id uuid)
  RETURNS void
  LANGUAGE sql
  SET search_path TO 'public', 'private', 'pg_temp'
-AS $function$ select private.advance_drawing_impl(p_round_id); $function$
-
+AS $function$ select private.advance_drawing_impl(p_round_id); $function$;
 
 
 revoke all on function private.random_prompt_options() from public;
