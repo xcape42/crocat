@@ -222,12 +222,7 @@ export default function OnlineDrawScreen() {
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
           <View style={styles.headerActions}>
-            <View style={styles.headerActions}>
-          <CountdownBadge remaining={remaining} />
-          <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
-        </View>
+            <CountdownBadge remaining={remaining} />
             <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
               <Text style={styles.leave}>LEAVE ROUND</Text>
             </Pressable>
@@ -261,7 +256,12 @@ export default function OnlineDrawScreen() {
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
           <Text style={[styles.role, compact && styles.roleCompact]}>{role}</Text>
         </View>
-        <CountdownBadge remaining={remaining} />
+        <View style={styles.headerActions}>
+          <CountdownBadge remaining={remaining} />
+          <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+            <Text style={styles.leave}>LEAVE ROUND</Text>
+          </Pressable>
+        </View>
       </View>
 
       {!!promptTerm && (
