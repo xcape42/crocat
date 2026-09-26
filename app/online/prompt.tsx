@@ -8,6 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
   advancePrompt,
+  leaveRoom,
   loadRoomById,
   rerollPrompt,
   selectPrompt,
@@ -116,6 +117,18 @@ export default function OnlinePromptScreen() {
     }
   }, [refresh, roundId]);
 
+  const leave = async () => {
+    if (!roomId || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(roomId);
+    } catch {
+      // Returning home is still correct if the room disappeared first.
+    } finally {
+      goHome();
+    }
+  };
+
   const remaining = useDeadlineCountdown(
     round?.id === roundId ? round.prompt_selection_ends_at : null,
     autoChoose,
@@ -177,7 +190,12 @@ export default function OnlinePromptScreen() {
             Three prompts, three different themes. The theme disappears once drawing starts.
           </Text>
         </View>
-        <CountdownBadge remaining={remaining} label="PICK" />
+        <View style={styles.headerActions}>
+          <CountdownBadge remaining={remaining} label="PICK" />
+          <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+            <Text style={styles.leave}>LEAVE ROUND</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.options}>
@@ -221,6 +239,8 @@ const styles = StyleSheet.create({
   screen: { gap: 12 },
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
   headerText: { flex: 1 },
+  headerActions: { alignItems: 'center', gap: 6, flexShrink: 0 },
+  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 5, color: colors.ink, fontSize: 30, lineHeight: 33, fontWeight: '900', letterSpacing: -1.1 },
   copy: { marginTop: 6, color: colors.muted, fontSize: 12, lineHeight: 17 },
