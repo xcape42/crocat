@@ -15,6 +15,7 @@ import {
   removeChannel,
   subscribeToAdjustment,
 } from '@/src/features/multiplayer/realtime';
+import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
@@ -46,7 +47,6 @@ export default function OnlineAdjustScreen() {
   const [body, setBody] = useState<CrocatDrawing | null>(null);
   const [headTransform, setHeadTransform] = useState<PartTransform>(ZERO);
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
-  const [secondsLeft, setSecondsLeft] = useState(15);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
 
@@ -234,22 +234,9 @@ export default function OnlineAdjustScreen() {
     }
   }, [params.roomId, params.roundId, refresh, role]);
 
-  useEffect(() => {
-    if (!round?.adjustment_ends_at || round.id !== params.roundId) return;
-
-    const update = () => {
-      const seconds = Math.max(
-        0,
-        Math.ceil((new Date(round.adjustment_ends_at!).getTime() - Date.now()) / 1000),
-      );
-      setSecondsLeft(seconds);
-      if (seconds === 0) void finishAdjustment();
-    };
-
-    update();
-    const interval = setInterval(update, 250);
-    return () => clearInterval(interval);
-  }, [finishAdjustment, params.roundId, round?.adjustment_ends_at, round?.id]);
+  const adjustmentDeadline =
+    round?.id === params.roundId ? round.adjustment_ends_at : null;
+  const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment);
 
   const ownTransform = useMemo(
     () => role === 'HEAD' ? headTransform : bodyTransform,

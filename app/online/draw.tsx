@@ -34,9 +34,6 @@ export default function OnlineDrawScreen() {
   const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
   const playerName = role === 'HEAD' ? 'Domi' : 'Sarah';
   const fallbackSeconds = Math.max(10, Number(params.seconds ?? 180));
-  const initialSeconds = params.endsAt
-    ? Math.max(1, Math.ceil((new Date(params.endsAt).getTime() - Date.now()) / 1000))
-    : fallbackSeconds;
 
   const [drawing, setDrawing] = useState<CrocatDrawing>(blankDrawing);
   const [color, setColor] = useState(colors.ink);
@@ -145,7 +142,7 @@ export default function OnlineDrawScreen() {
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
           <Text style={[styles.role, compact && styles.roleCompact]}>{role}</Text>
         </View>
-        <Timer seconds={initialSeconds} onComplete={finish} />
+        <Timer seconds={fallbackSeconds} endsAt={params.endsAt} onComplete={finish} />
       </View>
 
       <View style={styles.hintWrap}>

@@ -143,11 +143,12 @@ export default function OnlineRoomScreen() {
     () => players.find((player) => player.user_id === userId),
     [players, userId],
   );
-  const bothReady = players.length === 2 && players.every((player) => player.ready);
   const isHost = Boolean(room && userId === room.host_id);
+  const guest = players.find((player) => player.user_id !== room?.host_id);
+  const guestReady = players.length === 2 && Boolean(guest?.ready);
 
   const toggleReady = async () => {
-    if (!room || !me) return;
+    if (!room || !me || isHost) return;
     try {
       setBusy(true);
       await setReady(room.id, !me.ready);
@@ -209,7 +210,9 @@ export default function OnlineRoomScreen() {
               </View>
               <View style={styles.state}>
                 <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>
-                <Text style={styles.ready}>{player.ready ? 'READY ✓' : 'NOT READY'}</Text>
+                <Text style={styles.ready}>
+                  {player.user_id === room?.host_id ? 'HOST' : (player.ready ? 'READY ✓' : 'NOT READY')}
+                </Text>
               </View>
             </View>
           );
@@ -222,15 +225,29 @@ export default function OnlineRoomScreen() {
       </View>
 
       <View style={styles.bottom}>
-        <CrocatButton disabled={busy || !me} onPress={toggleReady}>
-          {me?.ready ? 'NOT READY' : 'I’M READY'}
-        </CrocatButton>
-        {isHost && (
-          <CrocatButton variant="coral" disabled={busy || !bothReady || Boolean(round && room?.status !== 'waiting')} onPress={start}>
-            START ROUND
-          </CrocatButton>
+        {isHost ? (
+          <>
+            <CrocatButton
+              variant="coral"
+              disabled={busy || !guestReady || room?.status !== 'waiting'}
+              onPress={start}
+            >
+              START ROUND
+            </CrocatButton>
+            <Text style={styles.hostNote}>
+              {guestReady ? 'Sarah is ready. Start when you are.' : 'Waiting for Sarah to be ready…'}
+            </Text>
+          </>
+        ) : (
+          <>
+            <CrocatButton disabled={busy || !me} onPress={toggleReady}>
+              {me?.ready ? 'NOT READY' : 'I’M READY'}
+            </CrocatButton>
+            <Text style={styles.hostNote}>
+              {me?.ready ? 'Ready. Waiting for Domi to start the round.' : 'Mark yourself ready when you are set.'}
+            </Text>
+          </>
         )}
-        {!isHost && <Text style={styles.hostNote}>The host starts the first round once everyone is ready.</Text>}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
     </Screen>
