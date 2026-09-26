@@ -140,6 +140,11 @@ export async function leaveRoom(roomId: string) {
   if (error) throw error;
 }
 
+export async function touchRoomPresence(roomId: string) {
+  const { error } = await requireSupabase().rpc('touch_room_presence', { p_room_id: roomId });
+  if (error) throw error;
+}
+
 export async function submitDrawing(
   roundId: string,
   role: GameRole,
