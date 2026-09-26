@@ -31,6 +31,7 @@ type Props = {
   headTransform?: PartTransform;
   bodyTransform?: PartTransform;
   interactive?: boolean;
+  interactiveRole?: GameRole;
   onMovePart?: (role: GameRole, dx: number, dy: number) => void;
 };
 
@@ -74,6 +75,7 @@ export function DrawingPreview({
   headTransform = { x: 0, y: 0, scale: 1 },
   bodyTransform = { x: 0, y: 0, scale: 1 },
   interactive = false,
+  interactiveRole,
   onMovePart,
 }: Props) {
   const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
@@ -88,7 +90,17 @@ export function DrawingPreview({
     onMoveShouldSetPanResponderCapture: () => interactive,
     onPanResponderGrant: (event) => {
       if (!interactive) return;
-      const role: GameRole = event.nativeEvent.locationY < layoutRef.current.height / 2 ? 'HEAD' : 'BODY';
+
+      const touchedRole: GameRole =
+        event.nativeEvent.locationY < layoutRef.current.height / 2 ? 'HEAD' : 'BODY';
+
+      if (interactiveRole && touchedRole !== interactiveRole) {
+        roleRef.current = null;
+        setActiveRole(null);
+        return;
+      }
+
+      const role = interactiveRole ?? touchedRole;
       roleRef.current = role;
       lastGestureRef.current = { x: 0, y: 0 };
       setActiveRole(role);
@@ -116,7 +128,7 @@ export function DrawingPreview({
       setActiveRole(null);
     },
     onPanResponderTerminationRequest: () => false,
-  }), [interactive, onMovePart]);
+  }), [interactive, interactiveRole, onMovePart]);
 
   const onFrameLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -148,12 +160,20 @@ export function DrawingPreview({
 
           {interactive && (
             <>
-              <View pointerEvents="none" style={[styles.partLabel, styles.headLabel]}>
-                <Text style={[styles.partLabelText, activeRole === 'HEAD' && styles.partLabelTextActive]}>HEAD · DRAG</Text>
-              </View>
-              <View pointerEvents="none" style={[styles.partLabel, styles.bodyLabel]}>
-                <Text style={[styles.partLabelText, activeRole === 'BODY' && styles.partLabelTextActive]}>BODY · DRAG</Text>
-              </View>
+              {(!interactiveRole || interactiveRole === 'HEAD') && (
+                <View pointerEvents="none" style={[styles.partLabel, styles.headLabel]}>
+                  <Text style={[styles.partLabelText, activeRole === 'HEAD' && styles.partLabelTextActive]}>
+                    HEAD · DRAG
+                  </Text>
+                </View>
+              )}
+              {(!interactiveRole || interactiveRole === 'BODY') && (
+                <View pointerEvents="none" style={[styles.partLabel, styles.bodyLabel]}>
+                  <Text style={[styles.partLabelText, activeRole === 'BODY' && styles.partLabelTextActive]}>
+                    BODY · DRAG
+                  </Text>
+                </View>
+              )}
               <View pointerEvents="none" style={styles.splitGuide} />
             </>
           )}

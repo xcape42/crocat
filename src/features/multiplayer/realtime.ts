@@ -1,4 +1,5 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { GameRole, PartTransform } from '@/src/types/game';
 import { requireSupabase } from '@/src/lib/supabase';
 
 type RoomRealtimeHandlers = {
@@ -18,10 +19,9 @@ export async function subscribeToRoom(
 ): Promise<RealtimeChannel> {
   const supabase = requireSupabase();
 
-  const channel = supabase
-    .channel(`room:${roomId}`, {
-      config: { presence: { key: userId } },
-    });
+  const channel = supabase.channel(`room:${roomId}`, {
+    config: { presence: { key: userId } },
+  });
 
   const syncPresence = () => {
     const state = channel.presenceState();
@@ -31,8 +31,6 @@ export async function subscribeToRoom(
   channel
     .on('presence', { event: 'sync' }, () => {
       syncPresence();
-      // Also refresh membership to close the narrow race where a player joins
-      // between the initial room fetch and the database subscription.
       handlers.onPlayerChange?.();
     })
     .on('presence', { event: 'join' }, ({ key }) => {
@@ -69,8 +67,6 @@ export async function subscribeToRoom(
           display_name: displayName,
           online_at: new Date().toISOString(),
         });
-        // Catch up once after the subscription is live in case an INSERT
-        // happened during setup.
         handlers.onPlayerChange?.();
         resolve();
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -110,6 +106,69 @@ export function subscribeToRound(
       onChange,
     )
     .subscribe();
+}
+
+export async function subscribeToAdjustment(
+  roundId: string,
+  roomId: string,
+  onTransform: (role: GameRole, transform: PartTransform) => void,
+  onChange: () => void,
+): Promise<RealtimeChannel> {
+  const channel = requireSupabase()
+    .channel(`adjust:${roundId}`)
+    .on('broadcast', { event: 'part_transform' }, ({ payload }) => {
+      const role = payload?.role;
+      const transform = payload?.transform;
+
+      if (
+        (role === 'HEAD' || role === 'BODY')
+        && transform
+        && typeof transform.x === 'number'
+        && typeof transform.y === 'number'
+        && typeof transform.scale === 'number'
+      ) {
+        onTransform(role, transform as PartTransform);
+      }
+    })
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'game_rounds', filter: `id=eq.${roundId}` },
+      onChange,
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'submissions', filter: `round_id=eq.${roundId}` },
+      onChange,
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
+      onChange,
+    );
+
+  await new Promise<void>((resolve, reject) => {
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        resolve();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        reject(new Error(`Adjustment channel failed: ${status}`));
+      }
+    });
+  });
+
+  return channel;
+}
+
+export async function broadcastTransform(
+  channel: RealtimeChannel,
+  role: GameRole,
+  transform: PartTransform,
+) {
+  await channel.send({
+    type: 'broadcast',
+    event: 'part_transform',
+    payload: { role, transform },
+  });
 }
 
 export async function removeChannel(channel: RealtimeChannel | null) {

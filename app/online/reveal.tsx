@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -7,16 +7,17 @@ import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
-  advanceRound,
+  advancePhase,
   leaveRoom,
   loadRoomById,
   loadSubmissions,
-  setReady,
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { colors, radius } from '@/src/theme/tokens';
-import type { CrocatDrawing } from '@/src/types/game';
+import { colors } from '@/src/theme/tokens';
+import type { CrocatDrawing, PartTransform } from '@/src/types/game';
+
+const ZERO: PartTransform = { x: 0, y: 0, scale: 1 };
 
 export default function OnlineRevealScreen() {
   const router = useRouter();
@@ -25,8 +26,10 @@ export default function OnlineRevealScreen() {
   const { roundId, roomId } = useLocalSearchParams<{ roundId: string; roomId: string }>();
   const {
     userId,
+    role,
     displayName,
     room,
+    round,
     players,
     setIdentity,
     setRoomState,
@@ -36,8 +39,9 @@ export default function OnlineRevealScreen() {
 
   const [head, setHead] = useState<CrocatDrawing | null>(null);
   const [body, setBody] = useState<CrocatDrawing | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(30);
-  const [busy, setBusy] = useState(false);
+  const [headTransform, setHeadTransform] = useState<PartTransform>(ZERO);
+  const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
+  const [secondsLeft, setSecondsLeft] = useState(15);
   const [error, setError] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advanceRef = useRef(false);
@@ -48,7 +52,7 @@ export default function OnlineRevealScreen() {
   }, [reset, router]);
 
   const refresh = useCallback(async () => {
-    if (!roomId) return;
+    if (!roomId || !roundId) return;
 
     try {
       const state = await loadRoomById(roomId);
@@ -63,7 +67,15 @@ export default function OnlineRevealScreen() {
         setIdentity(me.user_id, me.role);
       }
 
-      if (state.room.status === 'drawing' && state.round && me) {
+      if (state.room.status === 'adjusting' && me) {
+        router.replace({
+          pathname: '/online/adjust',
+          params: { roomId, roundId, role: me.role },
+        });
+        return;
+      }
+
+      if (state.room.status === 'drawing' && state.round && state.round.id !== roundId && me) {
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -83,17 +95,29 @@ export default function OnlineRevealScreen() {
     } catch {
       goHome();
     }
-  }, [goHome, roomId, router, setIdentity, setRoomState]);
+  }, [goHome, roomId, roundId, router, setIdentity, setRoomState]);
+
+  const loadArtwork = useCallback(async () => {
+    if (!roundId) return;
+    const submissions = await loadSubmissions(roundId);
+    const headSubmission = submissions.find((item) => item.role === 'HEAD');
+    const bodySubmission = submissions.find((item) => item.role === 'BODY');
+
+    setHead(headSubmission?.drawing ?? null);
+    setBody(bodySubmission?.drawing ?? null);
+    setHeadTransform(headSubmission?.transform ?? ZERO);
+    setBodyTransform(bodySubmission?.transform ?? ZERO);
+  }, [roundId]);
 
   const tryAdvance = useCallback(async () => {
     if (!roomId || advanceRef.current) return;
     advanceRef.current = true;
 
     try {
-      await advanceRound(roomId);
+      await advancePhase(roomId);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not continue to the next round.');
+      setError(e instanceof Error ? e.message : 'Could not start the next round.');
     } finally {
       advanceRef.current = false;
     }
@@ -104,21 +128,14 @@ export default function OnlineRevealScreen() {
 
     (async () => {
       try {
-        if (!roundId || !roomId) throw new Error('Round is missing.');
+        if (!roomId || !roundId) throw new Error('Final reveal is missing.');
 
         const user = await currentUser();
         if (!user) throw new Error('Guest session missing.');
+        if (!userId) setIdentity(user.id, role);
 
-        if (!userId) setIdentity(user.id);
-
-        const [submissions] = await Promise.all([
-          loadSubmissions(roundId),
-          refresh(),
-        ]);
+        await Promise.all([loadArtwork(), refresh()]);
         if (cancelled) return;
-
-        setHead(submissions.find((item) => item.role === 'HEAD')?.drawing ?? null);
-        setBody(submissions.find((item) => item.role === 'BODY')?.drawing ?? null);
 
         const activeRoom = useOnlineGameStore.getState().room;
         const activePlayers = useOnlineGameStore.getState().players;
@@ -131,13 +148,16 @@ export default function OnlineRevealScreen() {
           displayName || me.display_name,
           {
             onSync: setOnlineUserIds,
-            onRoomChange: refresh,
-            onPlayerChange: refresh,
-            onRoundChange: refresh,
+            onRoomChange: () => void refresh(),
+            onPlayerChange: () => void refresh(),
+            onRoundChange: () => {
+              void loadArtwork();
+              void refresh();
+            },
           },
         );
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load the reveal.');
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load final reveal.');
       }
     })();
 
@@ -148,49 +168,28 @@ export default function OnlineRevealScreen() {
   }, []);
 
   useEffect(() => {
-    if (!room?.next_round_at || room.status !== 'reveal') return;
+    if (!round?.final_reveal_ends_at || round.id !== roundId) return;
 
-    const updateCountdown = () => {
-      const next = Math.max(0, Math.ceil((new Date(room.next_round_at!).getTime() - Date.now()) / 1000));
-      setSecondsLeft(next);
-      if (next === 0) void tryAdvance();
+    const update = () => {
+      const seconds = Math.max(
+        0,
+        Math.ceil((new Date(round.final_reveal_ends_at!).getTime() - Date.now()) / 1000),
+      );
+      setSecondsLeft(seconds);
+      if (seconds === 0) void tryAdvance();
     };
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    update();
+    const interval = setInterval(update, 250);
     return () => clearInterval(interval);
-  }, [room?.next_round_at, room?.status, tryAdvance]);
-
-  const me = useMemo(
-    () => players.find((player) => player.user_id === userId),
-    [players, userId],
-  );
-  const bothReady = players.length === 2 && players.every((player) => player.ready);
-
-  useEffect(() => {
-    if (room?.status === 'reveal' && bothReady) void tryAdvance();
-  }, [bothReady, room?.status, tryAdvance]);
-
-  const toggleReady = async () => {
-    if (!room || !me || busy) return;
-    try {
-      setBusy(true);
-      await setReady(room.id, !me.ready);
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not update ready state.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  }, [round?.final_reveal_ends_at, round?.id, roundId, tryAdvance]);
 
   const leave = async () => {
-    if (!room || busy) return;
+    if (!room) return;
     try {
-      setBusy(true);
       await leaveRoom(room.id);
     } catch {
-      // If the host already closed the room, Home is still the correct destination.
+      // Home remains the correct destination if the room already vanished.
     } finally {
       goHome();
     }
@@ -201,7 +200,7 @@ export default function OnlineRevealScreen() {
       <Screen scroll={false}>
         <View style={styles.loading}>
           <ActivityIndicator color={colors.ink} />
-          <Text style={styles.copy}>{error || 'Combining both halves…'}</Text>
+          <Text style={styles.copy}>{error || 'Preparing final reveal…'}</Text>
         </View>
       </Screen>
     );
@@ -211,38 +210,29 @@ export default function OnlineRevealScreen() {
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.kicker}>ROOM {room.code} · REVEAL</Text>
-          <Text style={[styles.title, compact && styles.titleCompact]}>A beautiful accident.</Text>
+          <Text style={styles.kicker}>ROOM {room.code} · FINAL REVEAL</Text>
+          <Text style={[styles.title, compact && styles.titleCompact]}>This is your Crocat.</Text>
         </View>
         <View style={styles.countdown}>
-          <Text style={styles.countdownLabel}>{bothReady ? 'STARTING' : 'NEXT ROUND'}</Text>
-          <Text style={styles.countdownValue}>{bothReady ? 'READY' : `0:${String(secondsLeft).padStart(2, '0')}`}</Text>
+          <Text style={styles.countdownLabel}>NEXT ROUND</Text>
+          <Text style={styles.countdownValue}>0:{String(secondsLeft).padStart(2, '0')}</Text>
         </View>
       </View>
 
       <View style={styles.previewArea}>
-        <DrawingPreview head={head} body={body} />
-      </View>
-
-      <View style={styles.readyRow}>
-        {players.map((player) => (
-          <Text key={player.user_id} style={[styles.readyState, player.ready && styles.readyStateActive]}>
-            {player.display_name} {player.ready ? '✓' : '…'}
-          </Text>
-        ))}
+        <DrawingPreview
+          head={head}
+          body={body}
+          headTransform={headTransform}
+          bodyTransform={bodyTransform}
+        />
       </View>
 
       <Text style={styles.copy}>
-        Both ready starts immediately. Otherwise the next round starts automatically after 30 seconds while both players stay in the room.
+        Final result is locked. The next drawing round starts automatically after 15 seconds.
       </Text>
 
-      <View style={styles.actions}>
-        <CrocatButton disabled={busy || !me} onPress={toggleReady}>
-          {me?.ready ? 'NOT READY' : 'READY NEXT ROUND'}
-        </CrocatButton>
-        <CrocatButton variant="ghost" disabled={busy} onPress={leave}>HOME / LEAVE ROOM</CrocatButton>
-      </View>
-
+      <CrocatButton variant="ghost" onPress={leave}>HOME / LEAVE ROOM</CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
   );
@@ -251,7 +241,13 @@ export default function OnlineRevealScreen() {
 const styles = StyleSheet.create({
   screen: { gap: 8 },
   screenCompact: { gap: 6 },
-  header: { flexShrink: 0, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 },
+  header: {
+    flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.3, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
@@ -259,11 +255,7 @@ const styles = StyleSheet.create({
   countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
   countdownValue: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
-  readyRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, flexShrink: 0 },
-  readyState: { paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.pill, color: colors.muted, backgroundColor: colors.card, fontSize: 10, fontWeight: '900' },
-  readyStateActive: { color: colors.ink, backgroundColor: colors.moss },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
-  actions: { gap: 7, flexShrink: 0 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700', fontSize: 11 },
 });
