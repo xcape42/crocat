@@ -17,6 +17,7 @@ import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/real
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
+import { getPromptPartLabel } from '@/src/features/multiplayer/types';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
 const palette = [colors.ink, '#DB5C46', '#477A91', '#6A8E3A'];
@@ -204,6 +205,7 @@ export default function OnlineDrawScreen() {
   const otherName =
     players.find((player) => player.user_id !== userId)?.display_name ?? 'OTHER PLAYER';
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
+  const partLabel = getPromptPartLabel(round, role);
 
   const status = (
     <View style={[styles.status, otherSubmitted && styles.statusDone]}>
@@ -218,7 +220,7 @@ export default function OnlineDrawScreen() {
       <Screen scroll={false} contentStyle={styles.waitingScreen}>
         <View style={styles.waitingTop}>
           <View>
-            <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
+            <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
           <View style={styles.headerActions}>
@@ -254,7 +256,7 @@ export default function OnlineDrawScreen() {
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{role}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
         </View>
         <View style={styles.headerActions}>
           <CountdownBadge remaining={remaining} />
@@ -275,8 +277,8 @@ export default function OnlineDrawScreen() {
         <View style={styles.hintWrap}>
           <Text style={styles.hint}>
             {role === 'HEAD'
-              ? 'Draw the head. Connection line: bottom.'
-              : 'Draw the body. Connection line: top.'}
+              ? `Draw: ${partLabel}. Connection line: bottom.`
+              : `Draw: ${partLabel}. Connection line: top.`}
           </Text>
         </View>
         {status}
@@ -301,7 +303,7 @@ export default function OnlineDrawScreen() {
       </View>
 
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
-        SUBMIT {role}
+        SUBMIT {partLabel.toUpperCase()}
       </CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>

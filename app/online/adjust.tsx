@@ -299,6 +299,7 @@ export default function OnlineAdjustScreen() {
     () => role === 'HEAD' ? headTransform : bodyTransform,
     [bodyTransform, headTransform, role],
   );
+  const partLabel = getPromptPartLabel(round, role);
 
   if (!loaded || !head || !body) {
     return (
@@ -315,7 +316,7 @@ export default function OnlineAdjustScreen() {
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {role}</Text>
+          <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
         </View>
         <View style={styles.headerActions}>
@@ -328,7 +329,7 @@ export default function OnlineAdjustScreen() {
 
       <Text style={styles.copy}>
         {round?.prompt_term ? `DRAW · ${round.prompt_term} · ` : ''}
-        Drag only your {role.toLowerCase()}. Both players are adjusting at the same time.
+        Drag only your {partLabel.toLowerCase()}. Both players are adjusting at the same time.
       </Text>
 
       <View style={styles.previewArea}>
@@ -345,7 +346,7 @@ export default function OnlineAdjustScreen() {
 
       <View style={styles.controls}>
         <View style={styles.zoomGroup}>
-          <Text style={styles.zoomTitle}>{role} · ZOOM</Text>
+          <Text style={styles.zoomTitle}>{partLabel.toUpperCase()} · ZOOM</Text>
           <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
             <Text style={styles.zoomText}>−</Text>
           </Pressable>

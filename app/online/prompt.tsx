@@ -212,6 +212,9 @@ export default function OnlinePromptScreen() {
           >
             <Text style={styles.theme}>{option.theme.toUpperCase()}</Text>
             <Text style={styles.term}>{option.term}</Text>
+            <Text style={styles.parts}>
+              {(option.headLabel ?? 'HEAD').toUpperCase()} · {(option.bodyLabel ?? 'BODY').toUpperCase()}
+            </Text>
             <Text style={styles.action}>{isHead ? 'CHOOSE' : 'HEAD CAN CHOOSE'}</Text>
           </Pressable>
         ))}
@@ -250,6 +253,7 @@ const styles = StyleSheet.create({
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
+  parts: { marginTop: 5, color: colors.muted, fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
   action: { marginTop: 7, color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.9 },
   footer: { flexShrink: 0, gap: 8 },
   waiting: { textAlign: 'center', color: colors.muted, fontSize: 12, fontWeight: '700' },

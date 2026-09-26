@@ -3,6 +3,8 @@ import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 export type PromptOption = {
   theme: string;
   term: string;
+  headLabel?: string;
+  bodyLabel?: string;
 };
 
 export type OnlineRoomStatus =
@@ -69,3 +71,14 @@ export type RoomTicket = {
   code: string;
   role: GameRole;
 };
+
+
+export function getPromptPartLabel(
+  round: OnlineRound | null | undefined,
+  role: GameRole,
+): string {
+  const option = round?.prompt_options.find((item) => item.term === round.prompt_term);
+  return role === 'HEAD'
+    ? (option?.headLabel ?? 'HEAD')
+    : (option?.bodyLabel ?? 'BODY');
+}
