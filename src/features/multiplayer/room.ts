@@ -14,6 +14,31 @@ function one<T>(data: T | T[] | null): T {
   return value;
 }
 
+async function loadRoomRelations(room: OnlineRoom) {
+  const supabase = requireSupabase();
+
+  const playersResult = await supabase
+    .from('room_players')
+    .select('*')
+    .eq('room_id', room.id)
+    .order('joined_at');
+  if (playersResult.error) throw playersResult.error;
+
+  const roundResult = await supabase
+    .from('game_rounds')
+    .select('*')
+    .eq('room_id', room.id)
+    .order('started_at', { ascending: false })
+    .limit(1);
+  if (roundResult.error) throw roundResult.error;
+
+  return {
+    room,
+    players: (playersResult.data ?? []) as OnlinePlayer[],
+    round: (roundResult.data?.[0] as OnlineRound | undefined) ?? null,
+  };
+}
+
 export async function createRoom(displayName: string, roundSeconds: number): Promise<RoomTicket> {
   const { data, error } = await requireSupabase().rpc('create_room', {
     p_display_name: displayName,
@@ -35,32 +60,23 @@ export async function joinRoom(code: string, displayName: string): Promise<RoomT
 }
 
 export async function loadRoom(code: string) {
-  const supabase = requireSupabase();
-  const roomResult = await supabase.from('rooms').select('*').eq('code', code.toUpperCase()).single();
+  const roomResult = await requireSupabase()
+    .from('rooms')
+    .select('*')
+    .eq('code', code.toUpperCase())
+    .single();
   if (roomResult.error) throw roomResult.error;
+  return loadRoomRelations(roomResult.data as OnlineRoom);
+}
 
-  const room = roomResult.data as OnlineRoom;
-  const playersResult = await supabase
-    .from('room_players')
+export async function loadRoomById(roomId: string) {
+  const roomResult = await requireSupabase()
+    .from('rooms')
     .select('*')
-    .eq('room_id', room.id)
-    .order('joined_at');
-  if (playersResult.error) throw playersResult.error;
-
-  const roundResult = await supabase
-    .from('game_rounds')
-    .select('*')
-    .eq('room_id', room.id)
-    .order('started_at', { ascending: false })
-    .limit(1);
-
-  if (roundResult.error) throw roundResult.error;
-
-  return {
-    room,
-    players: (playersResult.data ?? []) as OnlinePlayer[],
-    round: (roundResult.data?.[0] as OnlineRound | undefined) ?? null,
-  };
+    .eq('id', roomId)
+    .single();
+  if (roomResult.error) throw roomResult.error;
+  return loadRoomRelations(roomResult.data as OnlineRoom);
 }
 
 export async function loadRound(roundId: string): Promise<OnlineRound> {
@@ -85,6 +101,18 @@ export async function startRound(roomId: string): Promise<OnlineRound> {
   const { data, error } = await requireSupabase().rpc('start_round', { p_room_id: roomId });
   if (error) throw error;
   return one<OnlineRound>(data);
+}
+
+export async function advanceRound(roomId: string): Promise<OnlineRound | null> {
+  const { data, error } = await requireSupabase().rpc('advance_round', { p_room_id: roomId });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as OnlineRound | undefined) ?? null;
+}
+
+export async function leaveRoom(roomId: string) {
+  const { error } = await requireSupabase().rpc('leave_room', { p_room_id: roomId });
+  if (error) throw error;
 }
 
 export async function submitDrawing(

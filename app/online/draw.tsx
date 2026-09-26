@@ -5,8 +5,9 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
 import { Timer } from '@/src/components/Timer';
-import { loadSubmissions, submitDrawing } from '@/src/features/multiplayer/room';
+import { loadRoomById, submitDrawing } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
+import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
@@ -21,6 +22,7 @@ export default function OnlineDrawScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
+  const { reset } = useOnlineGameStore();
   const params = useLocalSearchParams<{
     roomId: string;
     roundId: string;
@@ -42,29 +44,58 @@ export default function OnlineDrawScreen() {
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState('');
 
-  const checkReveal = useCallback(async () => {
-    if (!params.roundId) return;
-    const submissions = await loadSubmissions(params.roundId);
-    if (submissions.length >= 2) {
-      router.replace({
-        pathname: '/online/reveal',
-        params: { roundId: params.roundId, roomId: params.roomId },
-      });
+  const checkRoomState = useCallback(async () => {
+    if (!params.roomId || !params.roundId) return;
+
+    try {
+      const state = await loadRoomById(params.roomId);
+
+      if (state.room.status === 'reveal') {
+        router.replace({
+          pathname: '/online/reveal',
+          params: { roundId: params.roundId, roomId: params.roomId },
+        });
+        return;
+      }
+
+      if (state.room.status === 'waiting') {
+        router.replace(`/online/room/${state.room.code}`);
+        return;
+      }
+
+      if (state.room.status === 'drawing' && state.round && state.round.id !== params.roundId) {
+        const me = state.players.find((player) => player.role === role);
+        if (!me) return;
+
+        router.replace({
+          pathname: '/online/draw',
+          params: {
+            roomId: state.room.id,
+            roundId: state.round.id,
+            role,
+            seconds: state.room.round_seconds,
+            endsAt: state.round.ends_at,
+          },
+        });
+      }
+    } catch {
+      reset();
+      router.replace('/');
     }
-  }, [params.roomId, params.roundId, router]);
+  }, [params.roomId, params.roundId, reset, role, router]);
 
   useEffect(() => {
-    if (!params.roundId) return;
+    if (!params.roundId || !params.roomId) return;
 
-    const realtime = subscribeToRound(params.roundId, () => {
-      void checkReveal();
+    const realtime = subscribeToRound(params.roundId, params.roomId, () => {
+      void checkRoomState();
     });
-    void checkReveal();
+    void checkRoomState();
 
     return () => {
       void removeChannel(realtime);
     };
-  }, [checkReveal, params.roundId]);
+  }, [checkRoomState, params.roomId, params.roundId]);
 
   const finish = useCallback(async () => {
     if (submitted || !params.roundId) return;
@@ -73,12 +104,12 @@ export default function OnlineDrawScreen() {
       setError('');
       await submitDrawing(params.roundId, role, drawing);
       setWaiting(true);
-      await checkReveal();
+      await checkRoomState();
     } catch (e) {
       setSubmitted(false);
       setError(e instanceof Error ? e.message : 'Could not submit drawing.');
     }
-  }, [checkReveal, drawing, params.roundId, role, submitted]);
+  }, [checkRoomState, drawing, params.roundId, role, submitted]);
 
   const undo = () => setDrawing((current) => ({
     ...current,
@@ -91,7 +122,7 @@ export default function OnlineDrawScreen() {
         <View style={styles.waiting}>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
           <Text style={[styles.waitTitle, compact && styles.waitTitleCompact]}>Your half is hidden.</Text>
-          <Text style={styles.waitCopy}>Waiting for the other player. The reveal starts automatically when both drawings arrive.</Text>
+          <Text style={styles.waitCopy}>Waiting for the other player. The shared reveal starts automatically when both drawings arrive.</Text>
           <View style={styles.pulse}><Text style={styles.pulseText}>•••</Text></View>
           {!!error && <Text style={styles.error}>{error}</Text>}
         </View>
