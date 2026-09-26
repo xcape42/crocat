@@ -13,6 +13,9 @@ create table if not exists public.rooms (
   created_at timestamptz not null default now()
 );
 
+alter table public.rooms
+  add column if not exists round_seconds integer not null default 180;
+
 create table if not exists public.room_players (
   room_id uuid not null references public.rooms(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -23,6 +26,17 @@ create table if not exists public.room_players (
   primary key (room_id, user_id),
   unique (room_id, role)
 );
+
+alter table public.room_players
+  add column if not exists display_name text,
+  add column if not exists joined_at timestamptz not null default now();
+
+update public.room_players
+set display_name = 'Guest'
+where display_name is null;
+
+alter table public.room_players
+  alter column display_name set not null;
 
 create table if not exists public.game_rounds (
   id uuid primary key default gen_random_uuid(),
