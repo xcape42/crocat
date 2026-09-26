@@ -1,6 +1,12 @@
-import type { CrocatDrawing, GameRole } from '@/src/types/game';
+import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
-export type OnlineRoomStatus = 'waiting' | 'drawing' | 'reveal' | 'finished';
+export type OnlineRoomStatus =
+  | 'waiting'
+  | 'drawing'
+  | 'adjusting'
+  | 'final_reveal'
+  | 'reveal'
+  | 'finished';
 
 export type OnlineRoom = {
   id: string;
@@ -25,10 +31,12 @@ export type OnlinePlayer = {
 export type OnlineRound = {
   id: string;
   room_id: string;
-  status: 'drawing' | 'reveal' | 'finished';
+  status: 'drawing' | 'adjusting' | 'final_reveal' | 'reveal' | 'finished';
   started_at: string;
   ends_at: string;
   revealed_at: string | null;
+  adjustment_ends_at: string | null;
+  final_reveal_ends_at: string | null;
 };
 
 export type OnlineSubmission = {
@@ -37,6 +45,7 @@ export type OnlineSubmission = {
   player_id: string;
   role: GameRole;
   drawing: CrocatDrawing;
+  transform: PartTransform;
   created_at: string;
 };
 

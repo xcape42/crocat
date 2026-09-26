@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.0 — Simultaneous online adjustment
+
+- Added a synchronized 15-second Adjustment phase after both drawings are submitted
+- Domi can move/zoom only HEAD; Sarah can move/zoom only BODY
+- Reused the local drag-and-drop + zoom interaction model for online play
+- Broadcast live transform changes between both clients during Adjustment
+- Persist each player's final transform server-side with role ownership checks
+- Added strict transform validation and scale/position bounds
+- Added server-synchronized adjustment and final-reveal deadlines
+- Added a locked 15-second Final Reveal after Adjustment
+- Removed the between-round Ready check from online play
+- Automatically start the next drawing round after Final Reveal in the same room
+- Kept Home / Leave as the explicit way to exit the persistent room
+- Added end-to-end smoke coverage for Broadcast, role isolation, transform persistence and the 15s + 15s phase flow
+
 ## 1.2.0 — Persistent online rooms
 
 - Kept both online players in the same room across consecutive rounds

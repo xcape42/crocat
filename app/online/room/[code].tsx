@@ -66,7 +66,19 @@ export default function OnlineRoomScreen() {
         return;
       }
 
-      if (state.room.status === 'reveal' && state.round) {
+      if (state.room.status === 'adjusting' && state.round && me) {
+        router.replace({
+          pathname: '/online/adjust',
+          params: {
+            roomId: state.room.id,
+            roundId: state.round.id,
+            role: me.role,
+          },
+        });
+        return;
+      }
+
+      if ((state.room.status === 'final_reveal' || state.room.status === 'reveal') && state.round) {
         router.replace({
           pathname: '/online/reveal',
           params: {
@@ -182,7 +194,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
         <Text style={styles.code}>{String(code).toUpperCase()}</Text>
-        <Text style={styles.copy}>Share this code. You stay in this room between rounds until you leave for Home.</Text>
+        <Text style={styles.copy}>Share this code. After drawing, both players adjust simultaneously for 15 seconds, then see the final result for 15 seconds before the next round.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
 
