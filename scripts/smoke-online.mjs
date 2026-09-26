@@ -44,41 +44,48 @@ function drawing(id) {
 }
 
 async function main() {
-  // Direct room-route regression coverage: create_room followed by join_room
-  // with the same host session is exactly what /online/room/[code] performs.
+  // Direct room-route regression coverage: /online/room/[code] now uses
+  // the same atomic join-or-create operation as the room-code entry screen.
   const routeHostGuest = await guest('RouteHost');
   const routeJoinerGuest = await guest('RouteJoiner');
   const routeHost = routeHostGuest.supabase;
   const routeJoiner = routeJoinerGuest.supabase;
+  const routeCode = Date.now().toString(36).toUpperCase().slice(-6).padStart(6, '0');
 
-  const routeCreated = await routeHost.rpc('create_room', {
-    p_display_name: 'RouteHost',
+  const routeCreated = await routeHost.rpc('join_or_create_room', {
+    p_code: routeCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
     p_round_seconds: 10,
   });
   if (routeCreated.error) throw routeCreated.error;
   const routeRoom = first(routeCreated.data);
-  if (!routeRoom?.room_id || !routeRoom?.room_code) {
-    throw new Error('Direct-route setup room creation failed');
+  if (!routeRoom?.room_id || routeRoom.room_code !== routeCode || routeRoom.player_role !== 'HEAD') {
+    throw new Error('Unknown direct room link did not create the requested room');
   }
 
-  const routeHostRejoin = await routeHost.rpc('join_room', {
-    p_code: routeRoom.room_code,
-    p_display_name: 'RouteHost',
+  const routeHostRejoin = await routeHost.rpc('join_or_create_room', {
+    p_code: routeCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
   });
   if (routeHostRejoin.error) throw routeHostRejoin.error;
   const rejoinedHost = first(routeHostRejoin.data);
   if (rejoinedHost?.room_id !== routeRoom.room_id || rejoinedHost?.player_role !== 'HEAD') {
-    throw new Error('Existing host could not rejoin through direct room route');
+    throw new Error('Existing host could not reload through direct room route');
   }
 
-  const routeGuestJoin = await routeJoiner.rpc('join_room', {
-    p_code: routeRoom.room_code,
-    p_display_name: 'RouteJoiner',
+  const routeGuestJoin = await routeJoiner.rpc('join_or_create_room', {
+    p_code: routeCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
   });
   if (routeGuestJoin.error) throw routeGuestJoin.error;
   const joinedRouteGuest = first(routeGuestJoin.data);
   if (joinedRouteGuest?.room_id !== routeRoom.room_id || joinedRouteGuest?.player_role !== 'BODY') {
-    throw new Error('Available direct room route did not join the second player');
+    throw new Error('Available direct room link did not join the second player');
   }
 
   const routeCleanup = await routeHost.rpc('leave_room', { p_room_id: routeRoom.room_id });
@@ -114,11 +121,13 @@ async function main() {
   const heartbeat = await domi.rpc('touch_room_presence', { p_room_id: room.room_id });
   if (heartbeat.error) throw heartbeat.error;
 
-  const fullJoin = await third.rpc('join_room', {
+  const fullJoin = await third.rpc('join_or_create_room', {
     p_code: code,
-    p_display_name: 'Third',
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
   });
-  if (!fullJoin.error) throw new Error('Third player was able to join a full room');
+  if (!fullJoin.error) throw new Error('Third player was able to open a full room link');
 
   const guestReady = await sarah.rpc('set_ready', {
     p_room_id: room.room_id,
@@ -129,6 +138,28 @@ async function main() {
   const started = await domi.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
   const round = first(started.data);
+
+  const activeMemberReload = await domi.rpc('join_or_create_room', {
+    p_code: code,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
+  });
+  if (activeMemberReload.error) throw activeMemberReload.error;
+  const activeMemberTicket = first(activeMemberReload.data);
+  if (activeMemberTicket?.room_id !== room.room_id) {
+    throw new Error('Existing member could not reload a room after the round started');
+  }
+
+  const activeOutsiderJoin = await third.rpc('join_or_create_room', {
+    p_code: code,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
+  });
+  if (!activeOutsiderJoin.error) {
+    throw new Error('Outsider was able to open a direct link to an already-started room');
+  }
 
   if (round?.status !== 'prompt_select') {
     throw new Error(`Expected prompt_select, got ${round?.status}`);
