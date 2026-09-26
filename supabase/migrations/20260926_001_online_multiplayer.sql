@@ -1,25 +1,26 @@
--- Crocat 1.1.0 online multiplayer
--- Apply this migration after enabling Anonymous Sign-Ins in Supabase Auth.
+-- Crocat 1.1.0 online multiplayer schema draft.
+-- Apply to a Supabase project only after anonymous sign-ins are enabled.
+-- Public tables are explicitly granted to authenticated because new Supabase
+-- projects no longer expose new public tables to the Data API by default.
 
-create extension if not exists pgcrypto;
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
 
 create table if not exists public.rooms (
   id uuid primary key default gen_random_uuid(),
-  code text unique not null check (char_length(code) = 6),
+  code text not null unique check (code ~ '^[A-Z0-9]{6}$'),
   host_id uuid not null references auth.users(id) on delete cascade,
-  game_mode text not null default 'split',
+  game_mode text not null default 'split' check (game_mode in ('split')),
   status text not null default 'waiting' check (status in ('waiting','drawing','reveal','finished')),
   round_seconds integer not null default 180 check (round_seconds between 10 and 600),
   created_at timestamptz not null default now()
 );
 
-alter table public.rooms
-  add column if not exists round_seconds integer not null default 180;
-
 create table if not exists public.room_players (
   room_id uuid not null references public.rooms(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  display_name text not null check (char_length(display_name) between 1 and 24),
+  display_name text not null check (char_length(display_name) between 2 and 18),
   role text not null check (role in ('HEAD','BODY')),
   ready boolean not null default false,
   joined_at timestamptz not null default now(),
@@ -27,23 +28,13 @@ create table if not exists public.room_players (
   unique (room_id, role)
 );
 
-alter table public.room_players
-  add column if not exists display_name text,
-  add column if not exists joined_at timestamptz not null default now();
-
-update public.room_players
-set display_name = 'Guest'
-where display_name is null;
-
-alter table public.room_players
-  alter column display_name set not null;
-
 create table if not exists public.game_rounds (
   id uuid primary key default gen_random_uuid(),
   room_id uuid not null references public.rooms(id) on delete cascade,
   status text not null default 'drawing' check (status in ('drawing','reveal','finished')),
   started_at timestamptz not null default now(),
-  ends_at timestamptz not null
+  ends_at timestamptz not null,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.submissions (
@@ -57,210 +48,268 @@ create table if not exists public.submissions (
   unique (round_id, role)
 );
 
+create index if not exists rooms_code_idx on public.rooms(code);
+create index if not exists room_players_user_idx on public.room_players(user_id);
+create index if not exists game_rounds_room_idx on public.game_rounds(room_id, started_at desc);
+create index if not exists submissions_round_idx on public.submissions(round_id);
+
 alter table public.rooms enable row level security;
 alter table public.room_players enable row level security;
 alter table public.game_rounds enable row level security;
 alter table public.submissions enable row level security;
 
-create or replace function public.is_room_member(p_room_id uuid)
+create or replace function private.is_room_member(p_room_id uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1
     from public.room_players rp
     where rp.room_id = p_room_id
-      and rp.user_id = auth.uid()
+      and rp.user_id = (select auth.uid())
   );
 $$;
 
-revoke all on function public.is_room_member(uuid) from public;
-grant execute on function public.is_room_member(uuid) to authenticated;
+revoke all on function private.is_room_member(uuid) from public;
+grant execute on function private.is_room_member(uuid) to authenticated;
 
-drop policy if exists "members can read rooms" on public.rooms;
-create policy "members can read rooms"
-on public.rooms for select
+drop policy if exists rooms_member_select on public.rooms;
+create policy rooms_member_select
+on public.rooms
+for select
 to authenticated
-using (public.is_room_member(id));
+using (private.is_room_member(id));
 
-drop policy if exists "members can read room players" on public.room_players;
-create policy "members can read room players"
-on public.room_players for select
+drop policy if exists room_players_member_select on public.room_players;
+create policy room_players_member_select
+on public.room_players
+for select
 to authenticated
-using (public.is_room_member(room_id));
+using (private.is_room_member(room_id));
 
-drop policy if exists "members can read rounds" on public.game_rounds;
-create policy "members can read rounds"
-on public.game_rounds for select
+drop policy if exists game_rounds_member_select on public.game_rounds;
+create policy game_rounds_member_select
+on public.game_rounds
+for select
 to authenticated
-using (public.is_room_member(room_id));
+using (private.is_room_member(room_id));
 
-drop policy if exists "members can read submissions" on public.submissions;
-create policy "members can read submissions"
-on public.submissions for select
+drop policy if exists submissions_member_select on public.submissions;
+create policy submissions_member_select
+on public.submissions
+for select
 to authenticated
 using (
   exists (
     select 1
     from public.game_rounds gr
     where gr.id = submissions.round_id
-      and public.is_room_member(gr.room_id)
+      and private.is_room_member(gr.room_id)
   )
 );
 
-create or replace function public._crocat_code()
+revoke all on public.rooms, public.room_players, public.game_rounds, public.submissions from anon;
+revoke insert, update, delete on public.rooms, public.room_players, public.game_rounds, public.submissions from authenticated;
+grant select on public.rooms, public.room_players, public.game_rounds, public.submissions to authenticated;
+
+create or replace function private.make_room_code()
 returns text
 language sql
 volatile
+security invoker
+set search_path = pg_catalog
 as $$
-  select upper(substr(md5(gen_random_uuid()::text), 1, 6));
+  select upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
 $$;
 
-create or replace function public.create_room(
+revoke all on function private.make_room_code() from public;
+grant execute on function private.make_room_code() to authenticated;
+
+create or replace function private.create_room_impl(
   p_display_name text,
   p_round_seconds integer default 180
 )
 returns table(room_id uuid, room_code text, player_role text)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, private, pg_temp
 as $$
 declare
-  v_uid uuid := auth.uid();
-  v_room public.rooms;
+  v_user uuid := auth.uid();
+  v_room_id uuid;
+  v_code text;
   v_try integer := 0;
-  v_name text := left(trim(coalesce(p_display_name, '')), 24);
 begin
-  if v_uid is null then
+  if v_user is null then
     raise exception 'Authentication required';
   end if;
-  if char_length(v_name) < 1 then
-    raise exception 'Display name required';
+
+  p_display_name := btrim(p_display_name);
+  if char_length(p_display_name) not between 2 and 18 then
+    raise exception 'Display name must be 2-18 characters';
   end if;
+
+  p_round_seconds := greatest(10, least(coalesce(p_round_seconds, 180), 600));
 
   loop
     v_try := v_try + 1;
+    v_code := private.make_room_code();
     begin
       insert into public.rooms(code, host_id, round_seconds)
-      values (public._crocat_code(), v_uid, greatest(10, least(coalesce(p_round_seconds, 180), 600)))
-      returning * into v_room;
+      values (v_code, v_user, p_round_seconds)
+      returning id into v_room_id;
       exit;
     exception when unique_violation then
-      if v_try >= 8 then raise; end if;
+      if v_try >= 8 then
+        raise exception 'Could not allocate a room code';
+      end if;
     end;
   end loop;
 
   insert into public.room_players(room_id, user_id, display_name, role)
-  values (v_room.id, v_uid, v_name, 'HEAD');
+  values (v_room_id, v_user, p_display_name, 'HEAD');
 
-  return query select v_room.id, v_room.code, 'HEAD'::text;
+  return query select v_room_id, v_code, 'HEAD'::text;
 end;
 $$;
 
-create or replace function public.join_room(
+create or replace function private.join_room_impl(
   p_code text,
   p_display_name text
 )
 returns table(room_id uuid, room_code text, player_role text)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, private, pg_temp
 as $$
 declare
-  v_uid uuid := auth.uid();
-  v_room public.rooms;
-  v_existing public.room_players;
-  v_name text := left(trim(coalesce(p_display_name, '')), 24);
+  v_user uuid := auth.uid();
+  v_room public.rooms%rowtype;
+  v_existing public.room_players%rowtype;
   v_count integer;
 begin
-  if v_uid is null then raise exception 'Authentication required'; end if;
-  if char_length(v_name) < 1 then raise exception 'Display name required'; end if;
+  if v_user is null then
+    raise exception 'Authentication required';
+  end if;
 
-  select *
-  into v_room
+  p_code := upper(btrim(p_code));
+  p_display_name := btrim(p_display_name);
+
+  if char_length(p_display_name) not between 2 and 18 then
+    raise exception 'Display name must be 2-18 characters';
+  end if;
+
+  select * into v_room
   from public.rooms
-  where code = upper(trim(p_code))
+  where code = p_code
   for update;
 
-  if not found then raise exception 'Room not found'; end if;
-  if v_room.status <> 'waiting' then raise exception 'Round already started'; end if;
+  if not found then
+    raise exception 'Room not found';
+  end if;
 
   select * into v_existing
   from public.room_players
-  where room_id = v_room.id and user_id = v_uid;
+  where room_id = v_room.id and user_id = v_user;
 
   if found then
     return query select v_room.id, v_room.code, v_existing.role;
     return;
   end if;
 
+  if v_room.status <> 'waiting' then
+    raise exception 'This room already started';
+  end if;
+
   select count(*) into v_count
   from public.room_players
   where room_id = v_room.id;
 
-  if v_count >= 2 then raise exception 'Room is full'; end if;
+  if v_count >= 2 then
+    raise exception 'Room is full';
+  end if;
 
   insert into public.room_players(room_id, user_id, display_name, role)
-  values (v_room.id, v_uid, v_name, 'BODY');
+  values (v_room.id, v_user, p_display_name, 'BODY');
 
   return query select v_room.id, v_room.code, 'BODY'::text;
 end;
 $$;
 
-create or replace function public.set_ready(
+create or replace function private.set_ready_impl(
   p_room_id uuid,
   p_ready boolean
 )
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, private, pg_temp
 as $$
+declare
+  v_user uuid := auth.uid();
 begin
-  update public.room_players
-  set ready = p_ready
-  where room_id = p_room_id
-    and user_id = auth.uid();
+  if v_user is null then
+    raise exception 'Authentication required';
+  end if;
 
-  if not found then raise exception 'Not a room member'; end if;
+  update public.room_players
+  set ready = coalesce(p_ready, false)
+  where room_id = p_room_id
+    and user_id = v_user;
+
+  if not found then
+    raise exception 'You are not a member of this room';
+  end if;
 end;
 $$;
 
-create or replace function public.start_round(p_room_id uuid)
+create or replace function private.start_round_impl(p_room_id uuid)
 returns setof public.game_rounds
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, private, pg_temp
 as $$
 declare
-  v_room public.rooms;
-  v_count integer;
+  v_user uuid := auth.uid();
+  v_room public.rooms%rowtype;
   v_ready integer;
-  v_round public.game_rounds;
+  v_round public.game_rounds%rowtype;
 begin
+  if v_user is null then
+    raise exception 'Authentication required';
+  end if;
+
   select * into v_room
   from public.rooms
   where id = p_room_id
   for update;
 
-  if not found then raise exception 'Room not found'; end if;
-  if v_room.host_id <> auth.uid() then raise exception 'Only the host can start'; end if;
-  if v_room.status <> 'waiting' then raise exception 'Room is not waiting'; end if;
+  if not found or v_room.host_id <> v_user then
+    raise exception 'Only the host can start the round';
+  end if;
 
-  select count(*), count(*) filter (where ready)
-  into v_count, v_ready
+  if v_room.status <> 'waiting' then
+    raise exception 'Room is not waiting';
+  end if;
+
+  select count(*) into v_ready
   from public.room_players
-  where room_id = p_room_id;
+  where room_id = p_room_id and ready is true;
 
-  if v_count <> 2 or v_ready <> 2 then
+  if v_ready <> 2 then
     raise exception 'Both players must be ready';
   end if;
 
   insert into public.game_rounds(room_id, status, started_at, ends_at)
-  values (p_room_id, 'drawing', now(), now() + make_interval(secs => v_room.round_seconds))
+  values (
+    p_room_id,
+    'drawing',
+    now(),
+    now() + make_interval(secs => v_room.round_seconds)
+  )
   returning * into v_round;
 
   update public.rooms set status = 'drawing' where id = p_room_id;
@@ -269,7 +318,7 @@ begin
 end;
 $$;
 
-create or replace function public.submit_drawing(
+create or replace function private.submit_drawing_impl(
   p_round_id uuid,
   p_role text,
   p_drawing jsonb
@@ -277,32 +326,48 @@ create or replace function public.submit_drawing(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, private, pg_temp
 as $$
 declare
-  v_round public.game_rounds;
-  v_role text;
+  v_user uuid := auth.uid();
+  v_round public.game_rounds%rowtype;
+  v_player public.room_players%rowtype;
   v_count integer;
 begin
+  if v_user is null then
+    raise exception 'Authentication required';
+  end if;
+
   select * into v_round
   from public.game_rounds
   where id = p_round_id
   for update;
 
-  if not found then raise exception 'Round not found'; end if;
+  if not found then
+    raise exception 'Round not found';
+  end if;
 
-  select role into v_role
+  if v_round.status <> 'drawing' then
+    raise exception 'Round is not accepting drawings';
+  end if;
+
+  select * into v_player
   from public.room_players
   where room_id = v_round.room_id
-    and user_id = auth.uid();
+    and user_id = v_user;
 
-  if v_role is null then raise exception 'Not a room member'; end if;
-  if v_role <> p_role then raise exception 'Role mismatch'; end if;
+  if not found or v_player.role <> p_role then
+    raise exception 'Role mismatch';
+  end if;
+
+  if p_drawing is null or jsonb_typeof(p_drawing) <> 'object' then
+    raise exception 'Invalid drawing payload';
+  end if;
 
   insert into public.submissions(round_id, player_id, role, drawing)
-  values (p_round_id, auth.uid(), p_role, p_drawing)
+  values (p_round_id, v_user, p_role, p_drawing)
   on conflict (round_id, player_id)
-  do update set drawing = excluded.drawing, role = excluded.role, created_at = now();
+  do update set drawing = excluded.drawing, created_at = now();
 
   select count(*) into v_count
   from public.submissions
@@ -315,11 +380,78 @@ begin
 end;
 $$;
 
-revoke all on function public.create_room(text, integer) from public;
-revoke all on function public.join_room(text, text) from public;
-revoke all on function public.set_ready(uuid, boolean) from public;
-revoke all on function public.start_round(uuid) from public;
-revoke all on function public.submit_drawing(uuid, text, jsonb) from public;
+revoke all on function private.create_room_impl(text, integer) from public;
+revoke all on function private.join_room_impl(text, text) from public;
+revoke all on function private.set_ready_impl(uuid, boolean) from public;
+revoke all on function private.start_round_impl(uuid) from public;
+revoke all on function private.submit_drawing_impl(uuid, text, jsonb) from public;
+
+grant execute on function private.create_room_impl(text, integer) to authenticated;
+grant execute on function private.join_room_impl(text, text) to authenticated;
+grant execute on function private.set_ready_impl(uuid, boolean) to authenticated;
+grant execute on function private.start_round_impl(uuid) to authenticated;
+grant execute on function private.submit_drawing_impl(uuid, text, jsonb) to authenticated;
+
+create or replace function public.create_room(
+  p_display_name text,
+  p_round_seconds integer default 180
+)
+returns table(room_id uuid, room_code text, player_role text)
+language sql
+security invoker
+set search_path = public, private, pg_temp
+as $$
+  select * from private.create_room_impl(p_display_name, p_round_seconds);
+$$;
+
+create or replace function public.join_room(
+  p_code text,
+  p_display_name text
+)
+returns table(room_id uuid, room_code text, player_role text)
+language sql
+security invoker
+set search_path = public, private, pg_temp
+as $$
+  select * from private.join_room_impl(p_code, p_display_name);
+$$;
+
+create or replace function public.set_ready(p_room_id uuid, p_ready boolean)
+returns void
+language sql
+security invoker
+set search_path = public, private, pg_temp
+as $$
+  select private.set_ready_impl(p_room_id, p_ready);
+$$;
+
+create or replace function public.start_round(p_room_id uuid)
+returns setof public.game_rounds
+language sql
+security invoker
+set search_path = public, private, pg_temp
+as $$
+  select * from private.start_round_impl(p_room_id);
+$$;
+
+create or replace function public.submit_drawing(
+  p_round_id uuid,
+  p_role text,
+  p_drawing jsonb
+)
+returns void
+language sql
+security invoker
+set search_path = public, private, pg_temp
+as $$
+  select private.submit_drawing_impl(p_round_id, p_role, p_drawing);
+$$;
+
+revoke all on function public.create_room(text, integer) from public, anon;
+revoke all on function public.join_room(text, text) from public, anon;
+revoke all on function public.set_ready(uuid, boolean) from public, anon;
+revoke all on function public.start_round(uuid) from public, anon;
+revoke all on function public.submit_drawing(uuid, text, jsonb) from public, anon;
 
 grant execute on function public.create_room(text, integer) to authenticated;
 grant execute on function public.join_room(text, text) to authenticated;
@@ -327,15 +459,31 @@ grant execute on function public.set_ready(uuid, boolean) to authenticated;
 grant execute on function public.start_round(uuid) to authenticated;
 grant execute on function public.submit_drawing(uuid, text, jsonb) to authenticated;
 
-do $$ begin
-  alter publication supabase_realtime add table public.rooms;
-exception when duplicate_object then null; end $$;
-do $$ begin
-  alter publication supabase_realtime add table public.room_players;
-exception when duplicate_object then null; end $$;
-do $$ begin
-  alter publication supabase_realtime add table public.game_rounds;
-exception when duplicate_object then null; end $$;
-do $$ begin
-  alter publication supabase_realtime add table public.submissions;
-exception when duplicate_object then null; end $$;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'rooms'
+  ) then
+    alter publication supabase_realtime add table public.rooms;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'room_players'
+  ) then
+    alter publication supabase_realtime add table public.room_players;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'game_rounds'
+  ) then
+    alter publication supabase_realtime add table public.game_rounds;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'submissions'
+  ) then
+    alter publication supabase_realtime add table public.submissions;
+  end if;
+end
+$$;

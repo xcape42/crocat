@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -27,15 +27,20 @@ export default function OnlineRoomScreen() {
   } = useOnlineGameStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const channelRef = useState<{ current: RealtimeChannel | null }>({ current: null })[0];
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const refresh = useCallback(async () => {
     if (!code) return;
     const state = await loadRoom(String(code));
     setRoomState(state.room, state.players, state.round);
 
-    const me = userId ? state.players.find((player) => player.user_id === userId) : undefined;
-    if (me && !role) setIdentity(me.user_id, me.role);
+    const activeUserId = useOnlineGameStore.getState().userId;
+    const activeRole = useOnlineGameStore.getState().role;
+    const me = activeUserId
+      ? state.players.find((player) => player.user_id === activeUserId)
+      : undefined;
+
+    if (me && !activeRole) setIdentity(me.user_id, me.role);
 
     if (state.room.status === 'drawing' && state.round && me) {
       router.replace({
@@ -45,10 +50,11 @@ export default function OnlineRoomScreen() {
           roundId: state.round.id,
           role: me.role,
           seconds: state.room.round_seconds,
+          endsAt: state.round.ends_at,
         },
       });
     }
-  }, [code, role, router, setIdentity, setRoomState, userId]);
+  }, [code, router, setIdentity, setRoomState]);
 
   useEffect(() => {
     let cancelled = false;

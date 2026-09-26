@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -6,7 +6,7 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
 import { Timer } from '@/src/components/Timer';
-import { loadRound, submitDrawing } from '@/src/features/multiplayer/room';
+import { loadSubmissions, submitDrawing } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
@@ -24,68 +24,96 @@ export default function OnlineDrawScreen() {
     roomId: string;
     roundId: string;
     role: GameRole;
-    seconds: string;
+    seconds?: string;
+    endsAt?: string;
   }>();
-  const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
-  const seconds = Math.max(10, Number(params.seconds) || 180);
-  const [drawing, setDrawing] = useState<CrocatDrawing>(() => blankDrawing());
+
+  const role = params.role === 'BODY' ? 'BODY' : 'HEAD';
+  const fallbackSeconds = Math.max(10, Number(params.seconds ?? 180));
+  const initialSeconds = params.endsAt
+    ? Math.max(1, Math.ceil((new Date(params.endsAt).getTime() - Date.now()) / 1000))
+    : fallbackSeconds;
+
+  const [drawing, setDrawing] = useState<CrocatDrawing>(blankDrawing);
   const [color, setColor] = useState(colors.ink);
   const [submitted, setSubmitted] = useState(false);
+  const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState('');
+  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
-  const checkRound = useCallback(async () => {
+  const checkReveal = useCallback(async () => {
     if (!params.roundId) return;
-    const round = await loadRound(params.roundId);
-    if (round.status === 'reveal' || round.status === 'finished') {
+    const submissions = await loadSubmissions(params.roundId);
+    if (submissions.length >= 2) {
       router.replace({
         pathname: '/online/reveal',
-        params: { roomId: params.roomId, roundId: params.roundId },
+        params: { roundId: params.roundId, roomId: params.roomId },
       });
     }
   }, [params.roomId, params.roundId, router]);
 
   useEffect(() => {
     if (!params.roundId) return;
-    let channel: RealtimeChannel | null = subscribeToRound(params.roundId, () => {
-      void checkRound();
+
+    const realtime = subscribeToRound(params.roundId, () => {
+      void checkReveal();
     });
-    void checkRound();
-    return () => { void removeChannel(channel); channel = null; };
-  }, [checkRound, params.roundId]);
+    setChannel(realtime);
+    void checkReveal();
+
+    return () => {
+      void removeChannel(realtime);
+    };
+  }, [checkReveal, params.roundId]);
 
   const finish = useCallback(async () => {
     if (submitted || !params.roundId) return;
     try {
-      setError('');
       setSubmitted(true);
+      setError('');
       await submitDrawing(params.roundId, role, drawing);
-      await checkRound();
+      setWaiting(true);
+      await checkReveal();
     } catch (e) {
       setSubmitted(false);
       setError(e instanceof Error ? e.message : 'Could not submit drawing.');
     }
-  }, [checkRound, drawing, params.roundId, role, submitted]);
+  }, [checkReveal, drawing, params.roundId, role, submitted]);
 
-  const title = useMemo(() => role === 'HEAD' ? 'HEAD' : 'BODY', [role]);
+  const undo = () => setDrawing((current) => ({
+    ...current,
+    strokes: current.strokes.slice(0, -1),
+  }));
+
+  if (waiting) {
+    return (
+      <Screen>
+        <View style={styles.waiting}>
+          <Text style={styles.kicker}>{role} SUBMITTED</Text>
+          <Text style={styles.waitTitle}>Your half is hidden.</Text>
+          <Text style={styles.waitCopy}>Waiting for the other player. The reveal starts automatically when both drawings arrive.</Text>
+          <View style={styles.pulse}><Text style={styles.pulseText}>•••</Text></View>
+          {!!error && <Text style={styles.error}>{error}</Text>}
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen contentStyle={styles.screen}>
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>ONLINE · YOUR PART</Text>
-          <Text style={styles.role}>{title}</Text>
+          <Text style={styles.role}>{role}</Text>
         </View>
-        {!submitted && <Timer seconds={seconds} onComplete={finish} />}
-        {submitted && <View style={styles.waitPill}><Text style={styles.waitPillText}>SENT ✓</Text></View>}
+        <Timer seconds={initialSeconds} onComplete={finish} />
       </View>
 
       <View style={styles.hintWrap}>
         <Text style={styles.hint}>
-          {submitted
-            ? 'Waiting for the other half. You cannot see it yet.'
-            : role === 'HEAD'
-              ? 'Draw the head. Your friend is drawing the body on another device.'
-              : 'Draw the body. Your friend is drawing the head on another device.'}
+          {role === 'HEAD'
+            ? 'Draw the top half. The BODY player cannot see it.'
+            : 'Draw the bottom half. The HEAD player cannot see it.'}
         </Text>
       </View>
 
@@ -96,23 +124,16 @@ export default function OnlineDrawScreen() {
           {palette.map((item) => (
             <Pressable
               key={item}
-              disabled={submitted}
               onPress={() => setColor(item)}
               style={[styles.swatch, { backgroundColor: item }, color === item && styles.swatchActive]}
             />
           ))}
         </View>
-        <Pressable disabled={submitted} onPress={() => setDrawing((current) => ({ ...current, strokes: current.strokes.slice(0, -1) }))}>
-          <Text style={styles.tool}>UNDO</Text>
-        </Pressable>
-        <Pressable disabled={submitted} onPress={() => setDrawing((current) => ({ ...current, strokes: [] }))}>
-          <Text style={styles.tool}>CLEAR</Text>
-        </Pressable>
+        <Pressable onPress={undo}><Text style={styles.tool}>UNDO</Text></Pressable>
+        <Pressable onPress={() => setDrawing(blankDrawing())}><Text style={styles.tool}>CLEAR</Text></Pressable>
       </View>
 
-      <CrocatButton disabled={submitted} onPress={finish}>
-        {submitted ? 'WAITING FOR FRIEND…' : 'SUBMIT MY HALF'}
-      </CrocatButton>
+      <CrocatButton disabled={submitted} onPress={finish}>SUBMIT {role}</CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
   );
@@ -121,16 +142,19 @@ export default function OnlineDrawScreen() {
 const styles = StyleSheet.create({
   screen: { gap: 12 },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  kicker: { fontSize: 11, fontWeight: '900', letterSpacing: 1.4, color: colors.coral },
+  kicker: { fontSize: 11, fontWeight: '900', letterSpacing: 1.4, color: colors.muted },
   role: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
-  waitPill: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
-  waitPillText: { fontWeight: '900', color: colors.ink, fontSize: 12 },
-  hintWrap: { backgroundColor: colors.blue, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start' },
+  hintWrap: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start' },
   hint: { color: colors.ink, fontWeight: '700', fontSize: 12 },
   toolbar: { minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   palette: { flexDirection: 'row', gap: 8 },
   swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: colors.paper },
   swatchActive: { borderColor: colors.ink, transform: [{ scale: 1.1 }] },
   tool: { fontSize: 12, fontWeight: '900', letterSpacing: 0.8, color: colors.muted },
+  waiting: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  waitTitle: { marginTop: 10, fontSize: 42, lineHeight: 45, fontWeight: '900', letterSpacing: -1.5, color: colors.ink, textAlign: 'center' },
+  waitCopy: { marginTop: 12, maxWidth: 440, color: colors.muted, lineHeight: 22, textAlign: 'center', fontSize: 16 },
+  pulse: { marginTop: 28, minWidth: 86, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.card, alignItems: 'center' },
+  pulseText: { fontSize: 22, fontWeight: '900', letterSpacing: 5, color: colors.ink },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700' },
 });
