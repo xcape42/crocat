@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { useDeadlineCountdown, type DeadlineValue } from '@/src/hooks/useDeadlineCountdown';
 
@@ -9,19 +9,11 @@ type Props = {
 };
 
 export function Timer({ seconds, endsAt, onComplete }: Props) {
-  const [localDeadline, setLocalDeadline] = useState(() => Date.now() + seconds * 1000);
-
-  useEffect(() => {
-    if (endsAt == null) {
-      setLocalDeadline(Date.now() + seconds * 1000);
-    }
-  }, [endsAt, seconds]);
-
-  const deadline = useMemo(
-    () => endsAt ?? localDeadline,
-    [endsAt, localDeadline],
+  const localDeadline = useMemo(
+    () => Date.now() + seconds * 1000,
+    [seconds],
   );
-  const remaining = useDeadlineCountdown(deadline, onComplete);
+  const remaining = useDeadlineCountdown(endsAt ?? localDeadline, onComplete);
 
   return <CountdownBadge remaining={remaining} />;
 }
