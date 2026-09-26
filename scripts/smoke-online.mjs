@@ -36,6 +36,46 @@ function drawing(id) {
 }
 
 async function main() {
+  // Direct room-route regression coverage: create_room followed by join_room
+  // with the same host session is exactly what /online/room/[code] performs.
+  const routeHostGuest = await guest('RouteHost');
+  const routeJoinerGuest = await guest('RouteJoiner');
+  const routeHost = routeHostGuest.supabase;
+  const routeJoiner = routeJoinerGuest.supabase;
+
+  const routeCreated = await routeHost.rpc('create_room', {
+    p_display_name: 'RouteHost',
+    p_round_seconds: 10,
+  });
+  if (routeCreated.error) throw routeCreated.error;
+  const routeRoom = first(routeCreated.data);
+  if (!routeRoom?.room_id || !routeRoom?.room_code) {
+    throw new Error('Direct-route setup room creation failed');
+  }
+
+  const routeHostRejoin = await routeHost.rpc('join_room', {
+    p_code: routeRoom.room_code,
+    p_display_name: 'RouteHost',
+  });
+  if (routeHostRejoin.error) throw routeHostRejoin.error;
+  const rejoinedHost = first(routeHostRejoin.data);
+  if (rejoinedHost?.room_id !== routeRoom.room_id || rejoinedHost?.player_role !== 'HEAD') {
+    throw new Error('Existing host could not rejoin through direct room route');
+  }
+
+  const routeGuestJoin = await routeJoiner.rpc('join_room', {
+    p_code: routeRoom.room_code,
+    p_display_name: 'RouteJoiner',
+  });
+  if (routeGuestJoin.error) throw routeGuestJoin.error;
+  const joinedRouteGuest = first(routeGuestJoin.data);
+  if (joinedRouteGuest?.room_id !== routeRoom.room_id || joinedRouteGuest?.player_role !== 'BODY') {
+    throw new Error('Available direct room route did not join the second player');
+  }
+
+  const routeCleanup = await routeHost.rpc('leave_room', { p_room_id: routeRoom.room_id });
+  if (routeCleanup.error) throw routeCleanup.error;
+
   const domiGuest = await guest('Domi');
   const sarahGuest = await guest('Sarah');
   const thirdGuest = await guest('Third');
