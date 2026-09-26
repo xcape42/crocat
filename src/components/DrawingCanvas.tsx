@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, PanResponder, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, PanResponder, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { DRAWING_SURFACE_ASPECT } from '@/src/theme/gameSurface';
@@ -81,7 +81,11 @@ export function DrawingCanvas({
     <GameSurfaceSlot kind="drawing" aspectRatio={DRAWING_SURFACE_ASPECT} maxWidth={520}>
       {({ width, height }) => (
         <View
-          style={[styles.canvas, { width, height }]}
+          style={[
+            styles.canvas,
+            { width, height },
+            Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as never),
+          ]}
           onLayout={onCanvasLayout}
           {...responder.panHandlers}
         >
