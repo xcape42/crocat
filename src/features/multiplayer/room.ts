@@ -1,4 +1,4 @@
-import type { CrocatDrawing, GameRole } from '@/src/types/game';
+import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 import { requireSupabase } from '@/src/lib/supabase';
 import type {
   OnlinePlayer,
@@ -110,6 +110,13 @@ export async function advanceRound(roomId: string): Promise<OnlineRound | null> 
   return (row as OnlineRound | undefined) ?? null;
 }
 
+export async function advancePhase(roomId: string): Promise<OnlineRound | null> {
+  const { data, error } = await requireSupabase().rpc('advance_phase', { p_room_id: roomId });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as OnlineRound | undefined) ?? null;
+}
+
 export async function leaveRoom(roomId: string) {
   const { error } = await requireSupabase().rpc('leave_room', { p_room_id: roomId });
   if (error) throw error;
@@ -124,6 +131,19 @@ export async function submitDrawing(
     p_round_id: roundId,
     p_role: role,
     p_drawing: drawing,
+  });
+  if (error) throw error;
+}
+
+export async function saveTransform(
+  roundId: string,
+  role: GameRole,
+  transform: PartTransform,
+) {
+  const { error } = await requireSupabase().rpc('save_transform', {
+    p_round_id: roundId,
+    p_role: role,
+    p_transform: transform,
   });
   if (error) throw error;
 }
