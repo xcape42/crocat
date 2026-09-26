@@ -240,13 +240,43 @@ async function main() {
   });
   if (!wrongTransform.error) throw new Error('BODY was able to modify HEAD transform');
 
-  await wait(Math.max(
-    0,
-    new Date(adjustment.data.adjustment_ends_at).getTime() - Date.now() + 600,
-  ));
+  const firstAdjustReady = await head.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (firstAdjustReady.error) throw firstAdjustReady.error;
 
-  const toReveal = await body.rpc('advance_phase', { p_room_id: room.room_id });
-  if (toReveal.error) throw toReveal.error;
+  const oneReadyAdvance = await head.rpc('advance_phase', { p_room_id: room.room_id });
+  if (oneReadyAdvance.error) throw oneReadyAdvance.error;
+
+  const oneReadyState = await domi
+    .from('game_rounds')
+    .select('status')
+    .eq('id', round.id)
+    .single();
+  if (oneReadyState.error) throw oneReadyState.error;
+  if (oneReadyState.data.status !== 'adjusting') {
+    throw new Error('1/2 Adjustment Ready ended the phase too early');
+  }
+
+  const secondAdjustReady = await body.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (secondAdjustReady.error) throw secondAdjustReady.error;
+
+  const twoReadyAdvance = await body.rpc('advance_phase', { p_room_id: room.room_id });
+  if (twoReadyAdvance.error) throw twoReadyAdvance.error;
+
+  const twoReadyState = await domi
+    .from('game_rounds')
+    .select('status')
+    .eq('id', round.id)
+    .single();
+  if (twoReadyState.error) throw twoReadyState.error;
+  if (twoReadyState.data.status !== 'final_reveal') {
+    throw new Error('2/2 Adjustment Ready did not start Final Reveal');
+  }
 
   for (const activeClient of [domi, sarah]) {
     const ready = await activeClient.rpc('set_ready', {
