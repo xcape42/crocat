@@ -4,10 +4,12 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { GameLeaveButton } from '@/src/components/GameLeaveButton';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
   advancePrompt,
+  leaveRoom,
   loadRoomById,
   rerollPrompt,
   selectPrompt,
@@ -15,6 +17,7 @@ import {
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
 import type { PromptOption } from '@/src/features/multiplayer/types';
 
@@ -156,6 +159,19 @@ export default function OnlinePromptScreen() {
     }
   };
 
+  const leave = async () => {
+    if (!roomId || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(roomId);
+    } catch {
+      // Leaving remains valid if the room vanished first.
+    } finally {
+      await clearActiveRoomCode();
+      goHome();
+    }
+  };
+
   if (!room || !round) {
     return (
       <Screen scroll={false}>
@@ -169,6 +185,7 @@ export default function OnlinePromptScreen() {
 
   return (
     <Screen scroll={false} contentStyle={styles.screen}>
+      <GameLeaveButton disabled={busy} onPress={leave} />
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.kicker}>ROOM {room.code} · PROMPT PICK</Text>
