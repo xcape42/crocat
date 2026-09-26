@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.5 — Immediate handoffs, direct room links and stale-room cleanup
+
+- Start Drawing immediately when HEAD chooses a prompt
+- Resynchronize a round as soon as its Realtime subscription becomes active, covering fast prompt choices before the peer fully subscribes
+- Start Adjustment immediately when both players have submitted their drawings
+- Keep reversible early submission while only one player is submitted
+- Keep the drawing deadline as the fallback when both players are not finished early
+- Make direct /online/room/CODE links join or rejoin the room before loading protected room data
+- Send unavailable, invalid, started-for-nonmembers or full direct room links back to Home
+- Add a lightweight 20-second heartbeat for the active online room
+- Add last_seen_at tracking to room membership
+- Run stale-room cleanup once per minute and delete a room only when no player heartbeat has been seen for at least one minute
+- Keep explicit host leave behavior and guarantee truly empty rooms are deleted
+- Add smoke coverage for heartbeat, full-room rejection and immediate two-submit phase transition
+
 ## 1.4.4 — 1.4.0 baseline with active-player gating and in-round controls
 
 - Kept the Crocat 1.4.0 gameplay flow as the baseline
