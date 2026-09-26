@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.6 — Curated aesthetic prompts and semantic split labels
+
+- Replaced the previous 36 concrete prompts with a fully curated 60-prompt catalog
+- Use five balanced themes with 12 prompts each: Mystisch, Fantasy, Natur, Elegant and Genuss
+- Keep internal multiplayer roles as HEAD/BODY while giving each prompt server-authoritative display labels
+- Use Kopf/Körper for character and creature prompts
+- Use Oberer Teil/Unterer Teil as the default object split
+- Add natural special splits where they improve drawing clarity, including Kugel/Ständer, Pflanze/Topf, Blüte/Vase, Statue/Sockel and Tasse/Untertasse
+- Include split labels inside each server-generated prompt option so both players receive the same definition
+- Show semantic split labels in Prompt Pick, Drawing and Adjustment without changing the underlying game-role logic
+- Preserve three distinct prompt themes per choice and the existing one-time reroll behavior
+- Keep Presence, heartbeat, room cleanup, join/create, navigation, drawing canvas, timers, Ready and Realtime architecture unchanged
+- Align package, Expo and visible app versions to 1.4.6
+
 ## 1.4.5 — Immediate handoffs, direct room links and stale-room cleanup
 
 - Start Drawing immediately when HEAD chooses a prompt

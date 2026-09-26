@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.5
+## Stable version: 1.4.6
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.5 builds on the stable 1.4.4 baseline with faster phase handoffs, direct room-link joining and automatic cleanup of abandoned rooms:
+Crocat 1.4.6 keeps the stable 1.4.5 multiplayer flow and replaces the old prompt catalog with a curated aesthetic set of 60 prompts across five themes. Prompt options now carry server-authoritative split labels so character rounds stay Kopf/Körper while selected objects can use natural splits such as Kugel/Ständer, Pflanze/Topf or Blüte/Vase:
 
 ### Local Split
 
@@ -24,9 +24,9 @@ Two devices connect through a six-character room code.
 
 `Create or enter room code → Sarah Ready → Domi Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
 
-Host and drawing role are separate: **Domi remains host**, but HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options.
+Host and drawing role are separate: **Domi remains host**, but HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options. The active catalog contains 60 curated prompts in **Mystisch, Fantasy, Natur, Elegant and Genuss**, with 12 prompts per theme.
 
-The BODY player sees the same prompt-selection screen live, but cannot choose or reroll. As soon as HEAD chooses a prompt, the server switches to Drawing immediately and the other client resynchronizes as soon as its realtime subscription is live. During Drawing and Adjustment only the selected term is shown; the theme is hidden again until the Final Reveal.
+The BODY player sees the same prompt-selection screen live, but cannot choose or reroll. Each option also shows its split labels. As soon as HEAD chooses a prompt, the server switches to Drawing immediately and the other client resynchronizes as soon as its realtime subscription is live. During Drawing and Adjustment each player sees the selected term plus the semantic label for their assigned half; the theme is hidden again until the Final Reveal.
 
 Early drawing submission remains reversible while the other player is still drawing. A player can submit, see whether the other player has submitted, return to the canvas before the drawing deadline, and submit a newer version. As soon as **both** players are submitted, the server ends Drawing immediately and starts Adjustment; the drawing deadline remains the fallback when both are not finished early. The final seconds are visually emphasized.
 
@@ -70,13 +70,14 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.5 release validation includes:
+The 1.4.6 release validation includes:
 
 - dependency install
 - TypeScript
 - Expo Doctor
 - production Expo web export
 - automated Supabase multiplayer smoke coverage for prompt flow, immediate two-submit handoff, Adjustment Ready, heartbeat and full-room rejection
+- database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
 - GitHub Pages deployment
 
 ## Git workflow
