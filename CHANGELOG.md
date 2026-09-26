@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.2 — Join-or-create rooms, remembered codes and reveal Ready
+
+- Entering a six-character room code now joins an existing room or creates that exact room if it does not exist
+- Serialized join-or-create operations per room code to avoid concurrent duplicate creation
+- Kept the existing random Create Room flow
+- Remember the most recently opened online room code with AsyncStorage
+- Prefill the remembered code on future online sessions
+- Allow both players to toggle Ready during the 15-second Final Reveal
+- Show a shared 0/2, 1/2 or 2/2 Ready state
+- Start the next drawing round immediately when both players are Ready
+- Keep the 15-second automatic next-round fallback when they are not both Ready
+- Preserve the guest-only Ready / host Start rule in the initial lobby
+- Added two-client smoke coverage for join-or-create and early Final Reveal skip
+
 ## 1.3.1 — Host start flow and background-safe timers
 
 - Removed the Ready control from the online host
