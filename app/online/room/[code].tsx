@@ -23,9 +23,11 @@ export default function OnlineRoomScreen() {
     players,
     round,
     onlineUserIds,
+    activeUserIds,
     setIdentity,
     setRoomState,
     setOnlineUserIds,
+    setActiveUserIds,
     reset,
   } = useOnlineGameStore();
   const [busy, setBusy] = useState(false);
@@ -131,6 +133,7 @@ export default function OnlineRoomScreen() {
           displayName || String(user.user_metadata?.display_name ?? 'Guest'),
           {
             onSync: setOnlineUserIds,
+            onActiveSync: setActiveUserIds,
             onPresenceJoin: (joinedUserId) => {
               const current = useOnlineGameStore.getState();
               if (current.room?.host_id !== user.id || joinedUserId === user.id) return;
@@ -163,6 +166,8 @@ export default function OnlineRoomScreen() {
   const isHost = Boolean(room && userId === room.host_id);
   const guest = players.find((player) => player.user_id !== room?.host_id);
   const guestReady = players.length === 2 && Boolean(guest?.ready);
+  const bothActive = players.length === 2
+    && players.every((player) => activeUserIds.includes(player.user_id));
 
   const toggleReady = async () => {
     if (!room || !me || isHost) return;
@@ -235,6 +240,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.players}>
         {players.map((player) => {
           const online = onlineUserIds.includes(player.user_id);
+          const active = activeUserIds.includes(player.user_id);
           return (
             <View key={player.user_id} style={styles.player}>
               <View>
@@ -242,7 +248,9 @@ export default function OnlineRoomScreen() {
                 <Text style={styles.role}>ROLE · RANDOM EACH ROUND</Text>
               </View>
               <View style={styles.state}>
-                <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>
+                <Text style={styles.online}>
+                  {active ? '● ACTIVE' : (online ? '◐ AWAY' : '○ OFFLINE')}
+                </Text>
                 <Text style={styles.ready}>
                   {player.user_id === room?.host_id ? 'HOST' : (player.ready ? 'READY ✓' : 'NOT READY')}
                 </Text>
@@ -271,13 +279,17 @@ export default function OnlineRoomScreen() {
           <>
             <CrocatButton
               variant="coral"
-              disabled={busy || !guestReady || room?.status !== 'waiting'}
+              disabled={busy || !guestReady || !bothActive || room?.status !== 'waiting'}
               onPress={start}
             >
               START ROUND
             </CrocatButton>
             <Text style={styles.hostNote}>
-              {guestReady ? 'Sarah is ready. Start when you are.' : 'Waiting for Sarah to be ready…'}
+              {!guestReady
+                ? 'Waiting for Sarah to be ready…'
+                : !bothActive
+                  ? 'Sarah is ready, but someone is currently away. Waiting for both players…'
+                  : 'Sarah is ready and both players are active. Start when you are.'}
             </Text>
           </>
         ) : (
