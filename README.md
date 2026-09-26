@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.1.0
+## Stable version: 1.1.1
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.1.0 includes two Split modes:
+Crocat 1.1.1 includes two Split modes:
 
 ### Local Split
 
@@ -24,7 +24,7 @@ Two devices connect through a six-character room code.
 
 `Create room → Join → Presence → Ready → simultaneous HEAD/BODY → synchronized Reveal`
 
-The room creator plays as **Domi / HEAD** and the joining player as **Sarah / BODY**. There is no pre-game nickname form in 1.1.0.
+The room creator plays as **Domi / HEAD** and the joining player as **Sarah / BODY**. There is no pre-game nickname form.
 
 ## Stack
 
@@ -62,7 +62,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.1.0 release passed:
+The 1.1.1 release passed:
 
 - dependency install
 - TypeScript
