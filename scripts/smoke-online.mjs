@@ -121,13 +121,20 @@ async function main() {
     throw new Error('Sarah did not receive BODY');
   }
 
-  for (const supabase of [domi, sarah]) {
-    const ready = await supabase.rpc('set_ready', {
-      p_room_id: room.room_id,
-      p_ready: true,
-    });
-    if (ready.error) throw ready.error;
-  }
+  const hostReady = await domi.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (!hostReady.error) throw new Error('Host was able to set Ready');
+
+  const earlyStart = await domi.rpc('start_round', { p_room_id: room.room_id });
+  if (!earlyStart.error) throw new Error('Host started before guest was Ready');
+
+  const guestReady = await sarah.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (guestReady.error) throw guestReady.error;
 
   const started = await domi.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
