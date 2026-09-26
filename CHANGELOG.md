@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0 — Persistent online rooms
+
+- Kept both online players in the same room across consecutive rounds
+- Added a next-round Ready check directly on the reveal screen
+- Start the next round immediately when both players are Ready
+- Added synchronized 30-second automatic continuation when both players remain in the room
+- Reset Ready state for every new round
+- Added explicit Home / Leave behavior instead of returning to the online entry screen after every round
+- If the joining player leaves, the host stays in the same room and returns to the lobby
+- If the host leaves, the room is closed
+- Hardened host awareness of player joins with Postgres Changes, Presence join/sync refreshes and a visible join notice
+- Made round subscriptions react to room and membership changes as well as drawing submissions
+- Added server-side idempotency so simultaneous next-round requests cannot create duplicate rounds
+
 ## 1.1.3 — Standardized game surface
 
 - Introduced one shared sizing system for every visible game canvas

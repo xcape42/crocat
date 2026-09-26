@@ -9,6 +9,7 @@ export type OnlineRoom = {
   game_mode: string;
   status: OnlineRoomStatus;
   round_seconds: number;
+  next_round_at: string | null;
   created_at: string;
 };
 
@@ -27,6 +28,7 @@ export type OnlineRound = {
   status: 'drawing' | 'reveal' | 'finished';
   started_at: string;
   ends_at: string;
+  revealed_at: string | null;
 };
 
 export type OnlineSubmission = {
