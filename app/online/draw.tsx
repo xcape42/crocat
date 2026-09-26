@@ -123,8 +123,7 @@ export default function OnlineDrawScreen() {
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      reset();
-      router.replace('/');
+      setError('Connection interrupted. Reconnecting…');
     }
   }, [params.roomId, params.roundId, reset, role, router, setRoomState, userId]);
 
