@@ -19,7 +19,7 @@ export function CountdownBadge({ remaining, label }: Props) {
       warning && styles.warning,
       critical && styles.critical,
     ]}>
-      <Text style={styles.label}>
+      <Text style={[styles.label, warning && styles.labelWarning]}>
         {critical ? 'HURRY' : (warning ? 'LAST SECONDS' : (label ?? 'TIME'))}
       </Text>
       <Text style={[styles.time, warning && styles.timeWarning]}>{min}:{sec}</Text>
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   label: {
     width: '100%',
-    color: colors.ink,
+    color: colors.white,
     fontWeight: '900',
     fontSize: 8,
     lineHeight: 10,
@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
   },
+  labelWarning: { color: colors.ink },
   time: {
     width: '100%',
     color: colors.white,
