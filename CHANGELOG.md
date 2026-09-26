@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.1 — Resilient room recovery, immediate phases and semantic parts
+
+- Persist the active online room separately from the remembered room-code convenience value
+- Automatically resume the active room after reload, browser/app restart, foreground return or missed Realtime updates
+- Reconcile server phase deadlines whenever a room is loaded
+- Add a lightweight active-session watchdog for reconnect/lag recovery
+- Treat transient network failures as reconnect states instead of resetting the player to Home
+- Return Home automatically only when the room/membership actually no longer exists
+- Persist the current online drawing locally per round for reload recovery
+- Start Adjustment immediately when both players are submitted
+- Keep return-to-drawing available while the other player has not yet submitted
+- Start the next Prompt Select immediately when both players are Ready in Final Reveal
+- Add semantic first/second-part labels for all 36 built-in prompts
+- Include those labels in prompt options and persist them onto the selected round
+- Replace visible online HEAD/BODY terminology with prompt-specific labels such as Frame/Wheels or Helmet/Spacesuit
+- Show both semantic parts again in Final Reveal
+- Added server-side sync_room_state recovery RPC
+- Added smoke coverage for immediate phase transitions, state reconciliation and semantic labels
+
 ## 1.4.0 — Random roles, prompt themes and reversible submissions
 
 - Randomize HEAD and BODY server-side for every online round, independent of host/guest
