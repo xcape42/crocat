@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.3 — Standardized game surface
+
+- Introduced one shared sizing system for every visible game canvas
+- Drawing canvas target height: 340px on standard phones, 300px on short phones, 380px on medium screens, 420px on desktop
+- Full Crocat preview target height: 460px on standard phones, 360px on short phones, 500px on medium screens, 560px on desktop
+- Changed canvas sizing from viewport percentages to preferred-size + shrink-to-fit behavior
+- Canvas now measures the actually available play area between headers, controls and action buttons
+- Prevented large screens from making the game canvas unnecessarily huge
+- Prevented standard mobile screens from defaulting to an unnecessarily small canvas
+- Applied the same sizing rules to local drawing, online drawing, final alignment, online reveal and final result
+- Made the covered reveal frame use exactly the same game-surface size as the revealed Crocat
+- Final result now stays inside a fixed game viewport instead of relying on page scrolling
+
 ## 1.1.2 — Final alignment polish
 
 - Kept direct drag-and-drop for HEAD and BODY
