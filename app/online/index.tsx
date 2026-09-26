@@ -6,7 +6,7 @@ import { Screen } from '@/src/components/Screen';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { ensureGuest } from '@/src/features/multiplayer/auth';
 import { createRoom, joinOrCreateRoom, loadRoomById } from '@/src/features/multiplayer/room';
-import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
+import { loadLastRoomCode, rememberActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 
@@ -43,7 +43,7 @@ export default function OnlineEntryScreen() {
       setBusy('create');
       const user = await prepare(HOST_NAME);
       const ticket = await createRoom(HOST_NAME, 180);
-      await rememberRoomCode(ticket.code);
+      await rememberActiveRoomCode(ticket.code);
       setDisplayName(HOST_NAME);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
@@ -63,7 +63,7 @@ export default function OnlineEntryScreen() {
       const ticket = await joinOrCreateRoom(code, HOST_NAME, JOINER_NAME, 180);
       const roomState = await loadRoomById(ticket.roomId);
       const actualName = roomState.room.host_id === user.id ? HOST_NAME : JOINER_NAME;
-      await rememberRoomCode(ticket.code);
+      await rememberActiveRoomCode(ticket.code);
       setDisplayName(actualName);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
