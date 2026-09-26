@@ -73,7 +73,7 @@ export default function OnlinePromptScreen() {
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      goHome();
+      setError('Connection interrupted. Reconnecting…');
     }
   }, [goHome, roomId, roundId, router, setRoomState]);
 
