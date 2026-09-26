@@ -138,6 +138,26 @@ async function main() {
   const secondReroll = await head.rpc('reroll_prompt', { p_round_id: round.id });
   if (!secondReroll.error) throw new Error('Second reroll was allowed');
 
+  let promptRealtimeSeen = false;
+  const promptChannel = body
+    .channel(`smoke-prompt-${round.id}-${Date.now()}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'game_rounds', filter: `id=eq.${round.id}` },
+      () => {
+        promptRealtimeSeen = true;
+      },
+    );
+
+  await new Promise((resolve, reject) => {
+    promptChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') resolve();
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        reject(new Error(`Prompt realtime subscription failed: ${status}`));
+      }
+    });
+  });
+
   const picked = rerolledRound.prompt_options[0];
   const selected = await head.rpc('select_prompt', {
     p_round_id: round.id,
@@ -152,6 +172,14 @@ async function main() {
     || drawingRound.prompt_theme !== picked.theme
   ) {
     throw new Error('Prompt selection did not start drawing correctly');
+  }
+
+  for (let attempt = 0; attempt < 30 && !promptRealtimeSeen; attempt += 1) {
+    await wait(100);
+  }
+  await body.removeChannel(promptChannel);
+  if (!promptRealtimeSeen) {
+    throw new Error('BODY did not receive the prompt-to-drawing realtime update');
   }
 
   const playerRows = await domi
