@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import {
   LayoutChangeEvent,
   PanResponder,
+  Platform,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -124,7 +125,7 @@ export function DrawingPreview({
       style={[
         styles.frame,
         { width: frameWidth, height: frameHeight },
-        interactive && styles.interactive,
+        interactive && Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as never),
       ]}
       onLayout={onLayout}
       {...(interactive ? responder.panHandlers : {})}
@@ -166,11 +167,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
   },
-  interactive: {
-    // React Native Web forwards these CSS-compatible properties.
-    touchAction: 'none',
-    userSelect: 'none',
-  } as never,
   splitGuide: {
     position: 'absolute',
     top: '50%',
