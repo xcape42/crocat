@@ -128,8 +128,16 @@ export async function resumeActiveOnlineSession(
     }
 
     return true;
-  } catch {
-    await clearActiveRoomCode();
+  } catch (error) {
+    const code = typeof error === 'object' && error && 'code' in error
+      ? String((error as { code?: unknown }).code ?? '')
+      : '';
+
+    // A missing/RLS-hidden room means the membership really ended.
+    // Network errors keep the active-room pointer so the next reconnect can recover it.
+    if (code === 'PGRST116') {
+      await clearActiveRoomCode();
+    }
     return false;
   }
 }
