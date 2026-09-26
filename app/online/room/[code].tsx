@@ -209,7 +209,10 @@ export default function OnlineRoomScreen() {
   };
 
   const start = async () => {
-    if (!room) return;
+    if (!room || room.status !== 'waiting' || !canStart) {
+      setError('Both players must be online and the guest must be ready.');
+      return;
+    }
     try {
       setBusy(true);
       await startRound(room.id);
