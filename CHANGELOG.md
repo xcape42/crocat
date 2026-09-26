@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.8 — Shareable, reload-safe room links
+
+- Make `/online/room/CODE` use the same atomic join-or-create backend flow as manual room-code entry
+- Create the requested valid room automatically when a shared code does not exist yet
+- Rejoin an existing membership through the same URL, including after a browser reload during an active round
+- Join a free waiting room from a copied room URL without requiring prior Crocat navigation
+- Redirect invalid codes, full rooms, outsider access to already-started rooms and room-link failures to Play
+- Add a Copy Link action beside the existing Copy Code action
+- Switch the web export to Expo Router single-page output for arbitrary dynamic room-code routes
+- Add a GitHub Pages `404.html` app fallback so direct room URLs and reloads bootstrap Crocat correctly
+- Add CI verification for the Pages fallback and multiplayer smoke coverage for direct-link create, join, rejoin, full-room and started-room cases
+- Keep the production Supabase schema and existing room lifecycle unchanged
+- Align package, Expo and visible app versions to 1.4.8
+
 ## 1.4.7 — Exact phase timers and selection-safe canvas interaction
 
 - Derive every visible countdown directly from the current deadline on every render

@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.7
+## Stable version: 1.4.8
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.7 keeps the stable 1.4.6 game flow and hardens timing and browser interaction: every countdown is derived from its active deadline, Final Reveal gets a fresh 15-second deadline when it actually begins, and accidental browser text selection is disabled everywhere except the room code:
+Crocat 1.4.8 keeps the stable 1.4.7 game flow and makes online room URLs first-class entry points: a shared room link can create the requested room, join an available room, rejoin the same membership after a reload, and recover into the correct active phase. GitHub Pages now boots Crocat through an SPA fallback for arbitrary room-code URLs, and the room lobby can copy either the six-character code or the complete shareable link:
 
 ### Local Split
 
@@ -32,7 +32,7 @@ Early drawing submission remains reversible while the other player is still draw
 
 During Adjustment each player can drag and zoom only their own part. Each player can also mark themselves Ready without hiding the shared composition. 1/2 Ready keeps Adjustment running; 2/2 Ready starts Final Reveal immediately. Final Reveal shows both the selected term and its theme. Both players can press Ready Next Round; the next round starts only while both players are actively present in Crocat. If one player is away, the game visibly waits for them.
 
-The most recently opened room code is remembered locally and prefilled on future online sessions. A valid direct `/online/room/CODE` link now rejoins an existing membership or joins an available waiting room; unavailable, full or invalid rooms return to Home instead of showing a broken room screen. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
+The most recently opened room code is remembered locally and prefilled on future online sessions. A direct `/online/room/CODE` link now uses the same atomic join-or-create flow as the room-code entry screen: a valid missing code creates that exact room, an existing member rejoins even after the round has started, and a new player joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
 ## Stack
 
@@ -70,13 +70,13 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.7 release validation includes:
+The 1.4.8 release validation includes:
 
 - dependency install
 - TypeScript
 - Expo Doctor
-- production Expo web export
-- automated Supabase multiplayer smoke coverage for prompt flow, immediate two-submit handoff, Adjustment Ready, heartbeat and full-room rejection
+- production Expo web export with verified GitHub Pages direct-link fallback
+- automated Supabase multiplayer smoke coverage for direct-link create/join/rejoin/full/started-room behavior, prompt flow, immediate two-submit handoff, Adjustment Ready and heartbeat
 - database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
 - exact phase-deadline validation for Adjustment and Final Reveal
 - room-code clipboard interaction with global browser text-selection protection
