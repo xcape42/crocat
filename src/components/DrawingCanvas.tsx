@@ -2,11 +2,12 @@ import { useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, PanResponder, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors, radius } from '@/src/theme/tokens';
-import type { CrocatDrawing, Point, Stroke } from '@/src/types/game';
+import type { CrocatDrawing, GameRole, Point, Stroke } from '@/src/types/game';
 
 type Props = {
   drawing: CrocatDrawing;
   onChange: (drawing: CrocatDrawing) => void;
+  role?: GameRole;
   color?: string;
   brushWidth?: number;
 };
@@ -18,7 +19,13 @@ const pathFor = (points: Point[]) => points.length
   ? points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
   : '';
 
-export function DrawingCanvas({ drawing, onChange, color = colors.ink, brushWidth = 6 }: Props) {
+export function DrawingCanvas({
+  drawing,
+  onChange,
+  role,
+  color = colors.ink,
+  brushWidth = 6,
+}: Props) {
   const [activePoints, setActivePoints] = useState<Point[]>([]);
   const activeRef = useRef<Point[]>([]);
   const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
@@ -93,6 +100,16 @@ export function DrawingCanvas({ drawing, onChange, color = colors.ink, brushWidt
           />
         )}
       </Svg>
+
+      {role && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.connectionGuide,
+            role === 'BODY' ? styles.connectionGuideTop : styles.connectionGuideBottom,
+          ]}
+        />
+      )}
     </View>
   );
 }
@@ -110,4 +127,15 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
     overflow: 'hidden',
   },
+  connectionGuide: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    borderTopWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.muted,
+    opacity: 0.55,
+  },
+  connectionGuideTop: { top: 20 },
+  connectionGuideBottom: { bottom: 20 },
 });

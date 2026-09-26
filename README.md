@@ -1,72 +1,63 @@
-# Crocat 1.0.0
+# Crocat
 
-A first playable prototype of Crocat: a social drawing game where two people draw separate halves of one creature.
+Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## What works
+## Stable version: 1.0.0
 
-- Expo / React Native / Web project
-- Home, mode selection, lobby, drawing, handoff, reveal, finalize and result screens
-- HEAD / BODY role flow
-- Configurable 1 / 2 / 3 / 5 minute round timer
-- Freehand vector drawing via `react-native-svg`
-- Undo and clear
-- Small color palette
-- Final head/body alignment and scaling
-- Replay flow
-- Friends, gallery and settings navigation
-- Draft Supabase multiplayer schema for the next iteration
+The current public browser prototype supports the complete local pass-the-device flow:
 
-## Current multiplayer model
+`Home → Play → Lobby → HEAD → Handoff → BODY → Reveal → Finalize → Result`
 
-Version 1.0.0 is intentionally local: Player 1 draws HEAD, hands the device to Player 2, and Player 2 draws BODY. This lets us validate the core game loop before introducing auth, networking, reconnection and room synchronization.
+Public demo: https://xcape42.github.io/crocat/
 
-## Run it
+## 1.1.0 development: online Split
 
-Requires Node.js 22.13+ for Expo SDK 57.
+The `feat/online-multiplayer` branch adds the first true two-device game:
+
+`Create/Join → Room code → Presence → Ready → simultaneous HEAD/BODY → synchronized Reveal`
+
+### Stack
+
+- Expo / React Native / React Native Web
+- Expo Router
+- TypeScript
+- Zustand
+- react-native-svg
+- Supabase Auth, Postgres and Realtime
+
+### Run
+
+Node.js 22.13+.
 
 ```bash
-npm install
-npx expo install --fix
+npm ci
 npm run start
 ```
 
-Then:
-- press `w` for web
-- press `a` for Android
-- press `i` for iOS simulator on macOS
-- or open through a compatible Expo development client / Expo Go environment
+### Online backend
 
-## Main flow
+Crocat uses anonymous Supabase users to avoid a signup wall. Configure:
 
-`Home -> Play -> Lobby -> HEAD -> Handoff -> BODY -> Reveal -> Finalize -> Result`
-
-## Project structure
-
-```text
-app/                 Expo Router screens
-src/components/      reusable Crocat UI and drawing components
-src/store/           Zustand game state
-src/theme/           visual tokens
-src/types/           game/drawing types
-supabase/             draft online multiplayer schema
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 ```
 
-## Next iteration
+Then:
 
-1. Supabase Auth with guest identities
-2. real room codes and remote joining
-3. Realtime room presence and ready state
-4. concurrent HEAD/BODY drawing on separate devices
-5. persisted drawings + gallery
-6. export/share final Crocat
-7. custom Crocat illustrations and final visual identity
+1. Enable **Anonymous Sign-Ins** in Supabase Auth settings.
+2. Apply `supabase/schema.sql`.
+3. Run Supabase security/performance advisors.
+4. Start Crocat on two browsers/devices.
+5. Device A creates a room; Device B joins with the six-character code.
 
-## Version
+Never place a Supabase secret/service-role key in the app.
 
-`1.0.0` — first playable product sketch.
+## Git workflow
 
-## Browser-playable 1.0.0 demo
+- `main` — stable/public
+- `dev` — integrated next version
+- `feat/*` — isolated feature work
+- `fix/*` — isolated fixes
 
-A self-contained browser build lives in `docs/index.html`. It needs no backend and implements the local pass-the-device flow: Home → Lobby → HEAD → handoff → BODY → Reveal → Align → Result.
-
-Open `docs/index.html` directly in a browser, or publish the repository with the included `.github/workflows/pages.yml` GitHub Pages workflow.
+The online multiplayer work remains isolated until backend verification and CI both pass.

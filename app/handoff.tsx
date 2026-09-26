@@ -11,10 +11,10 @@ export default function HandoffScreen() {
       <View style={styles.center}>
         <Text style={styles.kicker}>DON'T PEEK.</Text>
         <Text style={styles.icon}>↝</Text>
-        <Text style={styles.title}>Pass it to Player 2.</Text>
-        <Text style={styles.copy}>The head is safely hidden. Player 2 gets the BODY and a fresh canvas.</Text>
+        <Text style={styles.title}>Pass it to Sarah.</Text>
+        <Text style={styles.copy}>Domi's head is safely hidden. Sarah gets the BODY and a fresh canvas with the connection line at the top.</Text>
       </View>
-      <CrocatButton onPress={() => router.replace('/draw')}>I'M PLAYER 2</CrocatButton>
+      <CrocatButton onPress={() => router.replace('/draw')}>I'M SARAH</CrocatButton>
     </Screen>
   );
 }

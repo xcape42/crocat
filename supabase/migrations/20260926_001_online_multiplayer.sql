@@ -204,19 +204,18 @@ begin
     raise exception 'Display name must be 2-18 characters';
   end if;
 
-  select r.* into v_room
-  from public.rooms r
-  where r.code = p_code
+  select * into v_room
+  from public.rooms
+  where code = p_code
   for update;
 
   if not found then
     raise exception 'Room not found';
   end if;
 
-  select rp.* into v_existing
-  from public.room_players rp
-  where rp.room_id = v_room.id
-    and rp.user_id = v_user;
+  select * into v_existing
+  from public.room_players
+  where room_id = v_room.id and user_id = v_user;
 
   if found then
     return query select v_room.id, v_room.code, v_existing.role;
@@ -228,8 +227,8 @@ begin
   end if;
 
   select count(*) into v_count
-  from public.room_players rp
-  where rp.room_id = v_room.id;
+  from public.room_players
+  where room_id = v_room.id;
 
   if v_count >= 2 then
     raise exception 'Room is full';
