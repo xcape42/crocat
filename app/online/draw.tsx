@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
@@ -28,7 +27,8 @@ export default function OnlineDrawScreen() {
     endsAt?: string;
   }>();
 
-  const role = params.role === 'BODY' ? 'BODY' : 'HEAD';
+  const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
+  const playerName = role === 'HEAD' ? 'Domi' : 'Sarah';
   const fallbackSeconds = Math.max(10, Number(params.seconds ?? 180));
   const initialSeconds = params.endsAt
     ? Math.max(1, Math.ceil((new Date(params.endsAt).getTime() - Date.now()) / 1000))
@@ -39,7 +39,6 @@ export default function OnlineDrawScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState('');
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   const checkReveal = useCallback(async () => {
     if (!params.roundId) return;
@@ -58,7 +57,6 @@ export default function OnlineDrawScreen() {
     const realtime = subscribeToRound(params.roundId, () => {
       void checkReveal();
     });
-    setChannel(realtime);
     void checkReveal();
 
     return () => {
@@ -89,7 +87,7 @@ export default function OnlineDrawScreen() {
     return (
       <Screen>
         <View style={styles.waiting}>
-          <Text style={styles.kicker}>{role} SUBMITTED</Text>
+          <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
           <Text style={styles.waitTitle}>Your half is hidden.</Text>
           <Text style={styles.waitCopy}>Waiting for the other player. The reveal starts automatically when both drawings arrive.</Text>
           <View style={styles.pulse}><Text style={styles.pulseText}>•••</Text></View>
@@ -103,7 +101,7 @@ export default function OnlineDrawScreen() {
     <Screen contentStyle={styles.screen}>
       <View style={styles.top}>
         <View>
-          <Text style={styles.kicker}>ONLINE · YOUR PART</Text>
+          <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
           <Text style={styles.role}>{role}</Text>
         </View>
         <Timer seconds={initialSeconds} onComplete={finish} />
@@ -112,12 +110,12 @@ export default function OnlineDrawScreen() {
       <View style={styles.hintWrap}>
         <Text style={styles.hint}>
           {role === 'HEAD'
-            ? 'Draw the top half. The BODY player cannot see it.'
-            : 'Draw the bottom half. The HEAD player cannot see it.'}
+            ? 'Draw the head. The dashed connection line is at the bottom.'
+            : 'Draw the body. The dashed connection line is at the top.'}
         </Text>
       </View>
 
-      <DrawingCanvas drawing={drawing} onChange={setDrawing} color={color} />
+      <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
 
       <View style={styles.toolbar}>
         <View style={styles.palette}>

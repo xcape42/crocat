@@ -9,19 +9,20 @@ import { createRoom, joinRoom } from '@/src/features/multiplayer/room';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 
+const HOST_NAME = 'Domi';
+const JOINER_NAME = 'Sarah';
+
 export default function OnlineEntryScreen() {
   const router = useRouter();
-  const { displayName, setDisplayName, setIdentity } = useOnlineGameStore();
+  const { setDisplayName, setIdentity } = useOnlineGameStore();
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
 
-  const name = displayName.trim();
-
-  const prepare = async () => {
+  const prepare = async (displayName: string) => {
     if (!hasSupabaseConfig) throw new Error('Supabase is not configured yet.');
-    if (name.length < 2) throw new Error('Choose a name with at least 2 characters.');
-    const user = await ensureGuest(name);
+    const user = await ensureGuest(displayName);
+    setDisplayName(displayName);
     return user;
   };
 
@@ -29,8 +30,8 @@ export default function OnlineEntryScreen() {
     try {
       setError('');
       setBusy('create');
-      const user = await prepare();
-      const ticket = await createRoom(name, 180);
+      const user = await prepare(HOST_NAME);
+      const ticket = await createRoom(HOST_NAME, 180);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {
@@ -44,9 +45,9 @@ export default function OnlineEntryScreen() {
     try {
       setError('');
       setBusy('join');
-      const user = await prepare();
-      if (code.trim().length < 4) throw new Error('Enter a valid room code.');
-      const ticket = await joinRoom(code, name);
+      const user = await prepare(JOINER_NAME);
+      if (code.trim().length !== 6) throw new Error('Enter the 6-character room code.');
+      const ticket = await joinRoom(code, JOINER_NAME);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {
@@ -60,35 +61,26 @@ export default function OnlineEntryScreen() {
     <Screen>
       <Text style={styles.back} onPress={() => router.back()}>← MODES</Text>
       <View style={styles.header}>
-        <Text style={styles.kicker}>CROCAT ONLINE · 1.1.0 DEV</Text>
+        <Text style={styles.kicker}>CROCAT ONLINE · 1.1.0</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
-        <Text style={styles.copy}>No account form: Crocat creates a temporary guest identity for you.</Text>
+        <Text style={styles.copy}>No account and no name form. The room creator plays as Domi; the joining player plays as Sarah.</Text>
       </View>
 
       {!hasSupabaseConfig && (
         <View style={styles.warning}>
           <Text style={styles.warningTitle}>Backend connection missing</Text>
-          <Text style={styles.warningText}>Add the Supabase URL and publishable key to your environment before testing online play.</Text>
+          <Text style={styles.warningText}>Crocat online needs the configured Supabase project. Local Split still works without it.</Text>
         </View>
       )}
 
       <View style={styles.card}>
-        <Text style={styles.label}>YOUR NAME</Text>
-        <TextInput
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="e.g. Domi"
-          placeholderTextColor={colors.muted}
-          maxLength={18}
-          style={styles.input}
-          autoCapitalize="words"
-        />
+        <Text style={styles.label}>CREATE AS DOMI</Text>
         <CrocatButton disabled={busy !== null || !hasSupabaseConfig} onPress={create}>
           {busy === 'create' ? 'CREATING…' : 'CREATE ROOM'}
         </CrocatButton>
       </View>
 
-      <Text style={styles.or}>OR JOIN A FRIEND</Text>
+      <Text style={styles.or}>OR JOIN AS SARAH</Text>
 
       <View style={styles.card}>
         <Text style={styles.label}>ROOM CODE</Text>

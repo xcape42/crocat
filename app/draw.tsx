@@ -32,17 +32,21 @@ export default function DrawScreen() {
     <Screen contentStyle={styles.screen}>
       <View style={styles.top}>
         <View>
-          <Text style={styles.kicker}>YOUR PART</Text>
+          <Text style={styles.kicker}>{currentRole === 'HEAD' ? 'DOMI · YOUR PART' : 'SARAH · YOUR PART'}</Text>
           <Text style={styles.role}>{currentRole}</Text>
         </View>
         <Timer seconds={roundSeconds} onComplete={finish} />
       </View>
 
       <View style={styles.hintWrap}>
-        <Text style={styles.hint}>{currentRole === 'HEAD' ? 'Draw the top half. Try to end around the bottom edge.' : 'Draw the body. Imagine a head will land on top.'}</Text>
+        <Text style={styles.hint}>
+          {currentRole === 'HEAD'
+            ? 'Draw the head. The dashed connection line is at the bottom.'
+            : 'Draw the body. The dashed connection line is at the top.'}
+        </Text>
       </View>
 
-      <DrawingCanvas drawing={drawing} onChange={setDrawing} color={color} />
+      <DrawingCanvas role={currentRole} drawing={drawing} onChange={setDrawing} color={color} />
 
       <View style={styles.toolbar}>
         <View style={styles.palette}>
