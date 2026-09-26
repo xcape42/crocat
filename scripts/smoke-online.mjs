@@ -102,23 +102,42 @@ async function main() {
   const { supabase: domi } = await guest('Domi');
   const { supabase: sarah } = await guest('Sarah');
 
-  const created = await domi.rpc('create_room', {
-    p_display_name: 'Domi',
+  const requestedCode = Date.now()
+    .toString(36)
+    .toUpperCase()
+    .slice(-6)
+    .padStart(6, '0');
+
+  const created = await domi.rpc('join_or_create_room', {
+    p_code: requestedCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
     p_round_seconds: 30,
   });
   if (created.error) throw created.error;
   const room = first(created.data);
-  if (!room?.room_id || !room?.room_code || room.player_role !== 'HEAD') {
-    throw new Error('create_room returned an invalid room ticket');
+  if (
+    !room?.room_id
+    || room.room_code !== requestedCode
+    || room.player_role !== 'HEAD'
+  ) {
+    throw new Error('Joining an empty code did not create the requested room as HEAD');
   }
 
-  const joined = await sarah.rpc('join_room', {
-    p_code: room.room_code,
-    p_display_name: 'Sarah',
+  const joined = await sarah.rpc('join_or_create_room', {
+    p_code: requestedCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 30,
   });
   if (joined.error) throw joined.error;
-  if (first(joined.data)?.player_role !== 'BODY') {
-    throw new Error('Sarah did not receive BODY');
+  const joinedRoom = first(joined.data);
+  if (
+    joinedRoom?.room_id !== room.room_id
+    || joinedRoom?.room_code !== requestedCode
+    || joinedRoom?.player_role !== 'BODY'
+  ) {
+    throw new Error('Second join did not enter the existing room as BODY');
   }
 
   const hostReady = await domi.rpc('set_ready', {
@@ -214,17 +233,50 @@ async function main() {
     throw new Error(`Expected final_reveal, got ${finalReveal.data.status}`);
   }
 
-  const revealWait = Math.max(
-    0,
-    new Date(finalReveal.data.final_reveal_ends_at).getTime() - Date.now() + 600,
-  );
-  await wait(revealWait);
+  const revealDeadlineMs = new Date(finalReveal.data.final_reveal_ends_at).getTime();
+  if (revealDeadlineMs - Date.now() < 5000) {
+    throw new Error('Not enough Final Reveal time remained to verify Ready skip');
+  }
+
+  const domiReadyNext = await domi.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (domiReadyNext.error) throw domiReadyNext.error;
+
+  const oneReadyAdvance = await domi.rpc('advance_phase', {
+    p_room_id: room.room_id,
+  });
+  if (oneReadyAdvance.error) throw oneReadyAdvance.error;
+  if (first(oneReadyAdvance.data)) {
+    throw new Error('One ready player was enough to skip Final Reveal');
+  }
+
+  const stillReveal = await sarah
+    .from('rooms')
+    .select('status')
+    .eq('id', room.room_id)
+    .single();
+  if (stillReveal.error) throw stillReveal.error;
+  if (stillReveal.data.status !== 'final_reveal') {
+    throw new Error('Room left Final Reveal with only one ready player');
+  }
+
+  const sarahReadyNext = await sarah.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (sarahReadyNext.error) throw sarahReadyNext.error;
 
   const next = await sarah.rpc('advance_phase', { p_room_id: room.room_id });
   if (next.error) throw next.error;
   const nextRound = first(next.data);
   if (!nextRound?.id || nextRound.id === round.id || nextRound.status !== 'drawing') {
-    throw new Error('Final reveal did not auto-advance to a new drawing round');
+    throw new Error('Two ready players did not skip Final Reveal');
+  }
+
+  if (Date.now() >= revealDeadlineMs) {
+    throw new Error('Ready skip completed only after the Final Reveal deadline');
   }
 
   const sameRoom = await domi
@@ -253,7 +305,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat adjustment smoke passed: ${room.room_code}`);
+  console.log(`Crocat room-memory/ready-skip smoke passed: ${room.room_code}`);
 }
 
 main().catch((error) => {
