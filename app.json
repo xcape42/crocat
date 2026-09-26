@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Crocat",
+    "slug": "crocat",
+    "version": "1.0.0",
+    "scheme": "crocat",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router"
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,113 @@
+import { useMemo, useRef, useState } from 'react';
+import { LayoutChangeEvent, PanResponder, StyleSheet, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import { colors, radius } from '@/src/theme/tokens';
+import type { CrocatDrawing, Point, Stroke } from '@/src/types/game';
+
+type Props = {
+  drawing: CrocatDrawing;
+  onChange: (drawing: CrocatDrawing) => void;
+  color?: string;
+  brushWidth?: number;
+};
+
+const VIRTUAL_WIDTH = 360;
+const VIRTUAL_HEIGHT = 380;
+
+const pathFor = (points: Point[]) => points.length
+  ? points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
+  : '';
+
+export function DrawingCanvas({ drawing, onChange, color = colors.ink, brushWidth = 6 }: Props) {
+  const [activePoints, setActivePoints] = useState<Point[]>([]);
+  const activeRef = useRef<Point[]>([]);
+  const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
+
+  const toVirtualPoint = (x: number, y: number): Point => ({
+    x: Math.max(0, Math.min(VIRTUAL_WIDTH, (x / layoutRef.current.width) * VIRTUAL_WIDTH)),
+    y: Math.max(0, Math.min(VIRTUAL_HEIGHT, (y / layoutRef.current.height) * VIRTUAL_HEIGHT)),
+  });
+
+  const responder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (event) => {
+      const point = toVirtualPoint(event.nativeEvent.locationX, event.nativeEvent.locationY);
+      activeRef.current = [point];
+      setActivePoints([point]);
+    },
+    onPanResponderMove: (event) => {
+      const point = toVirtualPoint(event.nativeEvent.locationX, event.nativeEvent.locationY);
+      const next = [...activeRef.current, point];
+      activeRef.current = next;
+      setActivePoints(next);
+    },
+    onPanResponderRelease: () => {
+      if (activeRef.current.length > 1) {
+        const stroke: Stroke = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          points: activeRef.current,
+          color,
+          width: brushWidth,
+          opacity: 1,
+        };
+        onChange({ ...drawing, strokes: [...drawing.strokes, stroke] });
+      }
+      activeRef.current = [];
+      setActivePoints([]);
+    },
+    onPanResponderTerminate: () => {
+      activeRef.current = [];
+      setActivePoints([]);
+    },
+  }), [brushWidth, color, drawing, onChange]);
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > 0 && height > 0) layoutRef.current = { width, height };
+  };
+
+  return (
+    <View style={styles.canvas} onLayout={onLayout} {...responder.panHandlers}>
+      <Svg width="100%" height="100%" viewBox={`0 0 ${VIRTUAL_WIDTH} ${VIRTUAL_HEIGHT}`} preserveAspectRatio="none" style={StyleSheet.absoluteFill}>
+        {drawing.strokes.map((stroke) => (
+          <Path
+            key={stroke.id}
+            d={pathFor(stroke.points)}
+            fill="none"
+            stroke={stroke.color}
+            strokeWidth={stroke.width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={stroke.opacity}
+          />
+        ))}
+        {activePoints.length > 1 && (
+          <Path
+            d={pathFor(activePoints)}
+            fill="none"
+            stroke={color}
+            strokeWidth={brushWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+      </Svg>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  canvas: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 520,
+    aspectRatio: VIRTUAL_WIDTH / VIRTUAL_HEIGHT,
+    alignSelf: 'center',
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    overflow: 'hidden',
+  },
+});
