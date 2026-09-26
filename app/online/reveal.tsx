@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -11,6 +11,7 @@ import {
   leaveRoom,
   loadRoomById,
   loadSubmissions,
+  setReady,
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
@@ -43,6 +44,7 @@ export default function OnlineRevealScreen() {
   const [headTransform, setHeadTransform] = useState<PartTransform>(ZERO);
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
   const [error, setError] = useState('');
+  const [readyBusy, setReadyBusy] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advanceRef = useRef(false);
 
@@ -171,6 +173,38 @@ export default function OnlineRevealScreen() {
     round?.id === roundId ? round.final_reveal_ends_at : null;
   const secondsLeft = useDeadlineCountdown(revealDeadline, tryAdvance);
 
+  const me = useMemo(
+    () => players.find((player) => player.user_id === userId),
+    [players, userId],
+  );
+  const readyCount = players.filter((player) => player.ready).length;
+  const bothReady = players.length === 2 && readyCount === 2;
+
+  useEffect(() => {
+    if (
+      room?.status === 'final_reveal'
+      && bothReady
+      && !advanceRef.current
+    ) {
+      void tryAdvance();
+    }
+  }, [bothReady, room?.status, tryAdvance]);
+
+  const toggleReady = async () => {
+    if (!room || !me || readyBusy) return;
+
+    try {
+      setReadyBusy(true);
+      setError('');
+      await setReady(room.id, !me.ready);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update next-round ready state.');
+    } finally {
+      setReadyBusy(false);
+    }
+  };
+
   const leave = async () => {
     if (!room) return;
     try {
@@ -216,8 +250,19 @@ export default function OnlineRevealScreen() {
       </View>
 
       <Text style={styles.copy}>
-        Final result is locked. The next drawing round starts automatically after 15 seconds.
+        Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.
       </Text>
+
+      <View style={styles.readyRow}>
+        <Text style={styles.readyStatus}>{readyCount}/2 READY</Text>
+        <CrocatButton
+          variant={me?.ready ? 'secondary' : 'coral'}
+          disabled={readyBusy || !me}
+          onPress={toggleReady}
+        >
+          {me?.ready ? 'NOT READY' : 'READY NEXT ROUND'}
+        </CrocatButton>
+      </View>
 
       <CrocatButton variant="ghost" onPress={leave}>HOME / LEAVE ROOM</CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
@@ -243,6 +288,8 @@ const styles = StyleSheet.create({
   countdownValue: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
+  readyRow: { flexShrink: 0, gap: 6 },
+  readyStatus: { color: colors.muted, fontSize: 10, fontWeight: '900', letterSpacing: 1, textAlign: 'center' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700', fontSize: 11 },
 });

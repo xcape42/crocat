@@ -7,6 +7,7 @@ import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import { leaveRoom, loadRoom, setReady, startRound } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
+import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
@@ -91,6 +92,10 @@ export default function OnlineRoomScreen() {
       goHome();
     }
   }, [code, goHome, router, setIdentity, setRoomState]);
+
+  useEffect(() => {
+    if (code) void rememberRoomCode(String(code));
+  }, [code]);
 
   useEffect(() => {
     let cancelled = false;
