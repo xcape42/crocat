@@ -22,7 +22,7 @@ export function CountdownBadge({ remaining, label }: Props) {
       <Text style={styles.label}>
         {critical ? 'HURRY' : (warning ? 'LAST SECONDS' : (label ?? 'TIME'))}
       </Text>
-      <Text style={styles.time}>{min}:{sec}</Text>
+      <Text style={[styles.time, warning && styles.timeWarning]}>{min}:{sec}</Text>
     </View>
   );
 }
@@ -57,4 +57,5 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     fontSize: 16,
   },
+  timeWarning: { color: colors.ink },
 });
