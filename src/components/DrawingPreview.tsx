@@ -15,6 +15,11 @@ import type { CrocatDrawing, GameRole, PartTransform, Point } from '@/src/types/
 const VIRTUAL_WIDTH = 360;
 const VIRTUAL_HEIGHT = 760;
 const ASPECT_RATIO = VIRTUAL_WIDTH / VIRTUAL_HEIGHT;
+const SPLIT_X = VIRTUAL_WIDTH / 2;
+const SPLIT_Y = VIRTUAL_HEIGHT / 2;
+const CONNECTION_INSET = 20;
+const HEAD_CONNECTION_Y = 380 - CONNECTION_INSET;
+const BODY_CONNECTION_Y = CONNECTION_INSET;
 
 const pathFor = (points: Point[]) => points.length
   ? points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
@@ -33,15 +38,21 @@ type Props = {
 function Part({
   drawing,
   transform,
-  yOffset,
+  connectionY,
 }: {
   drawing: CrocatDrawing | null;
   transform: PartTransform;
-  yOffset: number;
+  connectionY: number;
 }) {
   if (!drawing) return null;
+
+  const targetX = SPLIT_X + transform.x;
+  const targetY = SPLIT_Y + transform.y;
+
   return (
-    <G transform={`translate(${transform.x} ${yOffset + transform.y}) scale(${transform.scale})`}>
+    <G
+      transform={`translate(${targetX} ${targetY}) scale(${transform.scale}) translate(${-SPLIT_X} ${-connectionY})`}
+    >
       {drawing.strokes.map((stroke) => (
         <Path
           key={stroke.id}
@@ -137,17 +148,17 @@ export function DrawingPreview({
         viewBox="0 0 360 760"
         preserveAspectRatio="none"
       >
-        <Part drawing={head} transform={headTransform} yOffset={0} />
-        <Part drawing={body} transform={bodyTransform} yOffset={380} />
+        <Part drawing={head} transform={headTransform} connectionY={HEAD_CONNECTION_Y} />
+        <Part drawing={body} transform={bodyTransform} connectionY={BODY_CONNECTION_Y} />
       </Svg>
 
       {interactive && (
         <>
-          <View pointerEvents="none" style={[styles.partLabel, styles.headLabel, activeRole === 'HEAD' && styles.partLabelActive]}>
-            <Text style={styles.partLabelText}>DRAG HEAD</Text>
+          <View pointerEvents="none" style={[styles.partLabel, styles.headLabel]}>
+            <Text style={[styles.partLabelText, activeRole === 'HEAD' && styles.partLabelTextActive]}>HEAD · DRAG</Text>
           </View>
-          <View pointerEvents="none" style={[styles.partLabel, styles.bodyLabel, activeRole === 'BODY' && styles.partLabelActive]}>
-            <Text style={styles.partLabelText}>DRAG BODY</Text>
+          <View pointerEvents="none" style={[styles.partLabel, styles.bodyLabel]}>
+            <Text style={[styles.partLabelText, activeRole === 'BODY' && styles.partLabelTextActive]}>BODY · DRAG</Text>
           </View>
           <View pointerEvents="none" style={styles.splitGuide} />
         </>
@@ -178,21 +189,21 @@ const styles = StyleSheet.create({
   },
   partLabel: {
     position: 'absolute',
-    right: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.82)',
-  },
-  partLabelActive: {
-    backgroundColor: colors.lime,
+    right: 10,
+    paddingHorizontal: 2,
+    paddingVertical: 2,
   },
   headLabel: { top: 8 },
   bodyLabel: { bottom: 8 },
   partLabelText: {
-    color: colors.ink,
+    color: colors.muted,
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.7,
+    opacity: 0.78,
+  },
+  partLabelTextActive: {
+    color: colors.coral,
+    opacity: 1,
   },
 });
