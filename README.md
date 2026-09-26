@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.3
+## Stable version: 1.4.0
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.3 includes two Split modes:
+Crocat 1.4.0 includes two Split modes:
 
 ### Local Split
 
@@ -22,19 +22,17 @@ The drawing connection guide is role-aware:
 
 Two devices connect through a six-character room code.
 
-`Create / enter room → Ready → Start → random part assignment → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → Final Reveal → next round`
+`Create or enter room code → Sarah Ready → Domi Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
 
-The host relationship stays stable, but drawing parts are reassigned every round. Prompt options carry **semantic part names** instead of exposing technical HEAD/BODY labels. Examples include **Bicycle: Frame + Wheels**, **Astronaut: Helmet + Spacesuit**, **Ice Cream: Scoop + Cone**, and **Umbrella: Canopy + Handle**. All 36 built-in prompts have their own two-part description.
+Host and drawing role are separate: **Domi remains host**, but HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options.
 
-The player assigned the first part gets three prompts from three different themes and may reroll once. The other player watches the same selection live. During Drawing and Adjustment only the selected term and the player-specific part are shown; the theme returns in Final Reveal.
+The BODY player sees the same prompt-selection screen live, but cannot choose or reroll. During Drawing and Adjustment only the selected term is shown; the theme is hidden again until the Final Reveal.
 
-Early submission remains reversible while the other player is still drawing. A player can submit, return to the canvas, edit, and submit again. As soon as **both players are submitted**, Crocat starts Adjustment immediately. Likewise, when both players are Ready in Final Reveal, the next Prompt Select begins immediately.
+Early drawing submission is reversible. A player can submit, see whether the other player has submitted, return to the canvas before the drawing deadline, and submit a newer version. Two early submissions do **not** end the drawing phase early; the server waits for the configured drawing deadline. The final seconds are visually emphasized.
 
-Online state is server-authoritative and resumable. The active room is stored separately from the recent-room convenience value. On app/browser foreground, reconnect, reload, or a fresh page open, Crocat reloads the active room, reconciles expired server phases, restores the current player/role, and navigates to the correct Lobby, Prompt, Drawing, Adjustment, or Reveal screen. If the room is inactive, the player returns to its lobby. Explicit **Home / Leave** is what clears the active-room pointer.
+During Adjustment each player can drag and zoom only their own part. Final Reveal shows both the selected term and its theme. Both players can press Ready Next Round; 2/2 Ready starts the next round immediately, otherwise the 15-second reveal deadline starts it automatically.
 
-Realtime Presence now represents **active-in-game** state: backgrounding the app/tab removes the player from active Presence and returning restores it. A new round never starts from Final Reveal while one player is inactive; Crocat visibly waits for that player to return. During Adjustment both players can mark themselves Ready while remaining on the live composition screen. At 2/2 Ready, Final Reveal begins early; otherwise the 15-second Adjustment timer remains authoritative. Prompt, Drawing and Adjustment also expose a compact **Leave Round** control.
-
-The current drawing canvas is also saved locally per round so a reload during an unfinished Drawing phase can restore it. Realtime remains the primary update path; a lightweight active-session watchdog provides recovery when a websocket event was missed or the browser throttled the background tab.
+The most recently opened room code is remembered locally and prefilled on future online sessions. Players stay in the room until they explicitly choose Home / Leave. Timers are deadline-based, so backgrounding the browser/app does not pause the game clock.
 
 ## Stack
 
@@ -72,7 +70,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.3 release passed:
+The 1.4.0 release passed:
 
 - dependency install
 - TypeScript

@@ -7,22 +7,14 @@ import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
 import {
   advanceDrawing,
-  leaveRoom,
   loadRoomById,
   loadSubmissions,
   resumeDrawing,
   submitDrawing,
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
-import {
-  clearDrawingDraft,
-  loadDrawingDraft,
-  saveDrawingDraft,
-} from '@/src/features/multiplayer/drawingDraft';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
-import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
@@ -62,9 +54,8 @@ export default function OnlineDrawScreen() {
   const [error, setError] = useState('');
   const hydratedRef = useRef(false);
   const deadlineBusyRef = useRef(false);
-  const navigationRef = useRef<string | null>(null);
 
-  const checkRoomStateOnce = useCallback(async () => {
+  const checkRoomState = useCallback(async () => {
     if (!params.roomId || !params.roundId) return;
 
     try {
@@ -84,21 +75,13 @@ export default function OnlineDrawScreen() {
       const otherSubmission = submissions.find((item) => item.player_id !== userId);
       setOtherSubmitted(Boolean(otherSubmission?.submitted));
 
-      if (!hydratedRef.current && userId) {
-        const localDraft = await loadDrawingDraft(params.roundId, userId);
+      if (!hydratedRef.current && ownSubmission) {
         hydratedRef.current = true;
-        if (localDraft) {
-          setDrawing(localDraft);
-        } else if (ownSubmission) {
-          setDrawing(ownSubmission.drawing);
-        }
-        setWaiting(Boolean(ownSubmission?.submitted));
+        setDrawing(ownSubmission.drawing);
+        setWaiting(Boolean(ownSubmission.submitted));
       }
 
       if (state.room.status === 'prompt_select' && state.round) {
-        if (navigationRef.current === 'prompt') return;
-        navigationRef.current = 'prompt';
-        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/prompt',
           params: { roomId: state.room.id, roundId: state.round.id },
@@ -107,9 +90,6 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'adjusting') {
-        if (navigationRef.current === 'adjust') return;
-        navigationRef.current = 'adjust';
-        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/adjust',
           params: { roundId: params.roundId, roomId: params.roomId, role: myRole },
@@ -118,9 +98,6 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
-        if (navigationRef.current === 'reveal') return;
-        navigationRef.current = 'reveal';
-        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/reveal',
           params: { roundId: params.roundId, roomId: params.roomId },
@@ -129,17 +106,13 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'waiting') {
-        if (navigationRef.current === 'room') return;
-        navigationRef.current = 'room';
-        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      setError('Connection interrupted. Reconnecting…');
+      reset();
+      router.replace('/');
     }
-  }, [params.roomId, params.roundId, role, router, setRoomState, userId]);
-
-  const checkRoomState = useCoalescedAsync(checkRoomStateOnce);
+  }, [params.roomId, params.roundId, reset, role, router, setRoomState, userId]);
 
   useEffect(() => {
     if (!params.roundId || !params.roomId) return;
@@ -207,50 +180,16 @@ export default function OnlineDrawScreen() {
     }
   };
 
-  const leave = async () => {
-    if (!params.roomId || busy) return;
-    try {
-      setBusy(true);
-      await leaveRoom(params.roomId);
-    } catch {
-      // Explicit leave still returns Home if the room vanished first.
-    } finally {
-      if (params.roundId && userId) {
-        await clearDrawingDraft(params.roundId, userId);
-      }
-      await clearActiveRoomCode();
-      reset();
-      router.replace('/');
-    }
-  };
-
-  const updateDrawing = useCallback((next: CrocatDrawing) => {
-    setDrawing(next);
-    if (params.roundId && userId) {
-      void saveDrawingDraft(params.roundId, userId, next);
-    }
-  }, [params.roundId, userId]);
-
-  const undo = () => {
-    const next = {
-      ...drawing,
-      strokes: drawing.strokes.slice(0, -1),
-    };
-    updateDrawing(next);
-  };
-
-  const clear = () => updateDrawing(blankDrawing());
+  const undo = () => setDrawing((current) => ({
+    ...current,
+    strokes: current.strokes.slice(0, -1),
+  }));
 
   const playerName =
     players.find((player) => player.user_id === userId)?.display_name ?? 'YOU';
   const otherName =
     players.find((player) => player.user_id !== userId)?.display_name ?? 'OTHER PLAYER';
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
-  const partLabel = (
-    role === 'HEAD'
-      ? round?.prompt_head_label
-      : round?.prompt_body_label
-  ) ?? (role === 'HEAD' ? 'Upper Part' : 'Lower Part');
 
   const status = (
     <View style={[styles.status, otherSubmitted && styles.statusDone]}>
@@ -265,15 +204,10 @@ export default function OnlineDrawScreen() {
       <Screen scroll={false} contentStyle={styles.waitingScreen}>
         <View style={styles.waitingTop}>
           <View>
-            <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
+            <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
-          <View style={styles.headerActions}>
-            <CountdownBadge remaining={remaining} />
-            <Pressable accessibilityRole="button" onPress={leave}>
-              <Text style={styles.leave}>LEAVE ROUND</Text>
-            </Pressable>
-          </View>
+          <CountdownBadge remaining={remaining} />
         </View>
 
         <View style={styles.waiting}>
@@ -301,14 +235,9 @@ export default function OnlineDrawScreen() {
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{role}</Text>
         </View>
-        <View style={styles.headerActions}>
-          <CountdownBadge remaining={remaining} />
-          <Pressable accessibilityRole="button" onPress={leave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
-        </View>
+        <CountdownBadge remaining={remaining} />
       </View>
 
       {!!promptTerm && (
@@ -322,15 +251,15 @@ export default function OnlineDrawScreen() {
         <View style={styles.hintWrap}>
           <Text style={styles.hint}>
             {role === 'HEAD'
-              ? `Draw the ${partLabel.toLowerCase()}. Connection line: bottom.`
-              : `Draw the ${partLabel.toLowerCase()}. Connection line: top.`}
+              ? 'Draw the head. Connection line: bottom.'
+              : 'Draw the body. Connection line: top.'}
           </Text>
         </View>
         {status}
       </View>
 
       <View style={styles.canvasArea}>
-        <DrawingCanvas role={role} drawing={drawing} onChange={updateDrawing} color={color} />
+        <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
       </View>
 
       <View style={styles.toolbar}>
@@ -344,11 +273,11 @@ export default function OnlineDrawScreen() {
           ))}
         </View>
         <Pressable onPress={undo}><Text style={styles.tool}>UNDO</Text></Pressable>
-        <Pressable onPress={clear}><Text style={styles.tool}>CLEAR</Text></Pressable>
+        <Pressable onPress={() => setDrawing(blankDrawing())}><Text style={styles.tool}>CLEAR</Text></Pressable>
       </View>
 
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
-        SUBMIT {partLabel.toUpperCase()}
+        SUBMIT {role}
       </CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
@@ -361,8 +290,6 @@ const styles = StyleSheet.create({
   waitingScreen: { gap: 10 },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
   waitingTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
-  headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
-  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1.3, color: colors.muted },
   role: { fontSize: 29, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
   roleCompact: { fontSize: 25 },

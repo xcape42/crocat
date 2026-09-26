@@ -3,8 +3,6 @@ import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 export type PromptOption = {
   theme: string;
   term: string;
-  headLabel: string;
-  bodyLabel: string;
 };
 
 export type OnlineRoomStatus =
@@ -50,8 +48,6 @@ export type OnlineRound = {
   prompt_options: PromptOption[];
   prompt_term: string | null;
   prompt_theme: string | null;
-  prompt_head_label: string | null;
-  prompt_body_label: string | null;
   prompt_selection_ends_at: string | null;
   prompt_reroll_used: boolean;
 };

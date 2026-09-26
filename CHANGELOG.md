@@ -1,48 +1,5 @@
 # Changelog
 
-## 1.4.3 — Stable online phase transitions and countdown recovery
-
-- Coalesce bursts of Realtime room/round/submission refreshes so one logical phase change cannot trigger several competing navigations
-- Guard Prompt → Drawing, Drawing → Adjustment, Adjustment → Reveal and Reveal → next-round route replacements against duplicates
-- Normalize countdown values before formatting so invalid, negative or fractional values cannot render as broken timer text
-- Require both room members to be actively online, in addition to Guest Ready, before the host can start a round
-- Preserve random part assignment, reversible early submission, Adjustment Ready, active-presence next-round gating, Leave Round and resumable online sessions
-
-## 1.4.2 — Presence-aware continuation, Adjustment Ready and in-game leave
-
-- Treat Realtime Presence as active-in-game state rather than merely an open websocket
-- Untrack Presence when the app/tab goes inactive or into the background
-- Re-track Presence automatically when the player returns
-- Prevent server reconciliation from auto-starting the next round out of Final Reveal
-- Start the next round only when both players are actively present
-- Show which player is currently missing and that the room is waiting
-- Add Ready / Not Ready during the 15-second Adjustment phase
-- Keep the live Adjustment screen visible after one player becomes Ready
-- Start Final Reveal early when both players are Ready
-- Add Leave Round controls during Prompt Select, Drawing/submitted wait, and Adjustment
-- Standardize countdown dimensions, vertical centering and text centering
-- Reuse the shared CountdownBadge in Adjustment and Final Reveal
-- Added smoke coverage for 1/2 vs 2/2 Adjustment Ready and the Presence-gated next-round boundary
-
-## 1.4.1 — Resilient room recovery, immediate phases and semantic parts
-
-- Persist the active online room separately from the remembered room-code convenience value
-- Automatically resume the active room after reload, browser/app restart, foreground return or missed Realtime updates
-- Reconcile server phase deadlines whenever a room is loaded
-- Add a lightweight active-session watchdog for reconnect/lag recovery
-- Treat transient network failures as reconnect states instead of resetting the player to Home
-- Return Home automatically only when the room/membership actually no longer exists
-- Persist the current online drawing locally per round for reload recovery
-- Start Adjustment immediately when both players are submitted
-- Keep return-to-drawing available while the other player has not yet submitted
-- Start the next Prompt Select immediately when both players are Ready in Final Reveal
-- Add semantic first/second-part labels for all 36 built-in prompts
-- Include those labels in prompt options and persist them onto the selected round
-- Replace visible online HEAD/BODY terminology with prompt-specific labels such as Frame/Wheels or Helmet/Spacesuit
-- Show both semantic parts again in Final Reveal
-- Added server-side sync_room_state recovery RPC
-- Added smoke coverage for immediate phase transitions, state reconciliation and semantic labels
-
 ## 1.4.0 — Random roles, prompt themes and reversible submissions
 
 - Randomize HEAD and BODY server-side for every online round, independent of host/guest

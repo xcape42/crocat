@@ -77,36 +77,17 @@ export async function joinOrCreateRoom(
   return { roomId: row.room_id, code: row.room_code, role: row.player_role };
 }
 
-async function syncRoomState(roomId: string) {
-  const { error } = await requireSupabase().rpc('sync_room_state', {
-    p_room_id: roomId,
-  });
-  if (error) throw error;
-}
-
 export async function loadRoom(code: string) {
-  const supabase = requireSupabase();
-  const initial = await supabase
-    .from('rooms')
-    .select('id')
-    .eq('code', code.toUpperCase())
-    .single();
-  if (initial.error) throw initial.error;
-
-  await syncRoomState(initial.data.id);
-
-  const roomResult = await supabase
+  const roomResult = await requireSupabase()
     .from('rooms')
     .select('*')
-    .eq('id', initial.data.id)
+    .eq('code', code.toUpperCase())
     .single();
   if (roomResult.error) throw roomResult.error;
   return loadRoomRelations(roomResult.data as OnlineRoom);
 }
 
 export async function loadRoomById(roomId: string) {
-  await syncRoomState(roomId);
-
   const roomResult = await requireSupabase()
     .from('rooms')
     .select('*')

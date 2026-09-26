@@ -2,25 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
 import {
   advancePhase,
-  leaveRoom,
   loadRoomById,
   loadSubmissions,
   saveTransform,
-  setReady,
 } from '@/src/features/multiplayer/room';
 import {
   broadcastTransform,
   removeChannel,
   subscribeToAdjustment,
 } from '@/src/features/multiplayer/realtime';
-import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
-import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
@@ -46,13 +41,7 @@ export default function OnlineAdjustScreen() {
   }>();
 
   const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
-  const {
-    userId,
-    players,
-    round,
-    setRoomState,
-    reset,
-  } = useOnlineGameStore();
+  const { round, setRoomState, reset } = useOnlineGameStore();
 
   const [head, setHead] = useState<CrocatDrawing | null>(null);
   const [body, setBody] = useState<CrocatDrawing | null>(null);
@@ -60,7 +49,6 @@ export default function OnlineAdjustScreen() {
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
-  const [readyBusy, setReadyBusy] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const ownTransformRef = useRef<PartTransform>(ZERO);
@@ -68,7 +56,6 @@ export default function OnlineAdjustScreen() {
   const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceRef = useRef(false);
-  const navigationRef = useRef<string | null>(null);
 
   const setTransformForRole = useCallback((targetRole: GameRole, transform: PartTransform) => {
     const safe = clampTransform(transform);
@@ -76,7 +63,7 @@ export default function OnlineAdjustScreen() {
     else setBodyTransform(safe);
   }, []);
 
-  const refreshOnce = useCallback(async () => {
+  const refresh = useCallback(async () => {
     if (!params.roomId || !params.roundId) return;
 
     try {
@@ -84,8 +71,6 @@ export default function OnlineAdjustScreen() {
       setRoomState(state.room, state.players, state.round);
 
       if (state.room.status === 'prompt_select' && state.round) {
-        if (navigationRef.current === 'prompt') return;
-        navigationRef.current = 'prompt';
         router.replace({
           pathname: '/online/prompt',
           params: { roomId: state.room.id, roundId: state.round.id },
@@ -94,12 +79,10 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
-        if (navigationRef.current === 'reveal') return;
-        navigationRef.current = 'reveal';
         try {
           await saveTransform(params.roundId, role, ownTransformRef.current);
         } catch {
-          // A peer may already have closed the adjustment phase.
+          // The server allows a small grace window; a peer may already have advanced the phase.
         }
 
         router.replace({
@@ -110,8 +93,6 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && state.round.id !== params.roundId) {
-        if (navigationRef.current === 'draw') return;
-        navigationRef.current = 'draw';
         const currentUserId = useOnlineGameStore.getState().userId;
         const me = state.players.find((player) => player.user_id === currentUserId);
         router.replace({
@@ -128,16 +109,13 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'waiting') {
-        if (navigationRef.current === 'room') return;
-        navigationRef.current = 'room';
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      setError('Connection interrupted. Reconnecting…');
+      reset();
+      router.replace('/');
     }
-  }, [params.roomId, params.roundId, role, router, setRoomState]);
-
-  const refresh = useCoalescedAsync(refreshOnce);
+  }, [params.roomId, params.roundId, reset, role, router, setRoomState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -270,51 +248,10 @@ export default function OnlineAdjustScreen() {
     round?.id === params.roundId ? round.adjustment_ends_at : null;
   const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment);
 
-  const me = useMemo(
-    () => players.find((player) => player.user_id === userId),
-    [players, userId],
-  );
-  const readyCount = players.filter((player) => player.ready).length;
-
-  const toggleReady = async () => {
-    if (!params.roomId || !me || readyBusy) return;
-
-    try {
-      setReadyBusy(true);
-      setError('');
-      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
-      await saveTransform(params.roundId, role, ownTransformRef.current);
-      await setReady(params.roomId, !me.ready);
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not update adjustment ready state.');
-    } finally {
-      setReadyBusy(false);
-    }
-  };
-
-  const leave = async () => {
-    if (!params.roomId) return;
-    try {
-      await leaveRoom(params.roomId);
-    } catch {
-      // Home is still correct if the room vanished before the leave request.
-    } finally {
-      await clearActiveRoomCode();
-      reset();
-      router.replace('/');
-    }
-  };
-
   const ownTransform = useMemo(
     () => role === 'HEAD' ? headTransform : bodyTransform,
     [bodyTransform, headTransform, role],
   );
-  const partLabel = (
-    role === 'HEAD'
-      ? round?.prompt_head_label
-      : round?.prompt_body_label
-  ) ?? (role === 'HEAD' ? 'Upper Part' : 'Lower Part');
 
   if (!loaded || !head || !body) {
     return (
@@ -330,21 +267,19 @@ export default function OnlineAdjustScreen() {
   return (
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
       <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}</Text>
+        <View>
+          <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {role}</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
         </View>
-        <View style={styles.headerActions}>
-          <CountdownBadge remaining={secondsLeft} label="ADJUST" />
-          <Pressable accessibilityRole="button" onPress={leave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
+        <View style={styles.countdown}>
+          <Text style={styles.countdownLabel}>ADJUST</Text>
+          <Text style={styles.countdownValue}>0:{String(secondsLeft).padStart(2, '0')}</Text>
         </View>
       </View>
 
       <Text style={styles.copy}>
         {round?.prompt_term ? `DRAW · ${round.prompt_term} · ` : ''}
-        Drag only your {partLabel.toLowerCase()}. Ready keeps you here while the other player finishes.
+        Drag only your {role.toLowerCase()}. Both players are adjusting at the same time.
       </Text>
 
       <View style={styles.previewArea}>
@@ -359,29 +294,15 @@ export default function OnlineAdjustScreen() {
         />
       </View>
 
-      <View style={styles.controls}>
-        <View style={styles.zoomGroup}>
-          <Text style={styles.zoomTitle}>{partLabel.toUpperCase()} · ZOOM</Text>
-          <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
-            <Text style={styles.zoomText}>−</Text>
-          </Pressable>
-          <Text style={styles.scaleText}>{Math.round(ownTransform.scale * 100)}%</Text>
-          <Pressable accessibilityRole="button" onPress={() => zoom(0.05)} style={styles.zoomButton}>
-            <Text style={styles.zoomText}>+</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.readyGroup}>
-          <Text style={styles.readyCount}>{readyCount}/2 READY</Text>
-          <Pressable
-            accessibilityRole="button"
-            disabled={readyBusy}
-            onPress={toggleReady}
-            style={[styles.readyButton, me?.ready && styles.readyButtonActive]}
-          >
-            <Text style={styles.readyText}>{me?.ready ? 'NOT READY' : 'READY TO REVEAL'}</Text>
-          </Pressable>
-        </View>
+      <View style={styles.zoomGroup}>
+        <Text style={styles.zoomTitle}>{role} · ZOOM</Text>
+        <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
+          <Text style={styles.zoomText}>−</Text>
+        </Pressable>
+        <Text style={styles.scaleText}>{Math.round(ownTransform.scale * 100)}%</Text>
+        <Pressable accessibilityRole="button" onPress={() => zoom(0.05)} style={styles.zoomButton}>
+          <Text style={styles.zoomText}>+</Text>
+        </Pressable>
       </View>
 
       {!!error && <Text style={styles.error}>{error}</Text>}
@@ -395,20 +316,21 @@ const styles = StyleSheet.create({
   header: {
     flexShrink: 0,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     gap: 10,
   },
-  headerText: { flex: 1 },
-  headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
-  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.2, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
+  countdown: { alignItems: 'flex-end' },
+  countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
+  countdownValue: { color: colors.ink, fontSize: 22, fontWeight: '900' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
-  controls: { flexShrink: 0, gap: 7, alignItems: 'center' },
   zoomGroup: {
+    alignSelf: 'center',
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -430,19 +352,6 @@ const styles = StyleSheet.create({
   },
   zoomText: { fontSize: 18, fontWeight: '900', color: colors.ink },
   scaleText: { minWidth: 36, textAlign: 'center', fontSize: 10, fontWeight: '900', color: colors.ink },
-  readyGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  readyCount: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
-  readyButton: {
-    minHeight: 34,
-    justifyContent: 'center',
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.ink,
-    backgroundColor: colors.card,
-  },
-  readyButtonActive: { backgroundColor: colors.lime },
-  readyText: { color: colors.ink, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700', fontSize: 11 },
 });

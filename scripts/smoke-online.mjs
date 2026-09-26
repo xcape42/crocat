@@ -87,9 +87,6 @@ async function main() {
   if (!Array.isArray(round.prompt_options) || round.prompt_options.length !== 3) {
     throw new Error('Expected three prompt options');
   }
-  if (round.prompt_options.some((option) => !option.headLabel || !option.bodyLabel)) {
-    throw new Error('Prompt option is missing semantic part labels');
-  }
 
   const initialThemes = new Set(round.prompt_options.map((option) => option.theme));
   if (initialThemes.size !== 3) throw new Error('Initial prompt themes are not distinct');
@@ -142,10 +139,8 @@ async function main() {
     drawingRound.status !== 'drawing'
     || drawingRound.prompt_term !== picked.term
     || drawingRound.prompt_theme !== picked.theme
-    || drawingRound.prompt_head_label !== picked.headLabel
-    || drawingRound.prompt_body_label !== picked.bodyLabel
   ) {
-    throw new Error('Prompt selection did not start drawing with the semantic parts');
+    throw new Error('Prompt selection did not start drawing correctly');
   }
 
   const playerRows = await domi
@@ -202,15 +197,24 @@ async function main() {
   });
   if (bodySubmit.error) throw bodySubmit.error;
 
-  const immediateState = await domi
+  const earlyState = await domi
     .from('rooms')
     .select('status')
     .eq('id', room.room_id)
     .single();
-  if (immediateState.error) throw immediateState.error;
-  if (immediateState.data.status !== 'adjusting') {
-    throw new Error('Second submitted drawing did not start Adjustment immediately');
+  if (earlyState.error) throw earlyState.error;
+  if (earlyState.data.status !== 'drawing') {
+    throw new Error('Both early submissions advanced before the drawing deadline');
   }
+
+  const drawWait = Math.max(
+    0,
+    new Date(drawingRound.ends_at).getTime() - Date.now() + 600,
+  );
+  await wait(drawWait);
+
+  const advanceDrawing = await head.rpc('advance_drawing', { p_round_id: round.id });
+  if (advanceDrawing.error) throw advanceDrawing.error;
 
   const adjustment = await domi
     .from('game_rounds')
@@ -236,76 +240,28 @@ async function main() {
   });
   if (!wrongTransform.error) throw new Error('BODY was able to modify HEAD transform');
 
-  const firstAdjustReady = await head.rpc('set_ready', {
-    p_room_id: room.room_id,
-    p_ready: true,
-  });
-  if (firstAdjustReady.error) throw firstAdjustReady.error;
-
-  const oneAdjustReadyState = await domi
-    .from('rooms')
-    .select('status')
-    .eq('id', room.room_id)
-    .single();
-  if (oneAdjustReadyState.error) throw oneAdjustReadyState.error;
-  if (oneAdjustReadyState.data.status !== 'adjusting') {
-    throw new Error('One ready player ended Adjustment');
-  }
-
-  const secondAdjustReady = await body.rpc('set_ready', {
-    p_room_id: room.room_id,
-    p_ready: true,
-  });
-  if (secondAdjustReady.error) throw secondAdjustReady.error;
-
-  const syncReadyReveal = await body.rpc('sync_room_state', { p_room_id: room.room_id });
-  if (syncReadyReveal.error) throw syncReadyReveal.error;
-
-  const earlyReveal = await domi
-    .from('game_rounds')
-    .select('status,final_reveal_ends_at')
-    .eq('id', round.id)
-    .single();
-  if (earlyReveal.error) throw earlyReveal.error;
-  if (earlyReveal.data.status !== 'final_reveal') {
-    throw new Error('2/2 Adjustment Ready did not start Final Reveal');
-  }
-
   await wait(Math.max(
     0,
-    new Date(earlyReveal.data.final_reveal_ends_at).getTime() - Date.now() + 600,
+    new Date(adjustment.data.adjustment_ends_at).getTime() - Date.now() + 600,
   ));
 
-  const syncExpiredReveal = await domi.rpc('sync_room_state', { p_room_id: room.room_id });
-  if (syncExpiredReveal.error) throw syncExpiredReveal.error;
+  const toReveal = await body.rpc('advance_phase', { p_room_id: room.room_id });
+  if (toReveal.error) throw toReveal.error;
 
-  const stillReveal = await domi
-    .from('game_rounds')
-    .select('id,status')
-    .eq('room_id', room.room_id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-  if (stillReveal.error) throw stillReveal.error;
-  if (stillReveal.data.id !== round.id || stillReveal.data.status !== 'final_reveal') {
-    throw new Error('sync_room_state started a new round without the client Presence gate');
+  for (const activeClient of [domi, sarah]) {
+    const ready = await activeClient.rpc('set_ready', {
+      p_room_id: room.room_id,
+      p_ready: true,
+    });
+    if (ready.error) throw ready.error;
   }
 
-  const explicitAdvance = await domi.rpc('advance_phase', { p_room_id: room.room_id });
-  if (explicitAdvance.error) throw explicitAdvance.error;
-
-  const nextState = await domi
-    .from('game_rounds')
-    .select('*')
-    .eq('room_id', room.room_id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-  if (nextState.error) throw nextState.error;
-  const nextRound = nextState.data;
+  const next = await domi.rpc('advance_phase', { p_room_id: room.room_id });
+  if (next.error) throw next.error;
+  const nextRound = first(next.data);
 
   if (nextRound?.status !== 'prompt_select' || nextRound.id === round.id) {
-    throw new Error('Explicit Presence-gated advance did not start the next Prompt Select');
+    throw new Error('Next round did not return to prompt selection');
   }
 
   const nextThemes = new Set(nextRound.prompt_options.map((option) => option.theme));
@@ -318,23 +274,14 @@ async function main() {
     new Date(nextRound.prompt_selection_ends_at).getTime() - Date.now() + 600,
   ));
 
-  const syncedPrompt = await sarah.rpc('sync_room_state', { p_room_id: room.room_id });
-  if (syncedPrompt.error) throw syncedPrompt.error;
-
-  const timedPrompt = await sarah
-    .from('game_rounds')
-    .select('*')
-    .eq('id', nextRound.id)
-    .single();
+  const timedPrompt = await sarah.rpc('advance_prompt', { p_round_id: nextRound.id });
   if (timedPrompt.error) throw timedPrompt.error;
-  const timedDrawing = timedPrompt.data;
+  const timedDrawing = first(timedPrompt.data);
 
   if (
     timedDrawing?.status !== 'drawing'
     || !timedDrawing.prompt_term
     || !timedDrawing.prompt_theme
-    || !timedDrawing.prompt_head_label
-    || !timedDrawing.prompt_body_label
   ) {
     throw new Error('Prompt timeout did not auto-select a current option');
   }
@@ -354,7 +301,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.2 presence/adjust-ready smoke passed: ${code}`);
+  console.log(`Crocat 1.4.0 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {

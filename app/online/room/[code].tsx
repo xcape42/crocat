@@ -8,9 +8,8 @@ import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import { leaveRoom, loadRoom, setReady, startRound, updateRoomSettings } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
-import { clearActiveRoomCode, rememberActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
+import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function OnlineRoomScreen() {
@@ -34,14 +33,13 @@ export default function OnlineRoomScreen() {
   const [joinNotice, setJoinNotice] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const navigationRef = useRef<string | null>(null);
 
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
   }, [reset, router]);
 
-  const refreshOnce = useCallback(async () => {
+  const refresh = useCallback(async () => {
     if (!code) return;
 
     try {
@@ -57,8 +55,6 @@ export default function OnlineRoomScreen() {
       if (me && !activeRole) setIdentity(me.user_id, me.role);
 
       if (state.room.status === 'prompt_select' && state.round && me) {
-        if (navigationRef.current === 'prompt') return;
-        navigationRef.current = 'prompt';
         router.replace({
           pathname: '/online/prompt',
           params: {
@@ -70,8 +66,6 @@ export default function OnlineRoomScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && me) {
-        if (navigationRef.current === 'draw') return;
-        navigationRef.current = 'draw';
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -86,8 +80,6 @@ export default function OnlineRoomScreen() {
       }
 
       if (state.room.status === 'adjusting' && state.round && me) {
-        if (navigationRef.current === 'adjust') return;
-        navigationRef.current = 'adjust';
         router.replace({
           pathname: '/online/adjust',
           params: {
@@ -100,8 +92,6 @@ export default function OnlineRoomScreen() {
       }
 
       if ((state.room.status === 'final_reveal' || state.room.status === 'reveal') && state.round) {
-        if (navigationRef.current === 'reveal') return;
-        navigationRef.current = 'reveal';
         router.replace({
           pathname: '/online/reveal',
           params: {
@@ -111,14 +101,12 @@ export default function OnlineRoomScreen() {
         });
       }
     } catch {
-      setError('Connection interrupted. Reconnecting…');
+      goHome();
     }
-  }, [code, router, setIdentity, setRoomState]);
-
-  const refresh = useCoalescedAsync(refreshOnce);
+  }, [code, goHome, router, setIdentity, setRoomState]);
 
   useEffect(() => {
-    if (code) void rememberActiveRoomCode(String(code));
+    if (code) void rememberRoomCode(String(code));
   }, [code]);
 
   useEffect(() => {
@@ -175,10 +163,6 @@ export default function OnlineRoomScreen() {
   const isHost = Boolean(room && userId === room.host_id);
   const guest = players.find((player) => player.user_id !== room?.host_id);
   const guestReady = players.length === 2 && Boolean(guest?.ready);
-  const bothOnline =
-    players.length === 2
-    && players.every((player) => onlineUserIds.includes(player.user_id));
-  const canStart = guestReady && bothOnline;
 
   const toggleReady = async () => {
     if (!room || !me || isHost) return;
@@ -209,10 +193,7 @@ export default function OnlineRoomScreen() {
   };
 
   const start = async () => {
-    if (!room || room.status !== 'waiting' || !canStart) {
-      setError('Both players must be online and the guest must be ready.');
-      return;
-    }
+    if (!room) return;
     try {
       setBusy(true);
       await startRound(room.id);
@@ -232,7 +213,6 @@ export default function OnlineRoomScreen() {
     } catch {
       // Leaving should still return the player home if the room vanished first.
     } finally {
-      await clearActiveRoomCode();
       goHome();
     }
   };
@@ -247,7 +227,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
         <Text style={styles.code}>{String(code).toUpperCase()}</Text>
-        <Text style={styles.copy}>Share this code. Roles are randomized every round. The upper-part player chooses the prompt, then both draw at the same time.</Text>
+        <Text style={styles.copy}>Share this code. Roles are randomized every round. HEAD chooses the prompt, then both draw at the same time.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
 
@@ -290,17 +270,13 @@ export default function OnlineRoomScreen() {
           <>
             <CrocatButton
               variant="coral"
-              disabled={busy || !canStart || room?.status !== 'waiting'}
+              disabled={busy || !guestReady || room?.status !== 'waiting'}
               onPress={start}
             >
               START ROUND
             </CrocatButton>
             <Text style={styles.hostNote}>
-              {!bothOnline
-                ? 'Waiting until both players are actively online…'
-                : guestReady
-                  ? 'Sarah is ready. Start when you are.'
-                  : 'Waiting for Sarah to be ready…'}
+              {guestReady ? 'Sarah is ready. Start when you are.' : 'Waiting for Sarah to be ready…'}
             </Text>
           </>
         ) : (

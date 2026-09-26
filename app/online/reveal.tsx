@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
@@ -16,9 +15,7 @@ import {
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
-import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors } from '@/src/theme/tokens';
 import type { CrocatDrawing, PartTransform } from '@/src/types/game';
 
@@ -36,7 +33,6 @@ export default function OnlineRevealScreen() {
     room,
     round,
     players,
-    onlineUserIds,
     setIdentity,
     setRoomState,
     setOnlineUserIds,
@@ -51,14 +47,13 @@ export default function OnlineRevealScreen() {
   const [readyBusy, setReadyBusy] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advanceRef = useRef(false);
-  const navigationRef = useRef<string | null>(null);
 
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
   }, [reset, router]);
 
-  const refreshOnce = useCallback(async () => {
+  const refresh = useCallback(async () => {
     if (!roomId || !roundId) return;
 
     try {
@@ -75,8 +70,6 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'prompt_select' && state.round && me) {
-        if (navigationRef.current === 'prompt') return;
-        navigationRef.current = 'prompt';
         router.replace({
           pathname: '/online/prompt',
           params: { roomId: state.room.id, roundId: state.round.id },
@@ -85,8 +78,6 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'adjusting' && me) {
-        if (navigationRef.current === 'adjust') return;
-        navigationRef.current = 'adjust';
         router.replace({
           pathname: '/online/adjust',
           params: { roomId, roundId, role: me.role },
@@ -95,8 +86,6 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && state.round.id !== roundId && me) {
-        if (navigationRef.current === 'draw') return;
-        navigationRef.current = 'draw';
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -111,16 +100,12 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'waiting') {
-        if (navigationRef.current === 'room') return;
-        navigationRef.current = 'room';
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      setError('Connection interrupted. Reconnecting…');
+      goHome();
     }
-  }, [roomId, roundId, router, setIdentity, setRoomState]);
-
-  const refresh = useCoalescedAsync(refreshOnce);
+  }, [goHome, roomId, roundId, router, setIdentity, setRoomState]);
 
   const loadArtwork = useCallback(async () => {
     if (!roundId) return;
@@ -136,16 +121,6 @@ export default function OnlineRevealScreen() {
 
   const tryAdvance = useCallback(async () => {
     if (!roomId || advanceRef.current) return;
-
-    const activeState = useOnlineGameStore.getState();
-    const activePlayers = activeState.players;
-    const activeUserIds = activeState.onlineUserIds;
-    const everybodyActive =
-      activePlayers.length === 2
-      && activePlayers.every((player) => activeUserIds.includes(player.user_id));
-
-    if (!everybodyActive) return;
-
     advanceRef.current = true;
 
     try {
@@ -212,23 +187,16 @@ export default function OnlineRevealScreen() {
   );
   const readyCount = players.filter((player) => player.ready).length;
   const bothReady = players.length === 2 && readyCount === 2;
-  const bothOnline =
-    players.length === 2
-    && players.every((player) => onlineUserIds.includes(player.user_id));
-  const absentNames = players
-    .filter((player) => !onlineUserIds.includes(player.user_id))
-    .map((player) => player.display_name);
 
   useEffect(() => {
     if (
       room?.status === 'final_reveal'
-      && bothOnline
-      && (bothReady || secondsLeft === 0)
+      && bothReady
       && !advanceRef.current
     ) {
       void tryAdvance();
     }
-  }, [bothOnline, bothReady, room?.status, secondsLeft, tryAdvance]);
+  }, [bothReady, room?.status, tryAdvance]);
 
   const toggleReady = async () => {
     if (!room || !me || readyBusy) return;
@@ -252,7 +220,6 @@ export default function OnlineRevealScreen() {
     } catch {
       // Home remains the correct destination if the room already vanished.
     } finally {
-      await clearActiveRoomCode();
       goHome();
     }
   };
@@ -275,18 +242,16 @@ export default function OnlineRevealScreen() {
           <Text style={styles.kicker}>ROOM {room.code} · FINAL REVEAL</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>This is your Crocat.</Text>
         </View>
-        <CountdownBadge remaining={secondsLeft} label="NEXT" />
+        <View style={styles.countdown}>
+          <Text style={styles.countdownLabel}>NEXT ROUND</Text>
+          <Text style={styles.countdownValue}>0:{String(secondsLeft).padStart(2, '0')}</Text>
+        </View>
       </View>
 
       {!!round?.prompt_term && (
         <View style={styles.promptReveal}>
           <Text style={styles.promptTheme}>{round.prompt_theme?.toUpperCase()}</Text>
           <Text style={styles.promptTerm}>{round.prompt_term}</Text>
-          {!!round.prompt_head_label && !!round.prompt_body_label && (
-            <Text style={styles.promptParts}>
-              {round.prompt_head_label} + {round.prompt_body_label}
-            </Text>
-          )}
         </View>
       )}
 
@@ -299,16 +264,9 @@ export default function OnlineRevealScreen() {
         />
       </View>
 
-      {!bothOnline ? (
-        <View style={styles.presenceWait}>
-          <Text style={styles.presenceTitle}>WAITING FOR {absentNames.join(' + ').toUpperCase() || 'PLAYER'}</Text>
-          <Text style={styles.copy}>The next round is paused until both players are actively back in Crocat.</Text>
-        </View>
-      ) : (
-        <Text style={styles.copy}>
-          Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.
-        </Text>
-      )}
+      <Text style={styles.copy}>
+        Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.
+      </Text>
 
       <View style={styles.readyRow}>
         <Text style={styles.readyStatus}>{readyCount}/2 READY</Text>
@@ -340,12 +298,12 @@ const styles = StyleSheet.create({
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.3, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
-  presenceWait: { flexShrink: 0, alignItems: 'center', gap: 3 },
-  presenceTitle: { color: colors.coral, fontSize: 10, lineHeight: 13, fontWeight: '900', letterSpacing: 1, textAlign: 'center' },
+  countdown: { alignItems: 'flex-end' },
+  countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
+  countdownValue: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   promptReveal: { flexShrink: 0, alignItems: 'center' },
   promptTheme: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   promptTerm: { marginTop: 2, color: colors.ink, fontSize: 18, fontWeight: '900' },
-  promptParts: { marginTop: 3, color: colors.muted, fontSize: 10, fontWeight: '800' },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
   readyRow: { flexShrink: 0, gap: 6 },

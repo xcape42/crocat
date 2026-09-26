@@ -8,16 +8,13 @@ import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
   advancePrompt,
-  leaveRoom,
   loadRoomById,
   rerollPrompt,
   selectPrompt,
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
-import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
 import type { PromptOption } from '@/src/features/multiplayer/types';
 
@@ -38,14 +35,13 @@ export default function OnlinePromptScreen() {
   const [error, setError] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advancingRef = useRef(false);
-  const navigationRef = useRef<string | null>(null);
 
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
   }, [reset, router]);
 
-  const refreshOnce = useCallback(async () => {
+  const refresh = useCallback(async () => {
     if (!roomId || !roundId) return;
 
     try {
@@ -60,8 +56,6 @@ export default function OnlinePromptScreen() {
       if (!me || !state.round) return;
 
       if (state.room.status === 'drawing' && state.round.id === roundId) {
-        if (navigationRef.current === 'draw') return;
-        navigationRef.current = 'draw';
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -76,16 +70,12 @@ export default function OnlinePromptScreen() {
       }
 
       if (state.room.status === 'waiting') {
-        if (navigationRef.current === 'room') return;
-        navigationRef.current = 'room';
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      setError('Connection interrupted. Reconnecting…');
+      goHome();
     }
-  }, [roomId, roundId, router, setRoomState]);
-
-  const refresh = useCoalescedAsync(refreshOnce);
+  }, [goHome, roomId, roundId, router, setRoomState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,20 +116,6 @@ export default function OnlinePromptScreen() {
     }
   }, [refresh, roundId]);
 
-  const leave = async () => {
-    if (!roomId || busy) return;
-    try {
-      setBusy(true);
-      await leaveRoom(roomId);
-    } catch {
-      // Explicit leave should still return Home if the room already disappeared.
-    } finally {
-      await clearActiveRoomCode();
-      reset();
-      router.replace('/');
-    }
-  };
-
   const remaining = useDeadlineCountdown(
     round?.id === roundId ? round.prompt_selection_ends_at : null,
     autoChoose,
@@ -147,9 +123,7 @@ export default function OnlinePromptScreen() {
 
   const isHead = Boolean(userId && round?.head_player_id === userId);
   const headName =
-    players.find((player) => player.user_id === round?.head_player_id)?.display_name ?? 'Upper-part player';
-  const bodyName =
-    players.find((player) => player.user_id === round?.body_player_id)?.display_name ?? 'Lower-part player';
+    players.find((player) => player.user_id === round?.head_player_id)?.display_name ?? 'HEAD player';
   const options = (round?.prompt_options ?? []) as PromptOption[];
 
   const choose = async (term: string) => {
@@ -200,15 +174,10 @@ export default function OnlinePromptScreen() {
             {isHead ? 'Pick what you will draw.' : `${headName} is choosing.`}
           </Text>
           <Text style={styles.copy}>
-            Three prompts, three different themes. Each option also shows who draws which matching part.
+            Three prompts, three different themes. The theme disappears once drawing starts.
           </Text>
         </View>
-        <View style={styles.headerActions}>
-          <CountdownBadge remaining={remaining} label="PICK" />
-          <Pressable accessibilityRole="button" onPress={leave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
-        </View>
+        <CountdownBadge remaining={remaining} label="PICK" />
       </View>
 
       <View style={styles.options}>
@@ -225,11 +194,7 @@ export default function OnlinePromptScreen() {
           >
             <Text style={styles.theme}>{option.theme.toUpperCase()}</Text>
             <Text style={styles.term}>{option.term}</Text>
-            <View style={styles.parts}>
-              <Text style={styles.part}>{headName} · {option.headLabel}</Text>
-              <Text style={styles.part}>{bodyName} · {option.bodyLabel}</Text>
-            </View>
-            <Text style={styles.action}>{isHead ? 'CHOOSE' : `${headName.toUpperCase()} CHOOSES`}</Text>
+            <Text style={styles.action}>{isHead ? 'CHOOSE' : 'HEAD CAN CHOOSE'}</Text>
           </Pressable>
         ))}
       </View>
@@ -244,7 +209,7 @@ export default function OnlinePromptScreen() {
             {round.prompt_reroll_used ? 'REROLL USED' : 'NEW 3 · 1× REROLL'}
           </CrocatButton>
         ) : (
-          <Text style={styles.waiting}>Watch the choice happen live. Your exact drawing part is shown on every option.</Text>
+          <Text style={styles.waiting}>You are BODY this round. Watch the choice happen live.</Text>
         )}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
@@ -256,8 +221,6 @@ const styles = StyleSheet.create({
   screen: { gap: 12 },
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
   headerText: { flex: 1 },
-  headerActions: { alignItems: 'center', gap: 6, flexShrink: 0 },
-  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 5, color: colors.ink, fontSize: 30, lineHeight: 33, fontWeight: '900', letterSpacing: -1.1 },
   copy: { marginTop: 6, color: colors.muted, fontSize: 12, lineHeight: 17 },
@@ -267,8 +230,6 @@ const styles = StyleSheet.create({
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
-  parts: { marginTop: 8, gap: 3 },
-  part: { color: colors.muted, fontSize: 10, fontWeight: '800' },
   action: { marginTop: 7, color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.9 },
   footer: { flexShrink: 0, gap: 8 },
   waiting: { textAlign: 'center', color: colors.muted, fontSize: 12, fontWeight: '700' },
