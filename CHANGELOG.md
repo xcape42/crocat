@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.0 — Random roles, prompt themes and reversible submissions
+
+- Randomize HEAD and BODY server-side for every online round, independent of host/guest
+- Keep Domi/Sarah identity separate from per-round drawing role
+- Added a synchronized 15-second Prompt Select phase before every online drawing round
+- Added six prompt themes: Animals, Professions, Food, Fantasy, Vehicles and Objects
+- Present exactly three prompt options from three different themes
+- Allow the HEAD player to choose the prompt
+- Allow exactly one HEAD reroll per round
+- Guarantee rerolled terms do not repeat the previous three
+- Automatically choose one of the currently visible three prompts when the 15-second deadline expires
+- Let BODY observe the full prompt-selection flow live without interaction rights
+- Show only the chosen term during Drawing and Adjustment
+- Reveal both theme and term in Final Reveal
+- Make early drawing submission reversible until the drawing deadline
+- Keep the last submitted version as a safe server-side fallback
+- Show whether the other player is still drawing or has submitted
+- Do not start Adjustment merely because both players submitted early
+- Advance to Adjustment only after the actual drawing deadline
+- Added stronger visual urgency during the final 10 and 5 seconds
+- Hardened transform ownership against randomized roles
+- Added indexes for per-round HEAD/BODY foreign keys
+- Added end-to-end smoke coverage for prompt permissions, reroll uniqueness, resume/resubmit, deadline gating and prompt timeout
+
 ## 1.3.3 — Game settings belong to the room
 
 - Removed round duration from the global Home Settings screen

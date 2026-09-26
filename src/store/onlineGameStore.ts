@@ -27,7 +27,14 @@ export const useOnlineGameStore = create<OnlineState>((set) => ({
   onlineUserIds: [],
   setDisplayName: (displayName) => set({ displayName }),
   setIdentity: (userId, role = null) => set({ userId, role }),
-  setRoomState: (room, players, round) => set({ room, players, round }),
+  setRoomState: (room, players, round) => set((state) => ({
+    room,
+    players,
+    round,
+    role: state.userId
+      ? (players.find((player) => player.user_id === state.userId)?.role ?? state.role)
+      : state.role,
+  })),
   setOnlineUserIds: (onlineUserIds) => set({ onlineUserIds }),
   reset: () => set({
     userId: null,

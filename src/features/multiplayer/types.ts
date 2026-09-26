@@ -1,7 +1,13 @@
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
+export type PromptOption = {
+  theme: string;
+  term: string;
+};
+
 export type OnlineRoomStatus =
   | 'waiting'
+  | 'prompt_select'
   | 'drawing'
   | 'adjusting'
   | 'final_reveal'
@@ -31,12 +37,19 @@ export type OnlinePlayer = {
 export type OnlineRound = {
   id: string;
   room_id: string;
-  status: 'drawing' | 'adjusting' | 'final_reveal' | 'reveal' | 'finished';
+  status: 'prompt_select' | 'drawing' | 'adjusting' | 'final_reveal' | 'reveal' | 'finished';
   started_at: string;
   ends_at: string;
   revealed_at: string | null;
   adjustment_ends_at: string | null;
   final_reveal_ends_at: string | null;
+  head_player_id: string | null;
+  body_player_id: string | null;
+  prompt_options: PromptOption[];
+  prompt_term: string | null;
+  prompt_theme: string | null;
+  prompt_selection_ends_at: string | null;
+  prompt_reroll_used: boolean;
 };
 
 export type OnlineSubmission = {
@@ -46,6 +59,7 @@ export type OnlineSubmission = {
   role: GameRole;
   drawing: CrocatDrawing;
   transform: PartTransform;
+  submitted: boolean;
   created_at: string;
 };
 

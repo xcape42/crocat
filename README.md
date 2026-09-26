@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.3.3
+## Stable version: 1.4.0
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.3.3 includes two Split modes:
+Crocat 1.4.0 includes two Split modes:
 
 ### Local Split
 
@@ -22,9 +22,17 @@ The drawing connection guide is role-aware:
 
 Two devices connect through a six-character room code.
 
-`Create or enter room code → Sarah Ready → Domi Start → simultaneous HEAD/BODY → 15s simultaneous Adjustment → up to 15s Final Reveal → automatic / 2-of-2 Ready next round in the same room`
+`Create or enter room code → Sarah Ready → Domi Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
 
-Entering a six-character code now joins the room if it exists, or creates it with that exact code if it is empty. The creator becomes **Domi / HEAD** and the second player becomes **Sarah / BODY**. Only Sarah has a Ready control; Domi's Start button becomes active once Sarah is ready. There is no pre-game nickname form. During Adjustment, each player can drag and zoom only their own part while seeing the other player's live changes. After 15 seconds the composition locks for a Final Reveal of up to 15 seconds. Both players can press Ready Next Round; 2/2 Ready starts immediately, otherwise the timer starts the next round automatically. The most recently opened room code is remembered locally and prefilled the next time the online entry screen is opened. Players stay in the room until they explicitly choose Home / Leave. Drawing, Adjustment and Final Reveal timers are deadline-based, so backgrounding the browser/app does not pause the game clock.
+Host and drawing role are separate: **Domi remains host**, but HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options.
+
+The BODY player sees the same prompt-selection screen live, but cannot choose or reroll. During Drawing and Adjustment only the selected term is shown; the theme is hidden again until the Final Reveal.
+
+Early drawing submission is reversible. A player can submit, see whether the other player has submitted, return to the canvas before the drawing deadline, and submit a newer version. Two early submissions do **not** end the drawing phase early; the server waits for the configured drawing deadline. The final seconds are visually emphasized.
+
+During Adjustment each player can drag and zoom only their own part. Final Reveal shows both the selected term and its theme. Both players can press Ready Next Round; 2/2 Ready starts the next round immediately, otherwise the 15-second reveal deadline starts it automatically.
+
+The most recently opened room code is remembered locally and prefilled on future online sessions. Players stay in the room until they explicitly choose Home / Leave. Timers are deadline-based, so backgrounding the browser/app does not pause the game clock.
 
 ## Stack
 
@@ -62,7 +70,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.3.3 release passed:
+The 1.4.0 release passed:
 
 - dependency install
 - TypeScript
