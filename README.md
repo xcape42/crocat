@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.3.0
+## Stable version: 1.3.1
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.3.0 includes two Split modes:
+Crocat 1.3.1 includes two Split modes:
 
 ### Local Split
 
@@ -22,9 +22,9 @@ The drawing connection guide is role-aware:
 
 Two devices connect through a six-character room code.
 
-`Create room → Join → Ready → simultaneous HEAD/BODY → 15s simultaneous Adjustment → 15s Final Reveal → automatic next round in the same room`
+`Create room → Join → Sarah Ready → Domi Start → simultaneous HEAD/BODY → 15s simultaneous Adjustment → 15s Final Reveal → automatic next round in the same room`
 
-The room creator plays as **Domi / HEAD** and the joining player as **Sarah / BODY**. There is no pre-game nickname form. During Adjustment, each player can drag and zoom only their own part while seeing the other player's live changes. After 15 seconds the composition locks for a 15-second Final Reveal, then the next round starts automatically in the same room. Players stay in the room until they explicitly choose Home / Leave.
+The room creator plays as **Domi / HEAD** and the joining player as **Sarah / BODY**. Only Sarah has a Ready control; Domi's Start button becomes active once Sarah is ready. There is no pre-game nickname form. During Adjustment, each player can drag and zoom only their own part while seeing the other player's live changes. After 15 seconds the composition locks for a 15-second Final Reveal, then the next round starts automatically in the same room. Players stay in the room until they explicitly choose Home / Leave. Drawing, Adjustment and Final Reveal timers are deadline-based, so backgrounding the browser/app does not pause the game clock.
 
 ## Stack
 
@@ -62,7 +62,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.3.0 release passed:
+The 1.3.1 release passed:
 
 - dependency install
 - TypeScript
