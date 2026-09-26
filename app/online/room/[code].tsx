@@ -101,7 +101,7 @@ export default function OnlineRoomScreen() {
         });
       }
     } catch {
-      goHome();
+      setError('Connection interrupted. Reconnecting…');
     }
   }, [code, goHome, router, setIdentity, setRoomState]);
 
