@@ -24,12 +24,9 @@ export default function OnlineRoomScreen() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code: string }>();
   const {
-    displayName,
     userId,
-    role,
     room,
     players,
-    round,
     onlineUserIds,
     setDisplayName,
     setIdentity,
