@@ -2,19 +2,24 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
+import { GameLeaveButton } from '@/src/components/GameLeaveButton';
 import { Screen } from '@/src/components/Screen';
 import {
   advancePhase,
+  leaveRoom,
   loadRoomById,
   loadSubmissions,
   saveTransform,
+  setReady,
 } from '@/src/features/multiplayer/room';
 import {
   broadcastTransform,
   removeChannel,
   subscribeToAdjustment,
 } from '@/src/features/multiplayer/realtime';
+import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
@@ -41,7 +46,14 @@ export default function OnlineAdjustScreen() {
   }>();
 
   const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
-  const { round, setRoomState, reset } = useOnlineGameStore();
+  const {
+    userId,
+    room,
+    players,
+    round,
+    setRoomState,
+    reset,
+  } = useOnlineGameStore();
 
   const [head, setHead] = useState<CrocatDrawing | null>(null);
   const [body, setBody] = useState<CrocatDrawing | null>(null);
@@ -49,6 +61,7 @@ export default function OnlineAdjustScreen() {
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [readyBusy, setReadyBusy] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const ownTransformRef = useRef<PartTransform>(ZERO);
@@ -82,7 +95,7 @@ export default function OnlineAdjustScreen() {
         try {
           await saveTransform(params.roundId, role, ownTransformRef.current);
         } catch {
-          // The server allows a small grace window; a peer may already have advanced the phase.
+          // A peer may already have completed the adjustment phase.
         }
 
         router.replace({
@@ -114,7 +127,7 @@ export default function OnlineAdjustScreen() {
     } catch {
       setError('Connection interrupted. Reconnecting…');
     }
-  }, [params.roomId, params.roundId, reset, role, router, setRoomState]);
+  }, [params.roomId, params.roundId, role, router, setRoomState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -247,6 +260,51 @@ export default function OnlineAdjustScreen() {
     round?.id === params.roundId ? round.adjustment_ends_at : null;
   const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment);
 
+  const me = useMemo(
+    () => players.find((player) => player.user_id === userId),
+    [players, userId],
+  );
+  const readyCount = players.filter((player) => player.ready).length;
+  const bothReady = players.length === 2 && readyCount === 2;
+
+  useEffect(() => {
+    if (room?.status === 'adjusting' && bothReady && !advanceRef.current) {
+      void finishAdjustment();
+    }
+  }, [bothReady, finishAdjustment, room?.status]);
+
+  const toggleReady = async () => {
+    if (!room || !me || readyBusy) return;
+
+    try {
+      setReadyBusy(true);
+      setError('');
+      if (!me.ready && params.roundId) {
+        await saveTransform(params.roundId, role, ownTransformRef.current);
+      }
+      await setReady(room.id, !me.ready);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update adjustment ready state.');
+    } finally {
+      setReadyBusy(false);
+    }
+  };
+
+  const leave = async () => {
+    if (!params.roomId || readyBusy) return;
+    try {
+      setReadyBusy(true);
+      await leaveRoom(params.roomId);
+    } catch {
+      // Leaving remains valid if the room vanished first.
+    } finally {
+      await clearActiveRoomCode();
+      reset();
+      router.replace('/');
+    }
+  };
+
   const ownTransform = useMemo(
     () => role === 'HEAD' ? headTransform : bodyTransform,
     [bodyTransform, headTransform, role],
@@ -270,20 +328,19 @@ export default function OnlineAdjustScreen() {
 
   return (
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+      <GameLeaveButton disabled={readyBusy} onPress={leave} />
+
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerText}>
           <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
         </View>
-        <View style={styles.countdown}>
-          <Text style={styles.countdownLabel}>ADJUST</Text>
-          <Text style={styles.countdownValue}>0:{String(secondsLeft).padStart(2, '0')}</Text>
-        </View>
+        <CountdownBadge remaining={secondsLeft} label="ADJUST" />
       </View>
 
       <Text style={styles.copy}>
         {round?.prompt_term ? `DRAW · ${round.prompt_term} · ` : ''}
-        Drag only your {partLabel.toLowerCase()}. Both players are adjusting at the same time.
+        Drag only your {partLabel.toLowerCase()}. Ready does not lock your controls.
       </Text>
 
       <View style={styles.previewArea}>
@@ -298,43 +355,63 @@ export default function OnlineAdjustScreen() {
         />
       </View>
 
-      <View style={styles.zoomGroup}>
-        <Text style={styles.zoomTitle}>{partLabel.toUpperCase()} · ZOOM</Text>
-        <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
-          <Text style={styles.zoomText}>−</Text>
-        </Pressable>
-        <Text style={styles.scaleText}>{Math.round(ownTransform.scale * 100)}%</Text>
-        <Pressable accessibilityRole="button" onPress={() => zoom(0.05)} style={styles.zoomButton}>
-          <Text style={styles.zoomText}>+</Text>
+      <View style={styles.controls}>
+        <View style={styles.zoomGroup}>
+          <Text style={styles.zoomTitle}>{partLabel.toUpperCase()} · ZOOM</Text>
+          <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
+            <Text style={styles.zoomText}>−</Text>
+          </Pressable>
+          <Text style={styles.scaleText}>{Math.round(ownTransform.scale * 100)}%</Text>
+          <Pressable accessibilityRole="button" onPress={() => zoom(0.05)} style={styles.zoomButton}>
+            <Text style={styles.zoomText}>+</Text>
+          </Pressable>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          disabled={readyBusy || !me}
+          onPress={toggleReady}
+          style={[styles.readyButton, me?.ready && styles.readyButtonActive]}
+        >
+          <Text style={styles.readyButtonText}>
+            {me?.ready ? 'READY ✓' : 'READY TO REVEAL'}
+          </Text>
         </Pressable>
       </View>
 
+      <Text style={styles.readyStatus}>
+        {readyCount}/2 READY · both ready skips the remaining adjustment time
+      </Text>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 8 },
-  screenCompact: { gap: 6 },
+  screen: { gap: 7 },
+  screenCompact: { gap: 5 },
   header: {
     flexShrink: 0,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 10,
   },
+  headerText: { flex: 1 },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.2, fontSize: 10 },
-  title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
+  title: { marginTop: 3, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
-  countdown: { alignItems: 'flex-end' },
-  countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
-  countdownValue: { color: colors.ink, fontSize: 22, fontWeight: '900' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
-  zoomGroup: {
-    alignSelf: 'center',
+  controls: {
     flexShrink: 0,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 7,
+  },
+  zoomGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -356,6 +433,31 @@ const styles = StyleSheet.create({
   },
   zoomText: { fontSize: 18, fontWeight: '900', color: colors.ink },
   scaleText: { minWidth: 36, textAlign: 'center', fontSize: 10, fontWeight: '900', color: colors.ink },
+  readyButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    paddingHorizontal: 15,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.card,
+  },
+  readyButtonActive: { backgroundColor: colors.lime },
+  readyButtonText: {
+    color: colors.ink,
+    fontWeight: '900',
+    fontSize: 10,
+    letterSpacing: 0.7,
+    textAlign: 'center',
+  },
+  readyStatus: {
+    flexShrink: 0,
+    color: colors.muted,
+    textAlign: 'center',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+  },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700', fontSize: 11 },
 });
