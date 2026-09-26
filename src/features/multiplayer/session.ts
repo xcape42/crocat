@@ -137,6 +137,7 @@ export async function resumeActiveOnlineSession(
     // Network errors keep the active-room pointer so the next reconnect can recover it.
     if (code === 'PGRST116') {
       await clearActiveRoomCode();
+      if (pathname.startsWith('/online/')) router.replace('/');
     }
     return false;
   }
