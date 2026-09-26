@@ -12,9 +12,10 @@
     "doctor": "expo-doctor"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "3.1.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "2.117.1",
-    "expo": "57.0.17",
+    "expo": "57.0.25",
+    "expo-constants": "57.0.19",
     "expo-linking": "57.0.11",
     "expo-router": "57.0.23",
     "expo-status-bar": "57.0.1",
@@ -25,12 +26,12 @@
     "react-native-screens": "4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-url-polyfill": "4.0.0",
-    "react-native-web": "0.21.0",
+    "react-native-web": "0.21.2",
     "zustand": "5.0.8"
   },
   "devDependencies": {
-    "@types/react": "19.2.0",
+    "@types/react": "19.2.4",
     "expo-doctor": "1.20.4",
-    "typescript": "5.8.3"
+    "typescript": "6.0.3"
   }
 }
