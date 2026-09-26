@@ -10,10 +10,12 @@ type OnlineState = {
   players: OnlinePlayer[];
   round: OnlineRound | null;
   onlineUserIds: string[];
+  activeUserIds: string[];
   setDisplayName: (name: string) => void;
   setIdentity: (userId: string, role?: GameRole | null) => void;
   setRoomState: (room: OnlineRoom, players: OnlinePlayer[], round: OnlineRound | null) => void;
   setOnlineUserIds: (ids: string[]) => void;
+  setActiveUserIds: (ids: string[]) => void;
   reset: () => void;
 };
 
@@ -25,6 +27,7 @@ export const useOnlineGameStore = create<OnlineState>((set) => ({
   players: [],
   round: null,
   onlineUserIds: [],
+  activeUserIds: [],
   setDisplayName: (displayName) => set({ displayName }),
   setIdentity: (userId, role = null) => set({ userId, role }),
   setRoomState: (room, players, round) => set((state) => ({
@@ -36,6 +39,7 @@ export const useOnlineGameStore = create<OnlineState>((set) => ({
       : state.role,
   })),
   setOnlineUserIds: (onlineUserIds) => set({ onlineUserIds }),
+  setActiveUserIds: (activeUserIds) => set({ activeUserIds }),
   reset: () => set({
     userId: null,
     role: null,
@@ -43,5 +47,6 @@ export const useOnlineGameStore = create<OnlineState>((set) => ({
     players: [],
     round: null,
     onlineUserIds: [],
+    activeUserIds: [],
   }),
 }));
