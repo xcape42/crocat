@@ -8,7 +8,7 @@ import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import { leaveRoom, loadRoom, setReady, startRound, updateRoomSettings } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
-import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
+import { clearActiveRoomCode, rememberActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
@@ -106,7 +106,7 @@ export default function OnlineRoomScreen() {
   }, [code, goHome, router, setIdentity, setRoomState]);
 
   useEffect(() => {
-    if (code) void rememberRoomCode(String(code));
+    if (code) void rememberActiveRoomCode(String(code));
   }, [code]);
 
   useEffect(() => {
@@ -213,6 +213,7 @@ export default function OnlineRoomScreen() {
     } catch {
       // Leaving should still return the player home if the room vanished first.
     } finally {
+      await clearActiveRoomCode();
       goHome();
     }
   };
@@ -227,7 +228,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
         <Text style={styles.code}>{String(code).toUpperCase()}</Text>
-        <Text style={styles.copy}>Share this code. Roles are randomized every round. HEAD chooses the prompt, then both draw at the same time.</Text>
+        <Text style={styles.copy}>Share this code. Roles are randomized every round. The upper-part player chooses the prompt, then both draw at the same time.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
 
