@@ -13,6 +13,7 @@ import {
   loadSubmissions,
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
+import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors } from '@/src/theme/tokens';
 import type { CrocatDrawing, PartTransform } from '@/src/types/game';
@@ -41,7 +42,6 @@ export default function OnlineRevealScreen() {
   const [body, setBody] = useState<CrocatDrawing | null>(null);
   const [headTransform, setHeadTransform] = useState<PartTransform>(ZERO);
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
-  const [secondsLeft, setSecondsLeft] = useState(15);
   const [error, setError] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advanceRef = useRef(false);
@@ -167,22 +167,9 @@ export default function OnlineRevealScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!round?.final_reveal_ends_at || round.id !== roundId) return;
-
-    const update = () => {
-      const seconds = Math.max(
-        0,
-        Math.ceil((new Date(round.final_reveal_ends_at!).getTime() - Date.now()) / 1000),
-      );
-      setSecondsLeft(seconds);
-      if (seconds === 0) void tryAdvance();
-    };
-
-    update();
-    const interval = setInterval(update, 250);
-    return () => clearInterval(interval);
-  }, [round?.final_reveal_ends_at, round?.id, roundId, tryAdvance]);
+  const revealDeadline =
+    round?.id === roundId ? round.final_reveal_ends_at : null;
+  const secondsLeft = useDeadlineCountdown(revealDeadline, tryAdvance);
 
   const leave = async () => {
     if (!room) return;

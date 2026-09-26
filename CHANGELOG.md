@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.1 — Host start flow and background-safe timers
+
+- Removed the Ready control from the online host
+- Kept Ready exclusively on the joining player
+- Host Start stays disabled until the guest is ready, then becomes active
+- Enforced the guest-only Ready rule server-side
+- Prevented the host from starting before the guest is ready
+- Reworked the shared timer to calculate from an absolute deadline instead of decrementing local seconds
+- Online drawing now uses the server round `ends_at` timestamp directly
+- Adjustment and Final Reveal now share the same deadline-countdown implementation
+- Resynchronize countdowns when the app returns to the foreground so background throttling cannot extend a round
+- Kept Local Split behavior intact while making its drawing timer deadline-based too
+- Added smoke coverage for host Ready rejection and guest-gated round start
+
 ## 1.3.0 — Simultaneous online adjustment
 
 - Added a synchronized 15-second Adjustment phase after both drawings are submitted
