@@ -11,24 +11,27 @@ export default function PlayScreen() {
       <Text style={styles.back} onPress={() => router.back()}>← HOME</Text>
       <View style={styles.hero}>
         <Text style={styles.title}>Choose your chaos.</Text>
-        <Text style={styles.copy}>For 1.0.0 we start with the original Crocat mode.</Text>
+        <Text style={styles.copy}>Play together on one device or open an online room for two devices.</Text>
       </View>
 
       <View style={styles.card}>
         <View style={styles.badge}><Text style={styles.badgeText}>ORIGINAL</Text></View>
         <Text style={styles.mode}>Split</Text>
-        <Text style={styles.modeCopy}>Two players. One draws the head, one draws the body. Neither sees the other half until reveal.</Text>
+        <Text style={styles.modeCopy}>One head. One body. One reveal.</Text>
         <View style={styles.metaRow}>
           <Text style={styles.meta}>2 PLAYERS</Text>
           <Text style={styles.meta}>3 MIN</Text>
           <Text style={styles.meta}>CO-OP</Text>
         </View>
-        <CrocatButton onPress={() => router.push('/lobby')}>CREATE LOCAL GAME</CrocatButton>
+        <View style={styles.actions}>
+          <CrocatButton style={styles.flex} onPress={() => router.push('/lobby')}>LOCAL</CrocatButton>
+          <CrocatButton variant="coral" style={styles.flex} onPress={() => router.push('/online')}>ONLINE</CrocatButton>
+        </View>
       </View>
 
       <View style={styles.locked}>
-        <Text style={styles.lockedTitle}>More modes are growing.</Text>
-        <Text style={styles.lockedCopy}>Chains, blind drawing, three-part creatures and online rooms come next.</Text>
+        <Text style={styles.lockedTitle}>Online is the 1.1.0 workstream.</Text>
+        <Text style={styles.lockedCopy}>Guest identity, room codes, live presence and two-device drawing are now isolated from the stable local mode.</Text>
       </View>
     </Screen>
   );
@@ -46,6 +49,8 @@ const styles = StyleSheet.create({
   modeCopy: { color: colors.muted, fontSize: 16, lineHeight: 23 },
   metaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   meta: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 6, fontSize: 11, fontWeight: '800', color: colors.muted },
+  actions: { flexDirection: 'row', gap: 10 },
+  flex: { flex: 1 },
   locked: { marginTop: 18, backgroundColor: colors.blue, borderRadius: radius.md, padding: 18 },
   lockedTitle: { fontWeight: '900', fontSize: 17, color: colors.ink },
   lockedCopy: { marginTop: 4, color: colors.ink, opacity: 0.7, lineHeight: 20 },
