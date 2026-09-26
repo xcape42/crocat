@@ -62,14 +62,14 @@ export async function joinRoom(code: string, displayName: string): Promise<RoomT
 
 export async function joinOrCreateRoom(
   code: string,
-  hostDisplayName: string,
-  guestDisplayName: string,
+  firstPlayerDisplayName: string,
+  joiningPlayerDisplayName: string,
   roundSeconds: number,
 ): Promise<RoomTicket> {
   const { data, error } = await requireSupabase().rpc('join_or_create_room', {
     p_code: code.trim().toUpperCase(),
-    p_host_display_name: hostDisplayName,
-    p_guest_display_name: guestDisplayName,
+    p_host_display_name: firstPlayerDisplayName,
+    p_guest_display_name: joiningPlayerDisplayName,
     p_round_seconds: roundSeconds,
   });
   if (error) throw error;

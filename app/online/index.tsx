@@ -10,8 +10,8 @@ import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/r
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 
-const HOST_NAME = 'Domi';
-const JOINER_NAME = 'Sarah';
+const FIRST_PLAYER_NAME = 'Domi';
+const SECOND_PLAYER_NAME = 'Sarah';
 
 export default function OnlineEntryScreen() {
   const router = useRouter();
@@ -41,10 +41,10 @@ export default function OnlineEntryScreen() {
     try {
       setError('');
       setBusy('create');
-      const user = await prepare(HOST_NAME);
-      const ticket = await createRoom(HOST_NAME, 180);
+      const user = await prepare(FIRST_PLAYER_NAME);
+      const ticket = await createRoom(FIRST_PLAYER_NAME, 180);
       await rememberRoomCode(ticket.code);
-      setDisplayName(HOST_NAME);
+      setDisplayName(FIRST_PLAYER_NAME);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {
@@ -58,13 +58,14 @@ export default function OnlineEntryScreen() {
     try {
       setError('');
       setBusy('join');
-      const user = await prepare(JOINER_NAME);
+      const user = await prepare(SECOND_PLAYER_NAME);
       if (code.trim().length !== 6) throw new Error('Enter the 6-character room code.');
-      const ticket = await joinOrCreateRoom(code, HOST_NAME, JOINER_NAME, 180);
+      const ticket = await joinOrCreateRoom(code, FIRST_PLAYER_NAME, SECOND_PLAYER_NAME, 180);
       const roomState = await loadRoomById(ticket.roomId);
-      const actualName = roomState.room.host_id === user.id ? HOST_NAME : JOINER_NAME;
+      const me = roomState.players.find((player) => player.user_id === user.id);
+      if (!me) throw new Error('Room membership could not be established.');
       await rememberRoomCode(ticket.code);
-      setDisplayName(actualName);
+      setDisplayName(me.display_name);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {

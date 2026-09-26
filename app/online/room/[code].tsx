@@ -21,8 +21,8 @@ import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
-const HOST_NAME = 'Domi';
-const JOINER_NAME = 'Sarah';
+const FIRST_PLAYER_NAME = 'Domi';
+const SECOND_PLAYER_NAME = 'Sarah';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
@@ -142,7 +142,7 @@ export default function OnlineRoomScreen() {
         }
         if (!user) user = await ensureGuest(JOINER_NAME);
 
-        const ticket = await joinOrCreateRoom(roomCode, HOST_NAME, JOINER_NAME, 180);
+        const ticket = await joinOrCreateRoom(roomCode, FIRST_PLAYER_NAME, SECOND_PLAYER_NAME, 180);
         const initialState = await loadRoomById(ticket.roomId);
         const me = initialState.players.find((player) => player.user_id === user.id);
         if (!me) throw new Error('Room membership could not be established.');
@@ -165,11 +165,10 @@ export default function OnlineRoomScreen() {
           {
             onSync: setOnlineUserIds,
             onPresenceJoin: (joinedUserId) => {
-              const current = useOnlineGameStore.getState();
-              if (current.room?.host_id !== user.id || joinedUserId === user.id) return;
+              if (joinedUserId === user.id) return;
 
               if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
-              setJoinNotice('Sarah joined the room ✓');
+              setJoinNotice('Player joined the room ✓');
               noticeTimerRef.current = setTimeout(() => setJoinNotice(''), 3500);
             },
             onRoomChange: refresh,
@@ -193,16 +192,15 @@ export default function OnlineRoomScreen() {
     () => players.find((player) => player.user_id === userId),
     [players, userId],
   );
-  const isHost = Boolean(room && userId === room.host_id);
-  const guest = players.find((player) => player.user_id !== room?.host_id);
-  const guestReady = players.length === 2 && Boolean(guest?.ready);
+  const readyCount = players.filter((player) => player.ready).length;
+  const bothReady = players.length === 2 && readyCount === 2;
   const allPlayersActive =
     players.length === 2
     && players.every((player) => onlineUserIds.includes(player.user_id));
   const missingPlayer = players.find((player) => !onlineUserIds.includes(player.user_id));
 
   const toggleReady = async () => {
-    if (!room || !me || isHost) return;
+    if (!room || !me || busy || room.status !== 'waiting') return;
     try {
       setBusy(true);
       await setReady(room.id, !me.ready);
@@ -215,7 +213,7 @@ export default function OnlineRoomScreen() {
   };
 
   const changeRoundSeconds = async (seconds: number) => {
-    if (!room || !isHost || busy || room.status !== 'waiting' || room.round_seconds === seconds) return;
+    if (!room || !me || busy || room.status !== 'waiting' || room.round_seconds === seconds) return;
 
     try {
       setBusy(true);
@@ -280,7 +278,7 @@ export default function OnlineRoomScreen() {
               <View style={styles.state}>
                 <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>
                 <Text style={styles.ready}>
-                  {player.user_id === room?.host_id ? 'HOST' : (player.ready ? 'READY ✓' : 'NOT READY')}
+                  {player.ready ? 'READY ✓' : 'NOT READY'}
                 </Text>
               </View>
             </View>
@@ -296,38 +294,32 @@ export default function OnlineRoomScreen() {
       {room && (
         <RoomSettingsPanel
           roundSeconds={room.round_seconds}
-          editable={isHost && room.status === 'waiting'}
+          editable={Boolean(me) && room.status === 'waiting'}
           busy={busy}
           onChange={changeRoundSeconds}
         />
       )}
 
       <View style={styles.bottom}>
-        {isHost ? (
-          <>
-            <CrocatButton
-              variant="coral"
-              disabled={busy || !guestReady || !allPlayersActive || room?.status !== 'waiting'}
-              onPress={start}
-            >
-              START ROUND
-            </CrocatButton>
-            <Text style={styles.hostNote}>
-              {!allPlayersActive
-                ? `Waiting for ${missingPlayer?.display_name ?? 'the other player'} to be active…`
-                : (guestReady ? 'Both players are active and ready. Start when you are.' : 'Waiting for the guest to be ready…')}
-            </Text>
-          </>
-        ) : (
-          <>
-            <CrocatButton disabled={busy || !me} onPress={toggleReady}>
-              {me?.ready ? 'NOT READY' : 'I’M READY'}
-            </CrocatButton>
-            <Text style={styles.hostNote}>
-              {me?.ready ? 'Ready. Waiting for Domi to start the round.' : 'Mark yourself ready when you are set.'}
-            </Text>
-          </>
-        )}
+        <CrocatButton disabled={busy || !me || room?.status !== 'waiting'} onPress={toggleReady}>
+          {me?.ready ? 'NOT READY' : 'I’M READY'}
+        </CrocatButton>
+        <CrocatButton
+          variant="coral"
+          disabled={busy || !bothReady || !allPlayersActive || room?.status !== 'waiting'}
+          onPress={start}
+        >
+          START ROUND
+        </CrocatButton>
+        <Text style={styles.lobbyNote}>
+          {players.length < 2
+            ? 'Waiting for the second player…'
+            : (!allPlayersActive
+              ? `Waiting for ${missingPlayer?.display_name ?? 'the other player'} to be active…`
+              : (bothReady
+                ? 'Both players are ready. Either player can start.'
+                : `${readyCount}/2 ready. Both players must be ready to start.`))}
+        </Text>
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
     </Screen>
@@ -352,6 +344,6 @@ const styles = StyleSheet.create({
   waiting: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md },
   waitingText: { color: colors.muted, textAlign: 'center', fontWeight: '700' },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
-  hostNote: { textAlign: 'center', color: colors.muted, fontSize: 12 },
+  lobbyNote: { textAlign: 'center', color: colors.muted, fontSize: 12 },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700' },
 });

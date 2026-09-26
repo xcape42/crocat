@@ -16,9 +16,9 @@ export function RoomSettingsPanel({ roundSeconds, editable, busy = false, onChan
       <View style={styles.header}>
         <View>
           <Text style={styles.eyebrow}>GAME SETTINGS</Text>
-          <Text style={styles.title}>{editable ? 'Configure this room' : 'Room configuration'}</Text>
+          <Text style={styles.title}>{editable ? 'Shared room settings' : 'Room configuration'}</Text>
         </View>
-        <Text style={styles.mode}>{editable ? 'HOST' : 'VIEW ONLY'}</Text>
+        <Text style={styles.mode}>{editable ? 'BOTH PLAYERS' : 'LOCKED'}</Text>
       </View>
 
       <View style={styles.setting}>
@@ -49,7 +49,7 @@ export function RoomSettingsPanel({ roundSeconds, editable, busy = false, onChan
       </View>
 
       <Text style={styles.note}>
-        Future round modifiers and mode-specific rules will live here too.
+        Changing a room setting resets both Ready states. Future round modifiers will live here too.
       </Text>
     </View>
   );
