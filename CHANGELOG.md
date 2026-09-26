@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.3 — Stable online phase transitions and countdown recovery
+
+- Coalesce bursts of Realtime room/round/submission refreshes so one logical phase change cannot trigger several competing navigations
+- Guard Prompt → Drawing, Drawing → Adjustment, Adjustment → Reveal and Reveal → next-round route replacements against duplicates
+- Normalize countdown values before formatting so invalid, negative or fractional values cannot render as broken timer text
+- Require both room members to be actively online, in addition to Guest Ready, before the host can start a round
+- Preserve random part assignment, reversible early submission, Adjustment Ready, active-presence next-round gating, Leave Round and resumable online sessions
+
 ## 1.4.2 — Presence-aware continuation, Adjustment Ready and in-game leave
 
 - Treat Realtime Presence as active-in-game state rather than merely an open websocket

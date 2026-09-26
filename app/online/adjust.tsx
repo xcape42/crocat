@@ -20,6 +20,7 @@ import {
 } from '@/src/features/multiplayer/realtime';
 import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
@@ -67,6 +68,7 @@ export default function OnlineAdjustScreen() {
   const broadcastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceRef = useRef(false);
+  const navigationRef = useRef<string | null>(null);
 
   const setTransformForRole = useCallback((targetRole: GameRole, transform: PartTransform) => {
     const safe = clampTransform(transform);
@@ -74,7 +76,7 @@ export default function OnlineAdjustScreen() {
     else setBodyTransform(safe);
   }, []);
 
-  const refresh = useCallback(async () => {
+  const refreshOnce = useCallback(async () => {
     if (!params.roomId || !params.roundId) return;
 
     try {
@@ -82,6 +84,8 @@ export default function OnlineAdjustScreen() {
       setRoomState(state.room, state.players, state.round);
 
       if (state.room.status === 'prompt_select' && state.round) {
+        if (navigationRef.current === 'prompt') return;
+        navigationRef.current = 'prompt';
         router.replace({
           pathname: '/online/prompt',
           params: { roomId: state.room.id, roundId: state.round.id },
@@ -90,6 +94,8 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
+        if (navigationRef.current === 'reveal') return;
+        navigationRef.current = 'reveal';
         try {
           await saveTransform(params.roundId, role, ownTransformRef.current);
         } catch {
@@ -104,6 +110,8 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && state.round.id !== params.roundId) {
+        if (navigationRef.current === 'draw') return;
+        navigationRef.current = 'draw';
         const currentUserId = useOnlineGameStore.getState().userId;
         const me = state.players.find((player) => player.user_id === currentUserId);
         router.replace({
@@ -120,12 +128,16 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'waiting') {
+        if (navigationRef.current === 'room') return;
+        navigationRef.current = 'room';
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
       setError('Connection interrupted. Reconnecting…');
     }
   }, [params.roomId, params.roundId, role, router, setRoomState]);
+
+  const refresh = useCoalescedAsync(refreshOnce);
 
   useEffect(() => {
     let cancelled = false;

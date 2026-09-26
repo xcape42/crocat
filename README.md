@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.2
+## Stable version: 1.4.3
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.2 includes two Split modes:
+Crocat 1.4.3 includes two Split modes:
 
 ### Local Split
 
@@ -72,7 +72,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.2 release passed:
+The 1.4.3 release passed:
 
 - dependency install
 - TypeScript

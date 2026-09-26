@@ -2,7 +2,7 @@
   "expo": {
     "name": "Crocat",
     "slug": "crocat",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "scheme": "crocat",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
