@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.2 — Presence-aware continuation, Adjustment Ready and in-game leave
+
+- Treat Realtime Presence as active-in-game state rather than merely an open websocket
+- Untrack Presence when the app/tab goes inactive or into the background
+- Re-track Presence automatically when the player returns
+- Prevent server reconciliation from auto-starting the next round out of Final Reveal
+- Start the next round only when both players are actively present
+- Show which player is currently missing and that the room is waiting
+- Add Ready / Not Ready during the 15-second Adjustment phase
+- Keep the live Adjustment screen visible after one player becomes Ready
+- Start Final Reveal early when both players are Ready
+- Add Leave Round controls during Prompt Select, Drawing/submitted wait, and Adjustment
+- Standardize countdown dimensions, vertical centering and text centering
+- Reuse the shared CountdownBadge in Adjustment and Final Reveal
+- Added smoke coverage for 1/2 vs 2/2 Adjustment Ready and the Presence-gated next-round boundary
+
 ## 1.4.1 — Resilient room recovery, immediate phases and semantic parts
 
 - Persist the active online room separately from the remembered room-code convenience value
