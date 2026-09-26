@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.2 — Final alignment polish
+
+- Kept direct drag-and-drop for HEAD and BODY
+- Removed directional nudge buttons; final alignment now exposes zoom controls only
+- Simplified HEAD/BODY drag labels and removed their visible background treatment
+- Aligned the original HEAD bottom guide and BODY top guide to the same gray reveal line
+- Added the intended 40px overlap around the reveal seam instead of leaving a gap
+- Changed zooming to scale around each half's connection anchor so the seam stays aligned while zooming
+
 ## 1.1.1 — Mobile layout and touch fixes
 
 - Fixed scrolling on standard mobile screens so bottom actions remain reachable
