@@ -69,6 +69,14 @@ export default function OnlineRevealScreen() {
         setIdentity(me.user_id, me.role);
       }
 
+      if (state.room.status === 'prompt_select' && state.round && me) {
+        router.replace({
+          pathname: '/online/prompt',
+          params: { roomId: state.room.id, roundId: state.round.id },
+        });
+        return;
+      }
+
       if (state.room.status === 'adjusting' && me) {
         router.replace({
           pathname: '/online/adjust',
