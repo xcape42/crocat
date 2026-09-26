@@ -5,7 +5,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
-import { loadRoom, setReady, startRound } from '@/src/features/multiplayer/room';
+import { leaveRoom, loadRoom, setReady, startRound } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
@@ -24,37 +24,61 @@ export default function OnlineRoomScreen() {
     setIdentity,
     setRoomState,
     setOnlineUserIds,
+    reset,
   } = useOnlineGameStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [joinNotice, setJoinNotice] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const goHome = useCallback(() => {
+    reset();
+    router.replace('/');
+  }, [reset, router]);
 
   const refresh = useCallback(async () => {
     if (!code) return;
-    const state = await loadRoom(String(code));
-    setRoomState(state.room, state.players, state.round);
 
-    const activeUserId = useOnlineGameStore.getState().userId;
-    const activeRole = useOnlineGameStore.getState().role;
-    const me = activeUserId
-      ? state.players.find((player) => player.user_id === activeUserId)
-      : undefined;
+    try {
+      const state = await loadRoom(String(code));
+      setRoomState(state.room, state.players, state.round);
 
-    if (me && !activeRole) setIdentity(me.user_id, me.role);
+      const activeUserId = useOnlineGameStore.getState().userId;
+      const activeRole = useOnlineGameStore.getState().role;
+      const me = activeUserId
+        ? state.players.find((player) => player.user_id === activeUserId)
+        : undefined;
 
-    if (state.room.status === 'drawing' && state.round && me) {
-      router.replace({
-        pathname: '/online/draw',
-        params: {
-          roomId: state.room.id,
-          roundId: state.round.id,
-          role: me.role,
-          seconds: state.room.round_seconds,
-          endsAt: state.round.ends_at,
-        },
-      });
+      if (me && !activeRole) setIdentity(me.user_id, me.role);
+
+      if (state.room.status === 'drawing' && state.round && me) {
+        router.replace({
+          pathname: '/online/draw',
+          params: {
+            roomId: state.room.id,
+            roundId: state.round.id,
+            role: me.role,
+            seconds: state.room.round_seconds,
+            endsAt: state.round.ends_at,
+          },
+        });
+        return;
+      }
+
+      if (state.room.status === 'reveal' && state.round) {
+        router.replace({
+          pathname: '/online/reveal',
+          params: {
+            roomId: state.room.id,
+            roundId: state.round.id,
+          },
+        });
+      }
+    } catch {
+      goHome();
     }
-  }, [code, router, setIdentity, setRoomState]);
+  }, [code, goHome, router, setIdentity, setRoomState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +102,14 @@ export default function OnlineRoomScreen() {
           displayName || String(user.user_metadata?.display_name ?? 'Guest'),
           {
             onSync: setOnlineUserIds,
+            onPresenceJoin: (joinedUserId) => {
+              const current = useOnlineGameStore.getState();
+              if (current.room?.host_id !== user.id || joinedUserId === user.id) return;
+
+              if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+              setJoinNotice('Sarah joined the room ✓');
+              noticeTimerRef.current = setTimeout(() => setJoinNotice(''), 3500);
+            },
             onRoomChange: refresh,
             onPlayerChange: refresh,
             onRoundChange: refresh,
@@ -90,6 +122,7 @@ export default function OnlineRoomScreen() {
 
     return () => {
       cancelled = true;
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
       void removeChannel(channelRef.current);
     };
   }, []);
@@ -127,17 +160,30 @@ export default function OnlineRoomScreen() {
     }
   };
 
+  const leave = async () => {
+    if (!room || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(room.id);
+    } catch {
+      // Leaving should still return the player home if the room vanished first.
+    } finally {
+      goHome();
+    }
+  };
+
   if (!room && !error) {
     return <Screen><ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} /></Screen>;
   }
 
   return (
     <Screen>
-      <Text style={styles.back} onPress={() => router.replace('/online')}>← LEAVE</Text>
+      <Text style={styles.back} onPress={leave}>← HOME / LEAVE</Text>
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
         <Text style={styles.code}>{String(code).toUpperCase()}</Text>
-        <Text style={styles.copy}>Share this code. As soon as both players are ready, the host can start.</Text>
+        <Text style={styles.copy}>Share this code. You stay in this room between rounds until you leave for Home.</Text>
+        {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
 
       <View style={styles.players}>
@@ -156,7 +202,11 @@ export default function OnlineRoomScreen() {
             </View>
           );
         })}
-        {players.length < 2 && <View style={styles.waiting}><Text style={styles.waitingText}>Waiting for the second player…</Text></View>}
+        {players.length < 2 && (
+          <View style={styles.waiting}>
+            <Text style={styles.waitingText}>Waiting for the second player…</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.bottom}>
@@ -164,11 +214,11 @@ export default function OnlineRoomScreen() {
           {me?.ready ? 'NOT READY' : 'I’M READY'}
         </CrocatButton>
         {isHost && (
-          <CrocatButton variant="coral" disabled={busy || !bothReady || Boolean(round)} onPress={start}>
+          <CrocatButton variant="coral" disabled={busy || !bothReady || Boolean(round && room?.status !== 'waiting')} onPress={start}>
             START ROUND
           </CrocatButton>
         )}
-        {!isHost && <Text style={styles.hostNote}>The host starts once everyone is ready.</Text>}
+        {!isHost && <Text style={styles.hostNote}>The host starts the first round once everyone is ready.</Text>}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
     </Screen>
@@ -181,6 +231,7 @@ const styles = StyleSheet.create({
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.5, fontSize: 11 },
   code: { marginTop: 6, fontSize: 54, fontWeight: '900', letterSpacing: 5, color: colors.ink },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
+  joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
   players: { gap: 12 },
   player: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
   head: { backgroundColor: colors.moss },

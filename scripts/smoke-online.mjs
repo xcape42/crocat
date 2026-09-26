@@ -16,14 +16,97 @@ async function guest(name) {
   });
   if (error) throw new Error(`${name} anonymous auth failed: ${error.message}`);
   if (!data.user) throw new Error(`${name} anonymous auth returned no user`);
-  return supabase;
+  return { supabase, user: data.user };
 }
 
 const first = (data) => Array.isArray(data) ? data[0] : data;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function subscribePresence(supabase, roomId, user, onJoin) {
+  const channel = supabase.channel(`room:${roomId}`, {
+    config: { presence: { key: user.id } },
+  });
+
+  if (onJoin) {
+    channel.on('presence', { event: 'join' }, ({ key }) => {
+      if (String(key) !== user.id) onJoin(String(key));
+    });
+  }
+
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Presence subscription timed out')), 10000);
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        clearTimeout(timer);
+        await channel.track({
+          user_id: user.id,
+          display_name: String(user.user_metadata?.display_name ?? 'Guest'),
+          online_at: new Date().toISOString(),
+        });
+        resolve();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        clearTimeout(timer);
+        reject(new Error(`Presence channel failed: ${status}`));
+      }
+    });
+  });
+
+  return channel;
+}
+
+async function waitForHostPresenceJoin(domi, domiUser, sarah, sarahUser, roomId) {
+  let resolveJoin;
+  let rejectJoin;
+  const joined = new Promise((resolve, reject) => {
+    resolveJoin = resolve;
+    rejectJoin = reject;
+  });
+
+  const domiChannel = await subscribePresence(domi, roomId, domiUser, (joinedUserId) => {
+    if (joinedUserId === sarahUser.id) resolveJoin();
+  });
+
+  const timeout = setTimeout(
+    () => rejectJoin(new Error('Host did not receive Sarah Presence join')),
+    10000,
+  );
+
+  const sarahChannel = await subscribePresence(sarah, roomId, sarahUser);
+
+  await joined.finally(() => clearTimeout(timeout));
+
+  return async () => {
+    await Promise.all([
+      domi.removeChannel(domiChannel),
+      sarah.removeChannel(sarahChannel),
+    ]);
+  };
+}
+
+async function submitPair(domi, sarah, roundId, suffix) {
+  const head = {
+    id: `smoke-head-${suffix}`,
+    strokes: [{ id: `h-${suffix}`, points: [{ x: 20, y: 20 }, { x: 40, y: 40 }], color: '#17221D', width: 6, opacity: 1 }],
+  };
+  const body = {
+    id: `smoke-body-${suffix}`,
+    strokes: [{ id: `b-${suffix}`, points: [{ x: 20, y: 40 }, { x: 40, y: 80 }], color: '#17221D', width: 6, opacity: 1 }],
+  };
+
+  const headResult = await domi.rpc('submit_drawing', {
+    p_round_id: roundId, p_role: 'HEAD', p_drawing: head,
+  });
+  if (headResult.error) throw headResult.error;
+
+  const bodyResult = await sarah.rpc('submit_drawing', {
+    p_round_id: roundId, p_role: 'BODY', p_drawing: body,
+  });
+  if (bodyResult.error) throw bodyResult.error;
+}
 
 async function main() {
-  const domi = await guest('Domi');
-  const sarah = await guest('Sarah');
+  const { supabase: domi, user: domiUser } = await guest('Domi');
+  const { supabase: sarah, user: sarahUser } = await guest('Sarah');
 
   const created = await domi.rpc('create_room', {
     p_display_name: 'Domi',
@@ -40,8 +123,19 @@ async function main() {
     p_display_name: 'Sarah',
   });
   if (joined.error) throw joined.error;
-  const joinTicket = first(joined.data);
-  if (joinTicket?.player_role !== 'BODY') throw new Error('Sarah did not receive BODY');
+  if (first(joined.data)?.player_role !== 'BODY') throw new Error('Sarah did not receive BODY');
+
+  const closePresence = await waitForHostPresenceJoin(domi, domiUser, sarah, sarahUser, room.room_id);
+
+  const hostPlayers = await domi.from('room_players')
+    .select('user_id,display_name')
+    .eq('room_id', room.room_id);
+  if (hostPlayers.error) throw hostPlayers.error;
+  if ((hostPlayers.data ?? []).length !== 2) {
+    throw new Error('Host could not refresh both room members after Presence join');
+  }
+
+  await closePresence();
 
   for (const supabase of [domi, sarah]) {
     const ready = await supabase.rpc('set_ready', { p_room_id: room.room_id, p_ready: true });
@@ -50,38 +144,102 @@ async function main() {
 
   const started = await domi.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
-  const round = first(started.data);
-  if (!round?.id || round.status !== 'drawing') throw new Error('Round did not start correctly');
+  const roundOne = first(started.data);
+  if (!roundOne?.id || roundOne.status !== 'drawing') throw new Error('Round one did not start');
 
-  const head = {
-    id: 'smoke-head',
-    strokes: [{ id: 'h1', points: [{ x: 20, y: 20 }, { x: 40, y: 40 }], color: '#17221D', width: 6, opacity: 1 }],
-  };
-  const body = {
-    id: 'smoke-body',
-    strokes: [{ id: 'b1', points: [{ x: 20, y: 40 }, { x: 40, y: 80 }], color: '#17221D', width: 6, opacity: 1 }],
-  };
+  await submitPair(domi, sarah, roundOne.id, '1');
 
-  const headResult = await domi.rpc('submit_drawing', {
-    p_round_id: round.id, p_role: 'HEAD', p_drawing: head,
-  });
-  if (headResult.error) throw headResult.error;
+  const revealOne = await domi.from('rooms')
+    .select('status,next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (revealOne.error) throw revealOne.error;
+  if (revealOne.data.status !== 'reveal' || !revealOne.data.next_round_at) {
+    throw new Error('Round one did not enter timed reveal');
+  }
 
-  const bodyResult = await sarah.rpc('submit_drawing', {
-    p_round_id: round.id, p_role: 'BODY', p_drawing: body,
-  });
-  if (bodyResult.error) throw bodyResult.error;
+  const readyState = await domi.from('room_players')
+    .select('ready')
+    .eq('room_id', room.room_id);
+  if (readyState.error) throw readyState.error;
+  if ((readyState.data ?? []).some((player) => player.ready)) {
+    throw new Error('Ready state was not reset after reveal');
+  }
 
-  const state = await domi.from('rooms').select('status').eq('id', room.room_id).single();
-  if (state.error) throw state.error;
-  if (state.data.status !== 'reveal') throw new Error(`Expected reveal, got ${state.data.status}`);
+  for (const supabase of [domi, sarah]) {
+    const ready = await supabase.rpc('set_ready', { p_room_id: room.room_id, p_ready: true });
+    if (ready.error) throw ready.error;
+  }
 
-  const submissions = await domi.from('submissions').select('role').eq('round_id', round.id);
-  if (submissions.error) throw submissions.error;
-  const roles = new Set((submissions.data ?? []).map((row) => row.role));
-  if (!roles.has('HEAD') || !roles.has('BODY')) throw new Error('Both halves are not visible at reveal');
+  const advanced = await sarah.rpc('advance_round', { p_room_id: room.room_id });
+  if (advanced.error) throw advanced.error;
+  const roundTwo = first(advanced.data);
+  if (!roundTwo?.id || roundTwo.id === roundOne.id || roundTwo.status !== 'drawing') {
+    throw new Error('Ready check did not advance to a second round in the same room');
+  }
 
-  console.log(`Crocat online smoke passed: ${room.room_code}`);
+  const stillSameRoom = await domi.from('rooms')
+    .select('id,code,status,next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (stillSameRoom.error) throw stillSameRoom.error;
+  if (stillSameRoom.data.code !== room.room_code || stillSameRoom.data.status !== 'drawing') {
+    throw new Error('Room was not preserved for round two');
+  }
+
+  await submitPair(domi, sarah, roundTwo.id, '2');
+
+  const revealTwo = await domi.from('rooms')
+    .select('status,next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (revealTwo.error) throw revealTwo.error;
+  if (revealTwo.data.status !== 'reveal' || !revealTwo.data.next_round_at) {
+    throw new Error('Round two did not enter timed reveal');
+  }
+
+  const waitMs = Math.max(
+    0,
+    new Date(revealTwo.data.next_round_at).getTime() - Date.now() + 750,
+  );
+  await wait(waitMs);
+
+  const timedAdvance = await domi.rpc('advance_round', { p_room_id: room.room_id });
+  if (timedAdvance.error) throw timedAdvance.error;
+  const roundThree = first(timedAdvance.data);
+  if (!roundThree?.id || roundThree.id === roundTwo.id || roundThree.status !== 'drawing') {
+    throw new Error('30-second fallback did not advance to round three');
+  }
+
+  const leave = await sarah.rpc('leave_room', { p_room_id: room.room_id });
+  if (leave.error) throw leave.error;
+
+  const afterSarahLeaves = await domi.from('rooms')
+    .select('status')
+    .eq('id', room.room_id)
+    .single();
+  if (afterSarahLeaves.error) throw afterSarahLeaves.error;
+  if (afterSarahLeaves.data.status !== 'waiting') {
+    throw new Error('Host room did not return to waiting after Sarah left');
+  }
+
+  const playersAfterLeave = await domi.from('room_players')
+    .select('user_id')
+    .eq('room_id', room.room_id);
+  if (playersAfterLeave.error) throw playersAfterLeave.error;
+  if ((playersAfterLeave.data ?? []).length !== 1) {
+    throw new Error('Sarah membership was not removed');
+  }
+
+  const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
+  if (close.error) throw close.error;
+
+  await wait(150);
+  const closedRoom = await domi.from('rooms').select('id').eq('id', room.room_id).maybeSingle();
+  if (closedRoom.error) throw closedRoom.error;
+  if (closedRoom.data) throw new Error('Host leave did not close the room');
+
+  console.log(`Crocat persistent-room smoke passed: ${room.room_code}`);
 }
 
 main().catch((error) => {

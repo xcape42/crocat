@@ -52,5 +52,5 @@ jobs:
         run: npx expo export --platform web
 
       - name: Online multiplayer smoke test
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/online-multiplayer' }}
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/feat/online-multiplayer' || github.ref == 'refs/heads/feat/1.2.0-persistent-online-room') }}
         run: node scripts/smoke-online.mjs
