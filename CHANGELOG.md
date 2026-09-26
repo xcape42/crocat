@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.7 — Exact phase timers and selection-safe canvas interaction
+
+- Derive every visible countdown directly from the current deadline on every render
+- Remove transient stale countdown values when a phase switches deadlines
+- Keep deadline completion synchronized after backgrounding and foregrounding
+- Simplify the local Timer so it no longer resets its own deadline after render
+- Start Final Reveal with a fresh 15-second server deadline when Final Reveal actually begins
+- Stop precomputing Final Reveal and next-round deadlines during Adjustment
+- Keep Adjustment at a server-authoritative 15 seconds whether entered early or by deadline
+- Keep Prompt Pick and Drawing on their existing server-authoritative deadlines
+- Disable browser text selection across Crocat screens
+- Explicitly suppress browser selection and touch gestures while drawing on the canvas
+- Make the room code the only deliberately selectable text and add a universal Copy Code button
+- Align package, Expo and visible app versions to 1.4.7
+
 ## 1.4.6 — Curated aesthetic prompts and semantic split labels
 
 - Replaced the previous 36 concrete prompts with a fully curated 60-prompt catalog
