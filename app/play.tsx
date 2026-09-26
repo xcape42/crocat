@@ -28,9 +28,9 @@ export default function PlayScreen() {
         </View>
 
         <View style={[styles.card, styles.onlineCard]}>
-          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.4.0 · ONLINE</Text></View>
+          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.4.1 · ONLINE</Text></View>
           <Text style={styles.mode}>Split Online</Text>
-          <Text style={styles.modeCopy}>Randomize roles, pick a weird prompt, draw simultaneously, then adjust both parts together.</Text>
+          <Text style={styles.modeCopy}>Get a themed prompt, draw matching parts simultaneously, and always return to the live room state.</Text>
           <View style={styles.metaRow}>
             <Text style={styles.meta}>2 DEVICES</Text>
             <Text style={styles.meta}>REALTIME</Text>

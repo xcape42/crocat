@@ -87,6 +87,9 @@ async function main() {
   if (!Array.isArray(round.prompt_options) || round.prompt_options.length !== 3) {
     throw new Error('Expected three prompt options');
   }
+  if (round.prompt_options.some((option) => !option.headLabel || !option.bodyLabel)) {
+    throw new Error('Prompt option is missing semantic part labels');
+  }
 
   const initialThemes = new Set(round.prompt_options.map((option) => option.theme));
   if (initialThemes.size !== 3) throw new Error('Initial prompt themes are not distinct');
@@ -139,8 +142,10 @@ async function main() {
     drawingRound.status !== 'drawing'
     || drawingRound.prompt_term !== picked.term
     || drawingRound.prompt_theme !== picked.theme
+    || drawingRound.prompt_head_label !== picked.headLabel
+    || drawingRound.prompt_body_label !== picked.bodyLabel
   ) {
-    throw new Error('Prompt selection did not start drawing correctly');
+    throw new Error('Prompt selection did not start drawing with the semantic parts');
   }
 
   const playerRows = await domi
@@ -197,24 +202,15 @@ async function main() {
   });
   if (bodySubmit.error) throw bodySubmit.error;
 
-  const earlyState = await domi
+  const immediateState = await domi
     .from('rooms')
     .select('status')
     .eq('id', room.room_id)
     .single();
-  if (earlyState.error) throw earlyState.error;
-  if (earlyState.data.status !== 'drawing') {
-    throw new Error('Both early submissions advanced before the drawing deadline');
+  if (immediateState.error) throw immediateState.error;
+  if (immediateState.data.status !== 'adjusting') {
+    throw new Error('Second submitted drawing did not start Adjustment immediately');
   }
-
-  const drawWait = Math.max(
-    0,
-    new Date(drawingRound.ends_at).getTime() - Date.now() + 600,
-  );
-  await wait(drawWait);
-
-  const advanceDrawing = await head.rpc('advance_drawing', { p_round_id: round.id });
-  if (advanceDrawing.error) throw advanceDrawing.error;
 
   const adjustment = await domi
     .from('game_rounds')
@@ -245,23 +241,43 @@ async function main() {
     new Date(adjustment.data.adjustment_ends_at).getTime() - Date.now() + 600,
   ));
 
-  const toReveal = await body.rpc('advance_phase', { p_room_id: room.room_id });
-  if (toReveal.error) throw toReveal.error;
+  const syncReveal = await body.rpc('sync_room_state', { p_room_id: room.room_id });
+  if (syncReveal.error) throw syncReveal.error;
 
-  for (const activeClient of [domi, sarah]) {
-    const ready = await activeClient.rpc('set_ready', {
-      p_room_id: room.room_id,
-      p_ready: true,
-    });
-    if (ready.error) throw ready.error;
+  const firstReady = await domi.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (firstReady.error) throw firstReady.error;
+
+  const oneReadyState = await domi
+    .from('rooms')
+    .select('status')
+    .eq('id', room.room_id)
+    .single();
+  if (oneReadyState.error) throw oneReadyState.error;
+  if (oneReadyState.data.status !== 'final_reveal') {
+    throw new Error('One ready player advanced Final Reveal');
   }
 
-  const next = await domi.rpc('advance_phase', { p_room_id: room.room_id });
-  if (next.error) throw next.error;
-  const nextRound = first(next.data);
+  const secondReady = await sarah.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (secondReady.error) throw secondReady.error;
+
+  const nextState = await domi
+    .from('game_rounds')
+    .select('*')
+    .eq('room_id', room.room_id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  if (nextState.error) throw nextState.error;
+  const nextRound = nextState.data;
 
   if (nextRound?.status !== 'prompt_select' || nextRound.id === round.id) {
-    throw new Error('Next round did not return to prompt selection');
+    throw new Error('Second ready player did not start the next Prompt Select immediately');
   }
 
   const nextThemes = new Set(nextRound.prompt_options.map((option) => option.theme));
@@ -274,14 +290,23 @@ async function main() {
     new Date(nextRound.prompt_selection_ends_at).getTime() - Date.now() + 600,
   ));
 
-  const timedPrompt = await sarah.rpc('advance_prompt', { p_round_id: nextRound.id });
+  const syncedPrompt = await sarah.rpc('sync_room_state', { p_room_id: room.room_id });
+  if (syncedPrompt.error) throw syncedPrompt.error;
+
+  const timedPrompt = await sarah
+    .from('game_rounds')
+    .select('*')
+    .eq('id', nextRound.id)
+    .single();
   if (timedPrompt.error) throw timedPrompt.error;
-  const timedDrawing = first(timedPrompt.data);
+  const timedDrawing = timedPrompt.data;
 
   if (
     timedDrawing?.status !== 'drawing'
     || !timedDrawing.prompt_term
     || !timedDrawing.prompt_theme
+    || !timedDrawing.prompt_head_label
+    || !timedDrawing.prompt_body_label
   ) {
     throw new Error('Prompt timeout did not auto-select a current option');
   }
@@ -301,7 +326,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.0 gameplay smoke passed: ${code}`);
+  console.log(`Crocat 1.4.1 recovery/phase/labels smoke passed: ${code}`);
 }
 
 main().catch((error) => {

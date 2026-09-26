@@ -16,6 +16,7 @@ import {
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors } from '@/src/theme/tokens';
 import type { CrocatDrawing, PartTransform } from '@/src/types/game';
 
@@ -103,7 +104,7 @@ export default function OnlineRevealScreen() {
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      goHome();
+      setError('Connection interrupted. Reconnecting…');
     }
   }, [goHome, roomId, roundId, router, setIdentity, setRoomState]);
 
@@ -220,6 +221,7 @@ export default function OnlineRevealScreen() {
     } catch {
       // Home remains the correct destination if the room already vanished.
     } finally {
+      await clearActiveRoomCode();
       goHome();
     }
   };
@@ -252,6 +254,11 @@ export default function OnlineRevealScreen() {
         <View style={styles.promptReveal}>
           <Text style={styles.promptTheme}>{round.prompt_theme?.toUpperCase()}</Text>
           <Text style={styles.promptTerm}>{round.prompt_term}</Text>
+          {!!round.prompt_head_label && !!round.prompt_body_label && (
+            <Text style={styles.promptParts}>
+              {round.prompt_head_label} + {round.prompt_body_label}
+            </Text>
+          )}
         </View>
       )}
 
@@ -304,6 +311,7 @@ const styles = StyleSheet.create({
   promptReveal: { flexShrink: 0, alignItems: 'center' },
   promptTheme: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   promptTerm: { marginTop: 2, color: colors.ink, fontSize: 18, fontWeight: '900' },
+  promptParts: { marginTop: 3, color: colors.muted, fontSize: 10, fontWeight: '800' },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
   readyRow: { flexShrink: 0, gap: 6 },

@@ -73,7 +73,7 @@ export default function OnlinePromptScreen() {
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      goHome();
+      setError('Connection interrupted. Reconnecting…');
     }
   }, [goHome, roomId, roundId, router, setRoomState]);
 
@@ -123,7 +123,9 @@ export default function OnlinePromptScreen() {
 
   const isHead = Boolean(userId && round?.head_player_id === userId);
   const headName =
-    players.find((player) => player.user_id === round?.head_player_id)?.display_name ?? 'HEAD player';
+    players.find((player) => player.user_id === round?.head_player_id)?.display_name ?? 'Upper-part player';
+  const bodyName =
+    players.find((player) => player.user_id === round?.body_player_id)?.display_name ?? 'Lower-part player';
   const options = (round?.prompt_options ?? []) as PromptOption[];
 
   const choose = async (term: string) => {
@@ -174,7 +176,7 @@ export default function OnlinePromptScreen() {
             {isHead ? 'Pick what you will draw.' : `${headName} is choosing.`}
           </Text>
           <Text style={styles.copy}>
-            Three prompts, three different themes. The theme disappears once drawing starts.
+            Three prompts, three different themes. Each option also shows who draws which matching part.
           </Text>
         </View>
         <CountdownBadge remaining={remaining} label="PICK" />
@@ -194,7 +196,11 @@ export default function OnlinePromptScreen() {
           >
             <Text style={styles.theme}>{option.theme.toUpperCase()}</Text>
             <Text style={styles.term}>{option.term}</Text>
-            <Text style={styles.action}>{isHead ? 'CHOOSE' : 'HEAD CAN CHOOSE'}</Text>
+            <View style={styles.parts}>
+              <Text style={styles.part}>{headName} · {option.headLabel}</Text>
+              <Text style={styles.part}>{bodyName} · {option.bodyLabel}</Text>
+            </View>
+            <Text style={styles.action}>{isHead ? 'CHOOSE' : `${headName.toUpperCase()} CHOOSES`}</Text>
           </Pressable>
         ))}
       </View>
@@ -209,7 +215,7 @@ export default function OnlinePromptScreen() {
             {round.prompt_reroll_used ? 'REROLL USED' : 'NEW 3 · 1× REROLL'}
           </CrocatButton>
         ) : (
-          <Text style={styles.waiting}>You are BODY this round. Watch the choice happen live.</Text>
+          <Text style={styles.waiting}>Watch the choice happen live. Your exact drawing part is shown on every option.</Text>
         )}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
@@ -230,6 +236,8 @@ const styles = StyleSheet.create({
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
+  parts: { marginTop: 8, gap: 3 },
+  part: { color: colors.muted, fontSize: 10, fontWeight: '800' },
   action: { marginTop: 7, color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.9 },
   footer: { flexShrink: 0, gap: 8 },
   waiting: { textAlign: 'center', color: colors.muted, fontSize: 12, fontWeight: '700' },

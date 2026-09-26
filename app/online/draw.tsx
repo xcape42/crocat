@@ -13,6 +13,11 @@ import {
   submitDrawing,
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
+import {
+  clearDrawingDraft,
+  loadDrawingDraft,
+  saveDrawingDraft,
+} from '@/src/features/multiplayer/drawingDraft';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
@@ -75,13 +80,19 @@ export default function OnlineDrawScreen() {
       const otherSubmission = submissions.find((item) => item.player_id !== userId);
       setOtherSubmitted(Boolean(otherSubmission?.submitted));
 
-      if (!hydratedRef.current && ownSubmission) {
+      if (!hydratedRef.current && userId) {
+        const localDraft = await loadDrawingDraft(params.roundId, userId);
         hydratedRef.current = true;
-        setDrawing(ownSubmission.drawing);
-        setWaiting(Boolean(ownSubmission.submitted));
+        if (localDraft) {
+          setDrawing(localDraft);
+        } else if (ownSubmission) {
+          setDrawing(ownSubmission.drawing);
+        }
+        setWaiting(Boolean(ownSubmission?.submitted));
       }
 
       if (state.room.status === 'prompt_select' && state.round) {
+        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/prompt',
           params: { roomId: state.room.id, roundId: state.round.id },
@@ -90,6 +101,7 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'adjusting') {
+        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/adjust',
           params: { roundId: params.roundId, roomId: params.roomId, role: myRole },
@@ -98,6 +110,7 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
+        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/reveal',
           params: { roundId: params.roundId, roomId: params.roomId },
@@ -106,11 +119,11 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'waiting') {
+        if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
-      reset();
-      router.replace('/');
+      setError('Connection interrupted. Reconnecting…');
     }
   }, [params.roomId, params.roundId, reset, role, router, setRoomState, userId]);
 
@@ -180,16 +193,33 @@ export default function OnlineDrawScreen() {
     }
   };
 
-  const undo = () => setDrawing((current) => ({
-    ...current,
-    strokes: current.strokes.slice(0, -1),
-  }));
+  const updateDrawing = useCallback((next: CrocatDrawing) => {
+    setDrawing(next);
+    if (params.roundId && userId) {
+      void saveDrawingDraft(params.roundId, userId, next);
+    }
+  }, [params.roundId, userId]);
+
+  const undo = () => {
+    const next = {
+      ...drawing,
+      strokes: drawing.strokes.slice(0, -1),
+    };
+    updateDrawing(next);
+  };
+
+  const clear = () => updateDrawing(blankDrawing());
 
   const playerName =
     players.find((player) => player.user_id === userId)?.display_name ?? 'YOU';
   const otherName =
     players.find((player) => player.user_id !== userId)?.display_name ?? 'OTHER PLAYER';
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
+  const partLabel = (
+    role === 'HEAD'
+      ? round?.prompt_head_label
+      : round?.prompt_body_label
+  ) ?? (role === 'HEAD' ? 'Upper Part' : 'Lower Part');
 
   const status = (
     <View style={[styles.status, otherSubmitted && styles.statusDone]}>
@@ -204,7 +234,7 @@ export default function OnlineDrawScreen() {
       <Screen scroll={false} contentStyle={styles.waitingScreen}>
         <View style={styles.waitingTop}>
           <View>
-            <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
+            <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
           <CountdownBadge remaining={remaining} />
@@ -235,7 +265,7 @@ export default function OnlineDrawScreen() {
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{role}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
         </View>
         <CountdownBadge remaining={remaining} />
       </View>
@@ -251,15 +281,15 @@ export default function OnlineDrawScreen() {
         <View style={styles.hintWrap}>
           <Text style={styles.hint}>
             {role === 'HEAD'
-              ? 'Draw the head. Connection line: bottom.'
-              : 'Draw the body. Connection line: top.'}
+              ? `Draw the ${partLabel.toLowerCase()}. Connection line: bottom.`
+              : `Draw the ${partLabel.toLowerCase()}. Connection line: top.`}
           </Text>
         </View>
         {status}
       </View>
 
       <View style={styles.canvasArea}>
-        <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
+        <DrawingCanvas role={role} drawing={drawing} onChange={updateDrawing} color={color} />
       </View>
 
       <View style={styles.toolbar}>
@@ -273,11 +303,11 @@ export default function OnlineDrawScreen() {
           ))}
         </View>
         <Pressable onPress={undo}><Text style={styles.tool}>UNDO</Text></Pressable>
-        <Pressable onPress={() => setDrawing(blankDrawing())}><Text style={styles.tool}>CLEAR</Text></Pressable>
+        <Pressable onPress={clear}><Text style={styles.tool}>CLEAR</Text></Pressable>
       </View>
 
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
-        SUBMIT {role}
+        SUBMIT {partLabel.toUpperCase()}
       </CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
