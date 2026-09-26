@@ -51,6 +51,12 @@ jobs:
       - name: Export web build
         run: npx expo export --platform web
 
+      - name: Verify direct-link web fallback
+        run: |
+          test -s dist/index.html
+          cp dist/index.html dist/404.html
+          cmp --silent dist/index.html dist/404.html
+
       - name: Online multiplayer smoke test
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
         run: node scripts/smoke-online.mjs

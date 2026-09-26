@@ -35,6 +35,9 @@ jobs:
       - name: Build Expo web
         run: npx expo export --platform web
 
+      - name: Add direct-link fallback
+        run: cp dist/index.html dist/404.html
+
       - name: Disable Jekyll
         run: touch dist/.nojekyll
 

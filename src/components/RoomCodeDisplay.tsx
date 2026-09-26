@@ -1,27 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
 import { colors, radius } from '@/src/theme/tokens';
 
 type Props = {
   code: string;
 };
 
+type CopiedValue = 'code' | 'link' | null;
+
+function getRoomLink(code: string) {
+  if (Platform.OS === 'web') {
+    const location = (globalThis as typeof globalThis & {
+      location?: { origin?: string; pathname?: string };
+    }).location;
+
+    if (location?.origin && location.pathname) {
+      return `${location.origin}${location.pathname}`;
+    }
+  }
+
+  return Linking.createURL(`online/room/${code}`);
+}
+
 export function RoomCodeDisplay({ code }: Props) {
   const normalized = code.trim().toUpperCase();
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<CopiedValue>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
   }, []);
 
-  const copy = async () => {
-    await Clipboard.setStringAsync(normalized);
-    setCopied(true);
+  const markCopied = (value: Exclude<CopiedValue, null>) => {
+    setCopied(value);
 
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-    resetTimerRef.current = setTimeout(() => setCopied(false), 1800);
+    resetTimerRef.current = setTimeout(() => setCopied(null), 1800);
+  };
+
+  const copyCode = async () => {
+    await Clipboard.setStringAsync(normalized);
+    markCopied('code');
+  };
+
+  const copyLink = async () => {
+    await Clipboard.setStringAsync(getRoomLink(normalized));
+    markCopied('link');
   };
 
   return (
@@ -35,14 +61,24 @@ export function RoomCodeDisplay({ code }: Props) {
       >
         {normalized}
       </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Copy room code"
-        onPress={copy}
-        style={({ pressed }) => [styles.copyButton, pressed && styles.copyButtonPressed]}
-      >
-        <Text style={styles.copyText}>{copied ? 'COPIED ✓' : 'COPY CODE'}</Text>
-      </Pressable>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Copy room code"
+          onPress={copyCode}
+          style={({ pressed }) => [styles.copyButton, pressed && styles.copyButtonPressed]}
+        >
+          <Text style={styles.copyText}>{copied === 'code' ? 'COPIED ✓' : 'COPY CODE'}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Copy room link"
+          onPress={copyLink}
+          style={({ pressed }) => [styles.copyButton, pressed && styles.copyButtonPressed]}
+        >
+          <Text style={styles.copyText}>{copied === 'link' ? 'COPIED ✓' : 'COPY LINK'}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -60,6 +96,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 5,
     color: colors.ink,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
   },
   copyButton: {
     minHeight: 34,

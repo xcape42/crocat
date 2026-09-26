@@ -8,7 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { currentUser, ensureGuest } from '@/src/features/multiplayer/auth';
 import {
-  joinRoom,
+  joinOrCreateRoom,
   leaveRoom,
   loadRoom,
   loadRoomById,
@@ -20,6 +20,9 @@ import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realt
 import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+
+const HOST_NAME = 'Domi';
+const JOINER_NAME = 'Sarah';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
@@ -44,6 +47,11 @@ export default function OnlineRoomScreen() {
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
+  }, [reset, router]);
+
+  const goPlay = useCallback(() => {
+    reset();
+    router.replace('/play');
   }, [reset, router]);
 
   const refresh = useCallback(async () => {
@@ -108,9 +116,9 @@ export default function OnlineRoomScreen() {
         });
       }
     } catch {
-      goHome();
+      goPlay();
     }
-  }, [code, goHome, router, setIdentity, setRoomState]);
+  }, [code, goPlay, router, setIdentity, setRoomState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +130,7 @@ export default function OnlineRoomScreen() {
 
         const roomCode = String(code).trim().toUpperCase();
         if (!/^[A-Z0-9]{6}$/.test(roomCode)) {
-          goHome();
+          goPlay();
           return;
         }
 
@@ -132,9 +140,9 @@ export default function OnlineRoomScreen() {
         } catch {
           // A direct room link may be opened before Crocat created a guest session.
         }
-        if (!user) user = await ensureGuest('Sarah');
+        if (!user) user = await ensureGuest(JOINER_NAME);
 
-        const ticket = await joinRoom(roomCode, 'Sarah');
+        const ticket = await joinOrCreateRoom(roomCode, HOST_NAME, JOINER_NAME, 180);
         const initialState = await loadRoomById(ticket.roomId);
         const me = initialState.players.find((player) => player.user_id === user.id);
         if (!me) throw new Error('Room membership could not be established.');
@@ -170,7 +178,7 @@ export default function OnlineRoomScreen() {
           },
         );
       } catch {
-        if (!cancelled) goHome();
+        if (!cancelled) goPlay();
       }
     })();
 
@@ -256,7 +264,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
         <RoomCodeDisplay code={String(code)} />
-        <Text style={styles.copy}>Share this code. Roles are randomized every round. HEAD chooses the prompt, then both draw at the same time.</Text>
+        <Text style={styles.copy}>Share this code or link. Roles are randomized every round. HEAD chooses the prompt, then both draw at the same time.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
 
