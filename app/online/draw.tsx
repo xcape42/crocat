@@ -20,6 +20,7 @@ import {
   saveDrawingDraft,
 } from '@/src/features/multiplayer/drawingDraft';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
@@ -61,8 +62,9 @@ export default function OnlineDrawScreen() {
   const [error, setError] = useState('');
   const hydratedRef = useRef(false);
   const deadlineBusyRef = useRef(false);
+  const navigationRef = useRef<string | null>(null);
 
-  const checkRoomState = useCallback(async () => {
+  const checkRoomStateOnce = useCallback(async () => {
     if (!params.roomId || !params.roundId) return;
 
     try {
@@ -94,6 +96,8 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'prompt_select' && state.round) {
+        if (navigationRef.current === 'prompt') return;
+        navigationRef.current = 'prompt';
         if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/prompt',
@@ -103,6 +107,8 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'adjusting') {
+        if (navigationRef.current === 'adjust') return;
+        navigationRef.current = 'adjust';
         if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/adjust',
@@ -112,6 +118,8 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
+        if (navigationRef.current === 'reveal') return;
+        navigationRef.current = 'reveal';
         if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace({
           pathname: '/online/reveal',
@@ -121,13 +129,17 @@ export default function OnlineDrawScreen() {
       }
 
       if (state.room.status === 'waiting') {
+        if (navigationRef.current === 'room') return;
+        navigationRef.current = 'room';
         if (userId) void clearDrawingDraft(params.roundId, userId);
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
       setError('Connection interrupted. Reconnecting…');
     }
-  }, [params.roomId, params.roundId, reset, role, router, setRoomState, userId]);
+  }, [params.roomId, params.roundId, role, router, setRoomState, userId]);
+
+  const checkRoomState = useCoalescedAsync(checkRoomStateOnce);
 
   useEffect(() => {
     if (!params.roundId || !params.roomId) return;
