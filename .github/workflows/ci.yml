@@ -1,0 +1,56 @@
+name: Crocat CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13'
+
+      - name: Refresh dependency lock
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Commit refreshed lockfile
+        if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
+        run: |
+          if [ -n "$(git status --porcelain package-lock.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "chore: refresh dependency lock"
+            git push
+          fi
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Expo doctor
+        run: npm run doctor
+
+      - name: Export web build
+        run: npx expo export --platform web
+
+      - name: Online multiplayer smoke test
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/online-multiplayer' }}
+        run: node scripts/smoke-online.mjs

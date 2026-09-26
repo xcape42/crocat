@@ -25,17 +25,17 @@ export default function LobbyScreen() {
       <View style={styles.players}>
         <View style={[styles.player, { backgroundColor: colors.moss }]}>
           <Text style={styles.avatar}>◉ᴗ◉</Text>
-          <View style={styles.playerText}><Text style={styles.name}>Player 1</Text><Text style={styles.role}>HEAD · READY</Text></View>
+          <View style={styles.playerText}><Text style={styles.name}>Domi</Text><Text style={styles.role}>HEAD · READY</Text></View>
         </View>
         <View style={[styles.player, { backgroundColor: colors.blue }]}>
           <Text style={styles.avatar}>•ᴗ•</Text>
-          <View style={styles.playerText}><Text style={styles.name}>Player 2</Text><Text style={styles.role}>BODY · READY</Text></View>
+          <View style={styles.playerText}><Text style={styles.name}>Sarah</Text><Text style={styles.role}>BODY · READY</Text></View>
         </View>
       </View>
 
       <View style={styles.note}>
-        <Text style={styles.noteTitle}>How this prototype works</Text>
-        <Text style={styles.noteCopy}>Player 1 draws first. Then pass the device to Player 2. Online rooms will replace this handoff in a later version.</Text>
+        <Text style={styles.noteTitle}>Local Split</Text>
+        <Text style={styles.noteCopy}>Domi draws the HEAD first. Then pass the device to Sarah for the BODY. No names need to be entered before the game.</Text>
         <Text style={styles.noteMeta}>ROUND · {Math.round(roundSeconds / 60)} MINUTES</Text>
       </View>
 

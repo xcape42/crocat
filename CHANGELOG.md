@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0 — Online multiplayer (development)
+
+- Anonymous guest identities through Supabase Auth
+- Create/join online rooms with six-character codes
+- Realtime Presence for room connectivity
+- Ready state and host-controlled round start
+- HEAD and BODY drawing concurrently on separate devices
+- Server-authorized drawing submissions
+- Automatic synchronized reveal once both halves arrive
+- Explicit RLS + Data API grants for the 2026 Supabase security model
+- CI for dependency locking, TypeScript and Expo Doctor
+
 ## 1.0.0 — First playable sketch
 
 - Universal Expo / React Native / Web foundation
