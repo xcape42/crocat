@@ -50,7 +50,15 @@ export default function OnlineDrawScreen() {
     try {
       const state = await loadRoomById(params.roomId);
 
-      if (state.room.status === 'reveal') {
+      if (state.room.status === 'adjusting') {
+        router.replace({
+          pathname: '/online/adjust',
+          params: { roundId: params.roundId, roomId: params.roomId, role },
+        });
+        return;
+      }
+
+      if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
         router.replace({
           pathname: '/online/reveal',
           params: { roundId: params.roundId, roomId: params.roomId },
@@ -122,7 +130,7 @@ export default function OnlineDrawScreen() {
         <View style={styles.waiting}>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
           <Text style={[styles.waitTitle, compact && styles.waitTitleCompact]}>Your half is hidden.</Text>
-          <Text style={styles.waitCopy}>Waiting for the other player. The shared reveal starts automatically when both drawings arrive.</Text>
+          <Text style={styles.waitCopy}>Waiting for the other player. The 15-second shared adjustment starts automatically when both drawings arrive.</Text>
           <View style={styles.pulse}><Text style={styles.pulseText}>•••</Text></View>
           {!!error && <Text style={styles.error}>{error}</Text>}
         </View>
