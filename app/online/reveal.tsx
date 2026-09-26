@@ -16,6 +16,7 @@ import {
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors } from '@/src/theme/tokens';
@@ -50,13 +51,14 @@ export default function OnlineRevealScreen() {
   const [readyBusy, setReadyBusy] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advanceRef = useRef(false);
+  const navigationRef = useRef<string | null>(null);
 
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
   }, [reset, router]);
 
-  const refresh = useCallback(async () => {
+  const refreshOnce = useCallback(async () => {
     if (!roomId || !roundId) return;
 
     try {
@@ -73,6 +75,8 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'prompt_select' && state.round && me) {
+        if (navigationRef.current === 'prompt') return;
+        navigationRef.current = 'prompt';
         router.replace({
           pathname: '/online/prompt',
           params: { roomId: state.room.id, roundId: state.round.id },
@@ -81,6 +85,8 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'adjusting' && me) {
+        if (navigationRef.current === 'adjust') return;
+        navigationRef.current = 'adjust';
         router.replace({
           pathname: '/online/adjust',
           params: { roomId, roundId, role: me.role },
@@ -89,6 +95,8 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && state.round.id !== roundId && me) {
+        if (navigationRef.current === 'draw') return;
+        navigationRef.current = 'draw';
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -103,12 +111,16 @@ export default function OnlineRevealScreen() {
       }
 
       if (state.room.status === 'waiting') {
+        if (navigationRef.current === 'room') return;
+        navigationRef.current = 'room';
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
       setError('Connection interrupted. Reconnecting…');
     }
-  }, [goHome, roomId, roundId, router, setIdentity, setRoomState]);
+  }, [roomId, roundId, router, setIdentity, setRoomState]);
+
+  const refresh = useCoalescedAsync(refreshOnce);
 
   const loadArtwork = useCallback(async () => {
     if (!roundId) return;

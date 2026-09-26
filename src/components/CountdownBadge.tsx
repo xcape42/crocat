@@ -7,11 +7,14 @@ type Props = {
 };
 
 export function CountdownBadge({ remaining, label }: Props) {
-  const warning = remaining <= 10;
-  const critical = remaining <= 5;
+  const safeRemaining = Number.isFinite(remaining)
+    ? Math.max(0, Math.floor(remaining))
+    : 0;
+  const warning = safeRemaining <= 10;
+  const critical = safeRemaining <= 5;
 
-  const min = Math.floor(remaining / 60).toString().padStart(2, '0');
-  const sec = (remaining % 60).toString().padStart(2, '0');
+  const min = Math.floor(safeRemaining / 60).toString().padStart(2, '0');
+  const sec = (safeRemaining % 60).toString().padStart(2, '0');
 
   return (
     <View style={[

@@ -15,6 +15,7 @@ import {
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
@@ -37,13 +38,14 @@ export default function OnlinePromptScreen() {
   const [error, setError] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advancingRef = useRef(false);
+  const navigationRef = useRef<string | null>(null);
 
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
   }, [reset, router]);
 
-  const refresh = useCallback(async () => {
+  const refreshOnce = useCallback(async () => {
     if (!roomId || !roundId) return;
 
     try {
@@ -58,6 +60,8 @@ export default function OnlinePromptScreen() {
       if (!me || !state.round) return;
 
       if (state.room.status === 'drawing' && state.round.id === roundId) {
+        if (navigationRef.current === 'draw') return;
+        navigationRef.current = 'draw';
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -72,12 +76,16 @@ export default function OnlinePromptScreen() {
       }
 
       if (state.room.status === 'waiting') {
+        if (navigationRef.current === 'room') return;
+        navigationRef.current = 'room';
         router.replace(`/online/room/${state.room.code}`);
       }
     } catch {
       setError('Connection interrupted. Reconnecting…');
     }
-  }, [goHome, roomId, roundId, router, setRoomState]);
+  }, [roomId, roundId, router, setRoomState]);
+
+  const refresh = useCoalescedAsync(refreshOnce);
 
   useEffect(() => {
     let cancelled = false;
