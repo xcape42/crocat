@@ -117,8 +117,9 @@ export default function OnlineRoomScreen() {
     (async () => {
       try {
         setError('');
+        if (!code) return;
 
-        const roomCode = String(code ?? '').trim().toUpperCase();
+        const roomCode = String(code).trim().toUpperCase();
         if (!/^[A-Z0-9]{6}$/.test(roomCode)) {
           goHome();
           return;
@@ -177,7 +178,7 @@ export default function OnlineRoomScreen() {
       if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
       void removeChannel(channelRef.current);
     };
-  }, []);
+  }, [code]);
 
   const me = useMemo(
     () => players.find((player) => player.user_id === userId),
