@@ -248,6 +248,13 @@ export default function OnlineRevealScreen() {
         </View>
       </View>
 
+      {!!round?.prompt_term && (
+        <View style={styles.promptReveal}>
+          <Text style={styles.promptTheme}>{round.prompt_theme?.toUpperCase()}</Text>
+          <Text style={styles.promptTerm}>{round.prompt_term}</Text>
+        </View>
+      )}
+
       <View style={styles.previewArea}>
         <DrawingPreview
           head={head}
@@ -294,6 +301,9 @@ const styles = StyleSheet.create({
   countdown: { alignItems: 'flex-end' },
   countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
   countdownValue: { color: colors.ink, fontSize: 20, fontWeight: '900' },
+  promptReveal: { flexShrink: 0, alignItems: 'center' },
+  promptTheme: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
+  promptTerm: { marginTop: 2, color: colors.ink, fontSize: 18, fontWeight: '900' },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
   readyRow: { flexShrink: 0, gap: 6 },
