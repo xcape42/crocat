@@ -48,6 +48,9 @@ jobs:
       - name: Expo doctor
         run: npm run doctor
 
+      - name: Export web build
+        run: npx expo export --platform web
+
       - name: Online multiplayer smoke test
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/online-multiplayer' }}
         run: node scripts/smoke-online.mjs
