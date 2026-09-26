@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
@@ -33,6 +34,7 @@ export default function OnlineRevealScreen() {
     room,
     round,
     players,
+    onlineUserIds,
     setIdentity,
     setRoomState,
     setOnlineUserIds,
@@ -121,6 +123,13 @@ export default function OnlineRevealScreen() {
 
   const tryAdvance = useCallback(async () => {
     if (!roomId || advanceRef.current) return;
+
+    const current = useOnlineGameStore.getState();
+    const everyoneActive =
+      current.players.length === 2
+      && current.players.every((player) => current.onlineUserIds.includes(player.user_id));
+    if (!everyoneActive) return;
+
     advanceRef.current = true;
 
     try {
@@ -187,16 +196,32 @@ export default function OnlineRevealScreen() {
   );
   const readyCount = players.filter((player) => player.ready).length;
   const bothReady = players.length === 2 && readyCount === 2;
+  const allPlayersActive =
+    players.length === 2
+    && players.every((player) => onlineUserIds.includes(player.user_id));
+  const missingPlayer = players.find((player) => !onlineUserIds.includes(player.user_id));
 
   useEffect(() => {
     if (
       room?.status === 'final_reveal'
       && bothReady
+      && allPlayersActive
       && !advanceRef.current
     ) {
       void tryAdvance();
     }
-  }, [bothReady, room?.status, tryAdvance]);
+  }, [allPlayersActive, bothReady, room?.status, tryAdvance]);
+
+  useEffect(() => {
+    if (
+      room?.status === 'final_reveal'
+      && secondsLeft <= 0
+      && allPlayersActive
+      && !advanceRef.current
+    ) {
+      void tryAdvance();
+    }
+  }, [allPlayersActive, room?.status, secondsLeft, tryAdvance]);
 
   const toggleReady = async () => {
     if (!room || !me || readyBusy) return;
@@ -242,10 +267,7 @@ export default function OnlineRevealScreen() {
           <Text style={styles.kicker}>ROOM {room.code} · FINAL REVEAL</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>This is your Crocat.</Text>
         </View>
-        <View style={styles.countdown}>
-          <Text style={styles.countdownLabel}>NEXT ROUND</Text>
-          <Text style={styles.countdownValue}>0:{String(secondsLeft).padStart(2, '0')}</Text>
-        </View>
+        <CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />
       </View>
 
       {!!round?.prompt_term && (
@@ -265,7 +287,9 @@ export default function OnlineRevealScreen() {
       </View>
 
       <Text style={styles.copy}>
-        Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.
+        {!allPlayersActive
+          ? `${missingPlayer?.display_name ?? 'The other player'} is currently away. The next round waits until both players are active again.`
+          : 'Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.'}
       </Text>
 
       <View style={styles.readyRow}>
@@ -298,9 +322,6 @@ const styles = StyleSheet.create({
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.3, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
-  countdown: { alignItems: 'flex-end' },
-  countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
-  countdownValue: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   promptReveal: { flexShrink: 0, alignItems: 'center' },
   promptTheme: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   promptTerm: { marginTop: 2, color: colors.ink, fontSize: 18, fontWeight: '900' },
