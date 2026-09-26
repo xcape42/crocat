@@ -140,6 +140,30 @@ async function main() {
     throw new Error('Second join did not enter the existing room as BODY');
   }
 
+  const hostSettings = await domi.rpc('update_room_settings', {
+    p_room_id: room.room_id,
+    p_round_seconds: 120,
+  });
+  if (hostSettings.error) throw hostSettings.error;
+
+  const configuredRoom = await sarah
+    .from('rooms')
+    .select('round_seconds')
+    .eq('id', room.room_id)
+    .single();
+  if (configuredRoom.error) throw configuredRoom.error;
+  if (configuredRoom.data.round_seconds !== 120) {
+    throw new Error('Guest did not observe the host room-time setting');
+  }
+
+  const guestSettings = await sarah.rpc('update_room_settings', {
+    p_room_id: room.room_id,
+    p_round_seconds: 60,
+  });
+  if (!guestSettings.error) {
+    throw new Error('Guest was able to modify room settings');
+  }
+
   const hostReady = await domi.rpc('set_ready', {
     p_room_id: room.room_id,
     p_ready: true,
@@ -155,10 +179,38 @@ async function main() {
   });
   if (guestReady.error) throw guestReady.error;
 
+  const changeAfterReady = await domi.rpc('update_room_settings', {
+    p_room_id: room.room_id,
+    p_round_seconds: 60,
+  });
+  if (changeAfterReady.error) throw changeAfterReady.error;
+
+  const readyRows = await domi
+    .from('room_players')
+    .select('user_id,ready')
+    .eq('room_id', room.room_id);
+  if (readyRows.error) throw readyRows.error;
+  const guestRow = (readyRows.data ?? []).find((row) => row.user_id !== room.host_id);
+  if (guestRow?.ready) {
+    throw new Error('Changing room settings did not clear guest Ready');
+  }
+
+  const guestReadyAgain = await sarah.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (guestReadyAgain.error) throw guestReadyAgain.error;
+
   const started = await domi.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
   const round = first(started.data);
   if (!round?.id || round.status !== 'drawing') throw new Error('Round did not start');
+  const configuredDuration = Math.round(
+    (new Date(round.ends_at).getTime() - new Date(round.started_at).getTime()) / 1000,
+  );
+  if (configuredDuration !== 60) {
+    throw new Error(`Round did not use host configuration: ${configuredDuration}s`);
+  }
 
   await submitPair(domi, sarah, round.id);
 
@@ -305,7 +357,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat room-memory/ready-skip smoke passed: ${room.room_code}`);
+  console.log(`Crocat room-settings smoke passed: ${room.room_code}`);
 }
 
 main().catch((error) => {
