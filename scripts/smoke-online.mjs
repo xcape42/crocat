@@ -189,6 +189,28 @@ async function main() {
 
   await submitPair(domi, sarah, roundTwo.id, '2');
 
+  const revealTwo = await domi.from('rooms')
+    .select('status,next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (revealTwo.error) throw revealTwo.error;
+  if (revealTwo.data.status !== 'reveal' || !revealTwo.data.next_round_at) {
+    throw new Error('Round two did not enter timed reveal');
+  }
+
+  const waitMs = Math.max(
+    0,
+    new Date(revealTwo.data.next_round_at).getTime() - Date.now() + 750,
+  );
+  await wait(waitMs);
+
+  const timedAdvance = await domi.rpc('advance_round', { p_room_id: room.room_id });
+  if (timedAdvance.error) throw timedAdvance.error;
+  const roundThree = first(timedAdvance.data);
+  if (!roundThree?.id || roundThree.id === roundTwo.id || roundThree.status !== 'drawing') {
+    throw new Error('30-second fallback did not advance to round three');
+  }
+
   const leave = await sarah.rpc('leave_room', { p_room_id: room.room_id });
   if (leave.error) throw leave.error;
 
