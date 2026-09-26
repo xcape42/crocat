@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '@/src/theme/tokens';
@@ -17,7 +17,12 @@ export function Screen({ children, contentStyle, scroll = true }: Props) {
     : { padding: spacing.lg };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView
+      style={[
+        styles.safe,
+        Platform.OS === 'web' && ({ userSelect: 'none' } as ViewStyle),
+      ]}
+    >
       {scroll ? (
         <ScrollView
           style={styles.scroll}
