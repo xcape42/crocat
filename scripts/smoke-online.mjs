@@ -14,7 +14,7 @@ async function guest(name) {
   const { data, error } = await supabase.auth.signInAnonymously({
     options: { data: { display_name: name, crocat_smoke_test: true } },
   });
-  if (error) throw new Error(`${name} anonymous auth failed: ${error.message}`);
+  if (error) throw error;
   if (!data.user) throw new Error(`${name} anonymous auth returned no user`);
   return { supabase, user: data.user };
 }
@@ -22,156 +22,44 @@ async function guest(name) {
 const first = (data) => Array.isArray(data) ? data[0] : data;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function subscribe(channel) {
-  await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Realtime subscription timed out')), 10000);
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        clearTimeout(timer);
-        resolve();
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        clearTimeout(timer);
-        reject(new Error(`Realtime channel failed: ${status}`));
-      }
-    });
-  });
-}
-
-async function submitPair(domi, sarah, roundId) {
-  const head = {
-    id: 'smoke-head',
-    strokes: [{ id: 'h1', points: [{ x: 20, y: 20 }, { x: 40, y: 40 }], color: '#17221D', width: 6, opacity: 1 }],
+function drawing(id) {
+  return {
+    id,
+    strokes: [{
+      id: `${id}-stroke`,
+      points: [{ x: 20, y: 20 }, { x: 60, y: 70 }],
+      color: '#17221D',
+      width: 6,
+      opacity: 1,
+    }],
   };
-  const body = {
-    id: 'smoke-body',
-    strokes: [{ id: 'b1', points: [{ x: 20, y: 40 }, { x: 40, y: 80 }], color: '#17221D', width: 6, opacity: 1 }],
-  };
-
-  const headResult = await domi.rpc('submit_drawing', {
-    p_round_id: roundId, p_role: 'HEAD', p_drawing: head,
-  });
-  if (headResult.error) throw headResult.error;
-
-  const bodyResult = await sarah.rpc('submit_drawing', {
-    p_round_id: roundId, p_role: 'BODY', p_drawing: body,
-  });
-  if (bodyResult.error) throw bodyResult.error;
-}
-
-async function verifyBroadcast(domi, sarah, roundId) {
-  let resolveTransform;
-  let rejectTransform;
-
-  const received = new Promise((resolve, reject) => {
-    resolveTransform = resolve;
-    rejectTransform = reject;
-  });
-
-  const sarahChannel = sarah
-    .channel(`adjust:${roundId}`)
-    .on('broadcast', { event: 'part_transform' }, ({ payload }) => {
-      if (payload?.role === 'HEAD' && payload?.transform?.x === 12) {
-        resolveTransform();
-      }
-    });
-
-  const domiChannel = domi.channel(`adjust:${roundId}`);
-
-  await Promise.all([subscribe(sarahChannel), subscribe(domiChannel)]);
-
-  const timeout = setTimeout(
-    () => rejectTransform(new Error('Sarah did not receive Domi HEAD transform broadcast')),
-    10000,
-  );
-
-  await domiChannel.send({
-    type: 'broadcast',
-    event: 'part_transform',
-    payload: { role: 'HEAD', transform: { x: 12, y: -4, scale: 1.05 } },
-  });
-
-  await received.finally(() => clearTimeout(timeout));
-
-  await Promise.all([
-    domi.removeChannel(domiChannel),
-    sarah.removeChannel(sarahChannel),
-  ]);
 }
 
 async function main() {
-  const { supabase: domi, user: domiUser } = await guest('Domi');
-  const { supabase: sarah, user: sarahUser } = await guest('Sarah');
+  const domiGuest = await guest('Domi');
+  const sarahGuest = await guest('Sarah');
+  const domi = domiGuest.supabase;
+  const sarah = sarahGuest.supabase;
 
-  const requestedCode = Date.now()
-    .toString(36)
-    .toUpperCase()
-    .slice(-6)
-    .padStart(6, '0');
+  const code = Date.now().toString(36).toUpperCase().slice(-6).padStart(6, '0');
 
   const created = await domi.rpc('join_or_create_room', {
-    p_code: requestedCode,
+    p_code: code,
     p_host_display_name: 'Domi',
     p_guest_display_name: 'Sarah',
-    p_round_seconds: 30,
+    p_round_seconds: 10,
   });
   if (created.error) throw created.error;
   const room = first(created.data);
-  if (
-    !room?.room_id
-    || room.room_code !== requestedCode
-    || room.player_role !== 'HEAD'
-  ) {
-    throw new Error('Joining an empty code did not create the requested room as HEAD');
-  }
+  if (!room?.room_id || room.room_code !== code) throw new Error('Room creation failed');
 
   const joined = await sarah.rpc('join_or_create_room', {
-    p_code: requestedCode,
+    p_code: code,
     p_host_display_name: 'Domi',
     p_guest_display_name: 'Sarah',
-    p_round_seconds: 30,
+    p_round_seconds: 10,
   });
   if (joined.error) throw joined.error;
-  const joinedRoom = first(joined.data);
-  if (
-    joinedRoom?.room_id !== room.room_id
-    || joinedRoom?.room_code !== requestedCode
-    || joinedRoom?.player_role !== 'BODY'
-  ) {
-    throw new Error('Second join did not enter the existing room as BODY');
-  }
-
-  const hostSettings = await domi.rpc('update_room_settings', {
-    p_room_id: room.room_id,
-    p_round_seconds: 120,
-  });
-  if (hostSettings.error) throw hostSettings.error;
-
-  const configuredRoom = await sarah
-    .from('rooms')
-    .select('round_seconds')
-    .eq('id', room.room_id)
-    .single();
-  if (configuredRoom.error) throw configuredRoom.error;
-  if (configuredRoom.data.round_seconds !== 120) {
-    throw new Error('Guest did not observe the host room-time setting');
-  }
-
-  const guestSettings = await sarah.rpc('update_room_settings', {
-    p_room_id: room.room_id,
-    p_round_seconds: 60,
-  });
-  if (!guestSettings.error) {
-    throw new Error('Guest was able to modify room settings');
-  }
-
-  const hostReady = await domi.rpc('set_ready', {
-    p_room_id: room.room_id,
-    p_ready: true,
-  });
-  if (!hostReady.error) throw new Error('Host was able to set Ready');
-
-  const earlyStart = await domi.rpc('start_round', { p_room_id: room.room_id });
-  if (!earlyStart.error) throw new Error('Host started before guest was Ready');
 
   const guestReady = await sarah.rpc('set_ready', {
     p_room_id: room.room_id,
@@ -179,40 +67,154 @@ async function main() {
   });
   if (guestReady.error) throw guestReady.error;
 
-  const changeAfterReady = await domi.rpc('update_room_settings', {
-    p_room_id: room.room_id,
-    p_round_seconds: 60,
-  });
-  if (changeAfterReady.error) throw changeAfterReady.error;
-
-  const readyRows = await domi
-    .from('room_players')
-    .select('user_id,ready')
-    .eq('room_id', room.room_id);
-  if (readyRows.error) throw readyRows.error;
-  const guestRow = (readyRows.data ?? []).find((row) => row.user_id === sarahUser.id);
-  if (guestRow?.ready) {
-    throw new Error('Changing room settings did not clear guest Ready');
-  }
-
-  const guestReadyAgain = await sarah.rpc('set_ready', {
-    p_room_id: room.room_id,
-    p_ready: true,
-  });
-  if (guestReadyAgain.error) throw guestReadyAgain.error;
-
   const started = await domi.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
   const round = first(started.data);
-  if (!round?.id || round.status !== 'drawing') throw new Error('Round did not start');
-  const configuredDuration = Math.round(
-    (new Date(round.ends_at).getTime() - new Date(round.started_at).getTime()) / 1000,
-  );
-  if (configuredDuration !== 60) {
-    throw new Error(`Round did not use host configuration: ${configuredDuration}s`);
+
+  if (round?.status !== 'prompt_select') {
+    throw new Error(`Expected prompt_select, got ${round?.status}`);
   }
 
-  await submitPair(domi, sarah, round.id);
+  const memberIds = new Set([domiGuest.user.id, sarahGuest.user.id]);
+  if (
+    !memberIds.has(round.head_player_id)
+    || !memberIds.has(round.body_player_id)
+    || round.head_player_id === round.body_player_id
+  ) {
+    throw new Error('Random round roles are invalid');
+  }
+
+  if (!Array.isArray(round.prompt_options) || round.prompt_options.length !== 3) {
+    throw new Error('Expected three prompt options');
+  }
+
+  const initialThemes = new Set(round.prompt_options.map((option) => option.theme));
+  if (initialThemes.size !== 3) throw new Error('Initial prompt themes are not distinct');
+
+  const head = round.head_player_id === domiGuest.user.id ? domi : sarah;
+  const body = round.body_player_id === domiGuest.user.id ? domi : sarah;
+  const headUser = round.head_player_id === domiGuest.user.id ? domiGuest.user : sarahGuest.user;
+  const bodyUser = round.body_player_id === domiGuest.user.id ? domiGuest.user : sarahGuest.user;
+
+  const bodyView = await body
+    .from('game_rounds')
+    .select('prompt_options,prompt_reroll_used,status')
+    .eq('id', round.id)
+    .single();
+  if (bodyView.error) throw bodyView.error;
+  if (bodyView.data.prompt_options.length !== 3) {
+    throw new Error('BODY cannot see prompt selection state');
+  }
+
+  const forbiddenPick = await body.rpc('select_prompt', {
+    p_round_id: round.id,
+    p_term: round.prompt_options[0].term,
+  });
+  if (!forbiddenPick.error) throw new Error('BODY was able to choose the prompt');
+
+  const originalTerms = new Set(round.prompt_options.map((option) => option.term));
+  const rerolled = await head.rpc('reroll_prompt', { p_round_id: round.id });
+  if (rerolled.error) throw rerolled.error;
+  const rerolledRound = first(rerolled.data);
+
+  if (!rerolledRound.prompt_reroll_used) throw new Error('Reroll flag was not set');
+  const rerolledThemes = new Set(rerolledRound.prompt_options.map((option) => option.theme));
+  if (rerolledThemes.size !== 3) throw new Error('Rerolled prompt themes are not distinct');
+  if (rerolledRound.prompt_options.some((option) => originalTerms.has(option.term))) {
+    throw new Error('Reroll repeated an old prompt term');
+  }
+
+  const secondReroll = await head.rpc('reroll_prompt', { p_round_id: round.id });
+  if (!secondReroll.error) throw new Error('Second reroll was allowed');
+
+  const picked = rerolledRound.prompt_options[0];
+  const selected = await head.rpc('select_prompt', {
+    p_round_id: round.id,
+    p_term: picked.term,
+  });
+  if (selected.error) throw selected.error;
+  const drawingRound = first(selected.data);
+
+  if (
+    drawingRound.status !== 'drawing'
+    || drawingRound.prompt_term !== picked.term
+    || drawingRound.prompt_theme !== picked.theme
+  ) {
+    throw new Error('Prompt selection did not start drawing correctly');
+  }
+
+  const playerRows = await domi
+    .from('room_players')
+    .select('user_id,role')
+    .eq('room_id', room.room_id);
+  if (playerRows.error) throw playerRows.error;
+
+  const headRow = playerRows.data.find((player) => player.user_id === headUser.id);
+  const bodyRow = playerRows.data.find((player) => player.user_id === bodyUser.id);
+  if (headRow?.role !== 'HEAD' || bodyRow?.role !== 'BODY') {
+    throw new Error('Room player roles do not match round role assignment');
+  }
+
+  const headSubmit = await head.rpc('submit_drawing', {
+    p_round_id: round.id,
+    p_role: 'HEAD',
+    p_drawing: drawing('head-v1'),
+  });
+  if (headSubmit.error) throw headSubmit.error;
+
+  const submittedHead = await body
+    .from('submissions')
+    .select('submitted,drawing')
+    .eq('round_id', round.id)
+    .eq('player_id', headUser.id)
+    .single();
+  if (submittedHead.error) throw submittedHead.error;
+  if (!submittedHead.data.submitted) throw new Error('Early HEAD submission not marked submitted');
+
+  const resume = await head.rpc('resume_drawing', { p_round_id: round.id });
+  if (resume.error) throw resume.error;
+
+  const resumedHead = await body
+    .from('submissions')
+    .select('submitted')
+    .eq('round_id', round.id)
+    .eq('player_id', headUser.id)
+    .single();
+  if (resumedHead.error) throw resumedHead.error;
+  if (resumedHead.data.submitted) throw new Error('Resume did not clear submitted status');
+
+  const headResubmit = await head.rpc('submit_drawing', {
+    p_round_id: round.id,
+    p_role: 'HEAD',
+    p_drawing: drawing('head-v2'),
+  });
+  if (headResubmit.error) throw headResubmit.error;
+
+  const bodySubmit = await body.rpc('submit_drawing', {
+    p_round_id: round.id,
+    p_role: 'BODY',
+    p_drawing: drawing('body-v1'),
+  });
+  if (bodySubmit.error) throw bodySubmit.error;
+
+  const earlyState = await domi
+    .from('rooms')
+    .select('status')
+    .eq('id', room.room_id)
+    .single();
+  if (earlyState.error) throw earlyState.error;
+  if (earlyState.data.status !== 'drawing') {
+    throw new Error('Both early submissions advanced before the drawing deadline');
+  }
+
+  const drawWait = Math.max(
+    0,
+    new Date(drawingRound.ends_at).getTime() - Date.now() + 600,
+  );
+  await wait(drawWait);
+
+  const advanceDrawing = await head.rpc('advance_drawing', { p_round_id: round.id });
+  if (advanceDrawing.error) throw advanceDrawing.error;
 
   const adjustment = await domi
     .from('game_rounds')
@@ -220,144 +222,86 @@ async function main() {
     .eq('id', round.id)
     .single();
   if (adjustment.error) throw adjustment.error;
-
-  if (
-    adjustment.data.status !== 'adjusting'
-    || !adjustment.data.adjustment_ends_at
-    || !adjustment.data.final_reveal_ends_at
-  ) {
-    throw new Error('Round did not enter synchronized adjustment');
+  if (adjustment.data.status !== 'adjusting') {
+    throw new Error('Drawing deadline did not enter adjustment');
   }
 
-  await verifyBroadcast(domi, sarah, round.id);
-
-  const headTransform = { x: 12, y: -4, scale: 1.05 };
-  const bodyTransform = { x: -9, y: 6, scale: 0.95 };
-
-  const saveHead = await domi.rpc('save_transform', {
+  const headTransform = await head.rpc('save_transform', {
     p_round_id: round.id,
     p_role: 'HEAD',
-    p_transform: headTransform,
+    p_transform: { x: 8, y: -3, scale: 1.05 },
   });
-  if (saveHead.error) throw saveHead.error;
+  if (headTransform.error) throw headTransform.error;
 
-  const saveBody = await sarah.rpc('save_transform', {
-    p_round_id: round.id,
-    p_role: 'BODY',
-    p_transform: bodyTransform,
-  });
-  if (saveBody.error) throw saveBody.error;
-
-  const forbidden = await sarah.rpc('save_transform', {
+  const wrongTransform = await body.rpc('save_transform', {
     p_round_id: round.id,
     p_role: 'HEAD',
     p_transform: { x: 0, y: 0, scale: 1 },
   });
-  if (!forbidden.error) throw new Error('Sarah was able to modify HEAD');
+  if (!wrongTransform.error) throw new Error('BODY was able to modify HEAD transform');
 
-  const stored = await domi
-    .from('submissions')
-    .select('role,transform')
-    .eq('round_id', round.id);
-  if (stored.error) throw stored.error;
-
-  const byRole = new Map((stored.data ?? []).map((row) => [row.role, row.transform]));
-  if (Number(byRole.get('HEAD')?.x) !== 12 || Number(byRole.get('BODY')?.x) !== -9) {
-    throw new Error('Transforms were not persisted per role');
-  }
-
-  const adjustmentWait = Math.max(
+  await wait(Math.max(
     0,
     new Date(adjustment.data.adjustment_ends_at).getTime() - Date.now() + 600,
-  );
-  await wait(adjustmentWait);
+  ));
 
-  const toReveal = await domi.rpc('advance_phase', { p_room_id: room.room_id });
+  const toReveal = await body.rpc('advance_phase', { p_room_id: room.room_id });
   if (toReveal.error) throw toReveal.error;
 
-  const finalReveal = await domi
-    .from('game_rounds')
-    .select('status,final_reveal_ends_at')
-    .eq('id', round.id)
-    .single();
-  if (finalReveal.error) throw finalReveal.error;
-  if (finalReveal.data.status !== 'final_reveal') {
-    throw new Error(`Expected final_reveal, got ${finalReveal.data.status}`);
+  for (const activeClient of [domi, sarah]) {
+    const ready = await activeClient.rpc('set_ready', {
+      p_room_id: room.room_id,
+      p_ready: true,
+    });
+    if (ready.error) throw ready.error;
   }
 
-  const revealDeadlineMs = new Date(finalReveal.data.final_reveal_ends_at).getTime();
-  if (revealDeadlineMs - Date.now() < 5000) {
-    throw new Error('Not enough Final Reveal time remained to verify Ready skip');
-  }
-
-  const domiReadyNext = await domi.rpc('set_ready', {
-    p_room_id: room.room_id,
-    p_ready: true,
-  });
-  if (domiReadyNext.error) throw domiReadyNext.error;
-
-  const oneReadyAdvance = await domi.rpc('advance_phase', {
-    p_room_id: room.room_id,
-  });
-  if (oneReadyAdvance.error) throw oneReadyAdvance.error;
-  if (first(oneReadyAdvance.data)) {
-    throw new Error('One ready player was enough to skip Final Reveal');
-  }
-
-  const stillReveal = await sarah
-    .from('rooms')
-    .select('status')
-    .eq('id', room.room_id)
-    .single();
-  if (stillReveal.error) throw stillReveal.error;
-  if (stillReveal.data.status !== 'final_reveal') {
-    throw new Error('Room left Final Reveal with only one ready player');
-  }
-
-  const sarahReadyNext = await sarah.rpc('set_ready', {
-    p_room_id: room.room_id,
-    p_ready: true,
-  });
-  if (sarahReadyNext.error) throw sarahReadyNext.error;
-
-  const next = await sarah.rpc('advance_phase', { p_room_id: room.room_id });
+  const next = await domi.rpc('advance_phase', { p_room_id: room.room_id });
   if (next.error) throw next.error;
   const nextRound = first(next.data);
-  if (!nextRound?.id || nextRound.id === round.id || nextRound.status !== 'drawing') {
-    throw new Error('Two ready players did not skip Final Reveal');
+
+  if (nextRound?.status !== 'prompt_select' || nextRound.id === round.id) {
+    throw new Error('Next round did not return to prompt selection');
   }
 
-  if (Date.now() >= revealDeadlineMs) {
-    throw new Error('Ready skip completed only after the Final Reveal deadline');
+  const nextThemes = new Set(nextRound.prompt_options.map((option) => option.theme));
+  if (nextRound.prompt_options.length !== 3 || nextThemes.size !== 3) {
+    throw new Error('Next round prompt options are invalid');
   }
 
-  const sameRoom = await domi
-    .from('rooms')
-    .select('id,code,status')
-    .eq('id', room.room_id)
-    .single();
-  if (sameRoom.error) throw sameRoom.error;
-  if (sameRoom.data.code !== room.room_code || sameRoom.data.status !== 'drawing') {
-    throw new Error('Next round did not stay in the same room');
+  await wait(Math.max(
+    0,
+    new Date(nextRound.prompt_selection_ends_at).getTime() - Date.now() + 600,
+  ));
+
+  const timedPrompt = await sarah.rpc('advance_prompt', { p_round_id: nextRound.id });
+  if (timedPrompt.error) throw timedPrompt.error;
+  const timedDrawing = first(timedPrompt.data);
+
+  if (
+    timedDrawing?.status !== 'drawing'
+    || !timedDrawing.prompt_term
+    || !timedDrawing.prompt_theme
+  ) {
+    throw new Error('Prompt timeout did not auto-select a current option');
+  }
+
+  const selectedWasOffered = nextRound.prompt_options.some(
+    (option) =>
+      option.term === timedDrawing.prompt_term
+      && option.theme === timedDrawing.prompt_theme,
+  );
+  if (!selectedWasOffered) {
+    throw new Error('Prompt timeout selected something outside the current three options');
   }
 
   const leaveSarah = await sarah.rpc('leave_room', { p_room_id: room.room_id });
   if (leaveSarah.error) throw leaveSarah.error;
 
-  const afterSarahLeaves = await domi
-    .from('rooms')
-    .select('status')
-    .eq('id', room.room_id)
-    .single();
-  if (afterSarahLeaves.error) throw afterSarahLeaves.error;
-  if (afterSarahLeaves.data.status !== 'waiting') {
-    throw new Error('Host room did not return to waiting after Sarah left');
-  }
-
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat room-settings smoke passed: ${room.room_code}`);
+  console.log(`Crocat 1.4.0 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {

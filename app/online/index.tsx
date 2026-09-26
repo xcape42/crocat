@@ -5,7 +5,7 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { ensureGuest } from '@/src/features/multiplayer/auth';
-import { createRoom, joinOrCreateRoom } from '@/src/features/multiplayer/room';
+import { createRoom, joinOrCreateRoom, loadRoomById } from '@/src/features/multiplayer/room';
 import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
@@ -61,7 +61,8 @@ export default function OnlineEntryScreen() {
       const user = await prepare(JOINER_NAME);
       if (code.trim().length !== 6) throw new Error('Enter the 6-character room code.');
       const ticket = await joinOrCreateRoom(code, HOST_NAME, JOINER_NAME, 180);
-      const actualName = ticket.role === 'HEAD' ? HOST_NAME : JOINER_NAME;
+      const roomState = await loadRoomById(ticket.roomId);
+      const actualName = roomState.room.host_id === user.id ? HOST_NAME : JOINER_NAME;
       await rememberRoomCode(ticket.code);
       setDisplayName(actualName);
       setIdentity(user.id, ticket.role);
@@ -77,9 +78,9 @@ export default function OnlineEntryScreen() {
     <Screen>
       <Text style={styles.back} onPress={() => router.back()}>← MODES</Text>
       <View style={styles.header}>
-        <Text style={styles.kicker}>CROCAT ONLINE · 1.3.2</Text>
+        <Text style={styles.kicker}>CROCAT ONLINE · 1.4.0</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
-        <Text style={styles.copy}>No account and no name form. Entering a code joins that room; if it does not exist yet, Crocat creates it and makes you Domi / HEAD.</Text>
+        <Text style={styles.copy}>No account and no name form. Entering a code joins that room; if it does not exist yet, Crocat creates it. HEAD and BODY are randomized every round.</Text>
       </View>
 
       {!hasSupabaseConfig && (

@@ -70,6 +70,14 @@ export default function OnlineAdjustScreen() {
       const state = await loadRoomById(params.roomId);
       setRoomState(state.room, state.players, state.round);
 
+      if (state.room.status === 'prompt_select' && state.round) {
+        router.replace({
+          pathname: '/online/prompt',
+          params: { roomId: state.room.id, roundId: state.round.id },
+        });
+        return;
+      }
+
       if (state.room.status === 'final_reveal' || state.room.status === 'reveal') {
         try {
           await saveTransform(params.roundId, role, ownTransformRef.current);
@@ -85,12 +93,14 @@ export default function OnlineAdjustScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && state.round.id !== params.roundId) {
+        const currentUserId = useOnlineGameStore.getState().userId;
+        const me = state.players.find((player) => player.user_id === currentUserId);
         router.replace({
           pathname: '/online/draw',
           params: {
             roomId: state.room.id,
             roundId: state.round.id,
-            role,
+            role: me?.role ?? role,
             seconds: state.room.round_seconds,
             endsAt: state.round.ends_at,
           },
@@ -268,6 +278,7 @@ export default function OnlineAdjustScreen() {
       </View>
 
       <Text style={styles.copy}>
+        {round?.prompt_term ? `DRAW · ${round.prompt_term} · ` : ''}
         Drag only your {role.toLowerCase()}. Both players are adjusting at the same time.
       </Text>
 

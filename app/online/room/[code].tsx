@@ -54,6 +54,17 @@ export default function OnlineRoomScreen() {
 
       if (me && !activeRole) setIdentity(me.user_id, me.role);
 
+      if (state.room.status === 'prompt_select' && state.round && me) {
+        router.replace({
+          pathname: '/online/prompt',
+          params: {
+            roomId: state.room.id,
+            roundId: state.round.id,
+          },
+        });
+        return;
+      }
+
       if (state.room.status === 'drawing' && state.round && me) {
         router.replace({
           pathname: '/online/draw',
@@ -216,7 +227,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>ROOM</Text>
         <Text style={styles.code}>{String(code).toUpperCase()}</Text>
-        <Text style={styles.copy}>Share this code. After drawing, both players adjust simultaneously for 15 seconds, then see the final result for 15 seconds before the next round.</Text>
+        <Text style={styles.copy}>Share this code. Roles are randomized every round. HEAD chooses the prompt, then both draw at the same time.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
 
@@ -224,10 +235,10 @@ export default function OnlineRoomScreen() {
         {players.map((player) => {
           const online = onlineUserIds.includes(player.user_id);
           return (
-            <View key={player.user_id} style={[styles.player, player.role === 'HEAD' ? styles.head : styles.body]}>
+            <View key={player.user_id} style={styles.player}>
               <View>
                 <Text style={styles.name}>{player.display_name}</Text>
-                <Text style={styles.role}>{player.role}</Text>
+                <Text style={styles.role}>ROLE · RANDOM EACH ROUND</Text>
               </View>
               <View style={styles.state}>
                 <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>

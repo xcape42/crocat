@@ -28,9 +28,9 @@ export default function PlayScreen() {
         </View>
 
         <View style={[styles.card, styles.onlineCard]}>
-          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.3.3 · ONLINE</Text></View>
+          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.4.0 · ONLINE</Text></View>
           <Text style={styles.mode}>Split Online</Text>
-          <Text style={styles.modeCopy}>Draw HEAD + BODY at the same time, then adjust both parts together before the final reveal.</Text>
+          <Text style={styles.modeCopy}>Randomize roles, pick a weird prompt, draw simultaneously, then adjust both parts together.</Text>
           <View style={styles.metaRow}>
             <Text style={styles.meta}>2 DEVICES</Text>
             <Text style={styles.meta}>REALTIME</Text>

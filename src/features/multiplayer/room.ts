@@ -184,3 +184,44 @@ export async function updateRoomSettings(roomId: string, roundSeconds: number) {
   });
   if (error) throw error;
 }
+
+
+export async function selectPrompt(roundId: string, term: string): Promise<OnlineRound> {
+  const { data, error } = await requireSupabase().rpc('select_prompt', {
+    p_round_id: roundId,
+    p_term: term,
+  });
+  if (error) throw error;
+  return one<OnlineRound>(data);
+}
+
+export async function rerollPrompt(roundId: string): Promise<OnlineRound> {
+  const { data, error } = await requireSupabase().rpc('reroll_prompt', {
+    p_round_id: roundId,
+  });
+  if (error) throw error;
+  return one<OnlineRound>(data);
+}
+
+export async function advancePrompt(roundId: string): Promise<OnlineRound | null> {
+  const { data, error } = await requireSupabase().rpc('advance_prompt', {
+    p_round_id: roundId,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as OnlineRound | undefined) ?? null;
+}
+
+export async function resumeDrawing(roundId: string) {
+  const { error } = await requireSupabase().rpc('resume_drawing', {
+    p_round_id: roundId,
+  });
+  if (error) throw error;
+}
+
+export async function advanceDrawing(roundId: string) {
+  const { error } = await requireSupabase().rpc('advance_drawing', {
+    p_round_id: roundId,
+  });
+  if (error) throw error;
+}
