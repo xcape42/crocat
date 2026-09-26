@@ -125,7 +125,9 @@ export function subscribeToRound(
       { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` },
       onChange,
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') onChange();
+    });
 }
 
 export async function subscribeToAdjustment(
