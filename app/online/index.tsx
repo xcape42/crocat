@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { ensureGuest } from '@/src/features/multiplayer/auth';
-import { createRoom, joinRoom } from '@/src/features/multiplayer/room';
+import { createRoom, joinOrCreateRoom } from '@/src/features/multiplayer/room';
+import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 
@@ -18,6 +19,16 @@ export default function OnlineEntryScreen() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadLastRoomCode().then((savedCode) => {
+      if (!cancelled && savedCode) setCode((current) => current || savedCode);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const prepare = async (displayName: string) => {
     if (!hasSupabaseConfig) throw new Error('Supabase is not configured yet.');
@@ -32,6 +43,8 @@ export default function OnlineEntryScreen() {
       setBusy('create');
       const user = await prepare(HOST_NAME);
       const ticket = await createRoom(HOST_NAME, 180);
+      await rememberRoomCode(ticket.code);
+      setDisplayName(HOST_NAME);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {
@@ -47,7 +60,10 @@ export default function OnlineEntryScreen() {
       setBusy('join');
       const user = await prepare(JOINER_NAME);
       if (code.trim().length !== 6) throw new Error('Enter the 6-character room code.');
-      const ticket = await joinRoom(code, JOINER_NAME);
+      const ticket = await joinOrCreateRoom(code, HOST_NAME, JOINER_NAME, 180);
+      const actualName = ticket.role === 'HEAD' ? HOST_NAME : JOINER_NAME;
+      await rememberRoomCode(ticket.code);
+      setDisplayName(actualName);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {
@@ -61,9 +77,9 @@ export default function OnlineEntryScreen() {
     <Screen>
       <Text style={styles.back} onPress={() => router.back()}>← MODES</Text>
       <View style={styles.header}>
-        <Text style={styles.kicker}>CROCAT ONLINE · 1.1.0</Text>
+        <Text style={styles.kicker}>CROCAT ONLINE · 1.3.2</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
-        <Text style={styles.copy}>No account and no name form. The room creator plays as Domi; the joining player plays as Sarah.</Text>
+        <Text style={styles.copy}>No account and no name form. Entering a code joins that room; if it does not exist yet, Crocat creates it and makes you Domi / HEAD.</Text>
       </View>
 
       {!hasSupabaseConfig && (
@@ -80,10 +96,10 @@ export default function OnlineEntryScreen() {
         </CrocatButton>
       </View>
 
-      <Text style={styles.or}>OR JOIN AS SARAH</Text>
+      <Text style={styles.or}>OR ENTER A ROOM CODE</Text>
 
       <View style={styles.card}>
-        <Text style={styles.label}>ROOM CODE</Text>
+        <Text style={styles.label}>ROOM CODE · JOIN OR CREATE</Text>
         <TextInput
           value={code}
           onChangeText={(value) => setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
@@ -94,7 +110,7 @@ export default function OnlineEntryScreen() {
           autoCapitalize="characters"
         />
         <CrocatButton variant="secondary" disabled={busy !== null || !hasSupabaseConfig} onPress={join}>
-          {busy === 'join' ? 'JOINING…' : 'JOIN ROOM'}
+          {busy === 'join' ? 'OPENING…' : 'JOIN / CREATE ROOM'}
         </CrocatButton>
       </View>
 
