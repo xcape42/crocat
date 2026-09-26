@@ -99,8 +99,8 @@ async function verifyBroadcast(domi, sarah, roundId) {
 }
 
 async function main() {
-  const { supabase: domi } = await guest('Domi');
-  const { supabase: sarah } = await guest('Sarah');
+  const { supabase: domi, user: domiUser } = await guest('Domi');
+  const { supabase: sarah, user: sarahUser } = await guest('Sarah');
 
   const requestedCode = Date.now()
     .toString(36)
@@ -190,7 +190,7 @@ async function main() {
     .select('user_id,ready')
     .eq('room_id', room.room_id);
   if (readyRows.error) throw readyRows.error;
-  const guestRow = (readyRows.data ?? []).find((row) => row.user_id !== room.host_id);
+  const guestRow = (readyRows.data ?? []).find((row) => row.user_id === sarahUser.id);
   if (guestRow?.ready) {
     throw new Error('Changing room settings did not clear guest Ready');
   }
