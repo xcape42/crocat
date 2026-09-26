@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.3 — Game settings belong to the room
+
+- Removed round duration from the global Home Settings screen
+- Reserved Home Settings for future app-wide preferences such as theme, sound and accessibility
+- Added a reusable Game Settings panel to local and online lobbies
+- Moved Local Split round duration into the local lobby
+- Added host-editable Online Split round duration in the waiting room
+- Guests see the current room configuration read-only
+- Added host-only server authorization for room setting changes
+- Reset guest Ready whenever the host changes a room setting
+- Realtime room updates keep the guest configuration view synchronized
+- Added smoke coverage for host-only settings, Ready reset and actual round-duration application
+
 ## 1.3.2 — Join-or-create rooms, remembered codes and reveal Ready
 
 - Entering a six-character room code now joins an existing room or creates that exact room if it does not exist
