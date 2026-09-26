@@ -140,7 +140,7 @@ export default function OnlineRoomScreen() {
         } catch {
           // A direct room link may be opened before Crocat created a guest session.
         }
-        if (!user) user = await ensureGuest(JOINER_NAME);
+        if (!user) user = await ensureGuest(SECOND_PLAYER_NAME);
 
         const ticket = await joinOrCreateRoom(roomCode, FIRST_PLAYER_NAME, SECOND_PLAYER_NAME, 180);
         const initialState = await loadRoomById(ticket.roomId);
