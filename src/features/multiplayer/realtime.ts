@@ -164,6 +164,11 @@ export async function subscribeToAdjustment(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
       onChange,
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` },
+      onChange,
     );
 
   await new Promise<void>((resolve, reject) => {
