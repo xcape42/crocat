@@ -28,7 +28,7 @@ export default function PlayScreen() {
         </View>
 
         <View style={[styles.card, styles.onlineCard]}>
-          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.1.2 · ONLINE</Text></View>
+          <View style={[styles.badge, { backgroundColor: colors.coral }]}><Text style={styles.badgeText}>1.1.3 · ONLINE</Text></View>
           <Text style={styles.mode}>Split Online</Text>
           <Text style={styles.modeCopy}>Create a room code, join from a second device and draw HEAD + BODY at the same time.</Text>
           <View style={styles.metaRow}>

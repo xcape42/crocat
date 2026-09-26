@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, PanResponder, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { LayoutChangeEvent, PanResponder, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
+import { DRAWING_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, Point, Stroke } from '@/src/types/game';
 
@@ -14,7 +16,6 @@ type Props = {
 
 const VIRTUAL_WIDTH = 360;
 const VIRTUAL_HEIGHT = 380;
-const ASPECT_RATIO = VIRTUAL_WIDTH / VIRTUAL_HEIGHT;
 
 const pathFor = (points: Point[]) => points.length
   ? points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
@@ -27,15 +28,9 @@ export function DrawingCanvas({
   color = colors.ink,
   brushWidth = 6,
 }: Props) {
-  const { height: viewportHeight, width: viewportWidth } = useWindowDimensions();
   const [activePoints, setActivePoints] = useState<Point[]>([]);
   const activeRef = useRef<Point[]>([]);
   const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
-
-  const horizontalRoom = Math.max(220, viewportWidth - (viewportWidth < 480 ? 28 : 48));
-  const heightCap = Math.max(220, Math.min(470, viewportHeight * 0.48));
-  const canvasHeight = Math.min(heightCap, horizontalRoom / ASPECT_RATIO);
-  const canvasWidth = canvasHeight * ASPECT_RATIO;
 
   const toVirtualPoint = (x: number, y: number): Point => ({
     x: Math.max(0, Math.min(VIRTUAL_WIDTH, (x / layoutRef.current.width) * VIRTUAL_WIDTH)),
@@ -77,68 +72,70 @@ export function DrawingCanvas({
     onPanResponderTerminationRequest: () => false,
   }), [brushWidth, color, drawing, onChange]);
 
-  const onLayout = (event: LayoutChangeEvent) => {
+  const onCanvasLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (width > 0 && height > 0) layoutRef.current = { width, height };
   };
 
   return (
-    <View
-      style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]}
-      onLayout={onLayout}
-      {...responder.panHandlers}
-    >
-      <Svg
-        pointerEvents="none"
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${VIRTUAL_WIDTH} ${VIRTUAL_HEIGHT}`}
-        preserveAspectRatio="none"
-        style={StyleSheet.absoluteFill}
-      >
-        {drawing.strokes.map((stroke) => (
-          <Path
-            key={stroke.id}
-            d={pathFor(stroke.points)}
-            fill="none"
-            stroke={stroke.color}
-            strokeWidth={stroke.width}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity={stroke.opacity}
-          />
-        ))}
-        {activePoints.length > 1 && (
-          <Path
-            d={pathFor(activePoints)}
-            fill="none"
-            stroke={color}
-            strokeWidth={brushWidth}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-      </Svg>
-
-      {role && (
+    <GameSurfaceSlot kind="drawing" aspectRatio={DRAWING_SURFACE_ASPECT} maxWidth={520}>
+      {({ width, height }) => (
         <View
-          pointerEvents="none"
-          style={[
-            styles.connectionGuide,
-            role === 'BODY' ? styles.connectionGuideTop : styles.connectionGuideBottom,
-          ]}
-        />
+          style={[styles.canvas, { width, height }]}
+          onLayout={onCanvasLayout}
+          {...responder.panHandlers}
+        >
+          <Svg
+            pointerEvents="none"
+            width="100%"
+            height="100%"
+            viewBox={`0 0 ${VIRTUAL_WIDTH} ${VIRTUAL_HEIGHT}`}
+            preserveAspectRatio="none"
+            style={StyleSheet.absoluteFill}
+          >
+            {drawing.strokes.map((stroke) => (
+              <Path
+                key={stroke.id}
+                d={pathFor(stroke.points)}
+                fill="none"
+                stroke={stroke.color}
+                strokeWidth={stroke.width}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={stroke.opacity}
+              />
+            ))}
+            {activePoints.length > 1 && (
+              <Path
+                d={pathFor(activePoints)}
+                fill="none"
+                stroke={color}
+                strokeWidth={brushWidth}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+          </Svg>
+
+          {role && (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.connectionGuide,
+                role === 'BODY' ? styles.connectionGuideTop : styles.connectionGuideBottom,
+              ]}
+            />
+          )}
+        </View>
       )}
-    </View>
+    </GameSurfaceSlot>
   );
 }
 
 const styles = StyleSheet.create({
   canvas: {
     flexGrow: 0,
-    flexShrink: 1,
-    maxWidth: 520,
-    alignSelf: 'center',
+    flexShrink: 0,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 2,

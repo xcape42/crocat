@@ -3,16 +3,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
+import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { Screen } from '@/src/components/Screen';
 import { loadSubmissions } from '@/src/features/multiplayer/room';
+import { PREVIEW_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing } from '@/src/types/game';
 
-const PREVIEW_ASPECT = 360 / 760;
-
 export default function OnlineRevealScreen() {
   const router = useRouter();
-  const { height, width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const compact = height < 720;
   const { roundId } = useLocalSearchParams<{ roundId: string; roomId: string }>();
   const [head, setHead] = useState<CrocatDrawing | null>(null);
@@ -32,11 +32,6 @@ export default function OnlineRevealScreen() {
       }
     })();
   }, [roundId]);
-
-  const heightCap = Math.max(220, Math.min(560, height * (compact ? 0.46 : 0.54)));
-  const widthRoom = Math.max(160, width - (width < 480 ? 28 : 48));
-  const stageHeight = Math.min(heightCap, widthRoom / PREVIEW_ASPECT);
-  const stageWidth = stageHeight * PREVIEW_ASPECT;
 
   if (!head || !body) {
     return (
@@ -65,15 +60,15 @@ export default function OnlineRevealScreen() {
 
       <View style={styles.previewArea}>
         {revealed ? (
-          <DrawingPreview
-            head={head}
-            body={body}
-            maxHeightRatio={compact ? 0.46 : 0.54}
-          />
+          <DrawingPreview head={head} body={body} />
         ) : (
-          <View style={[styles.curtain, { width: stageWidth, height: stageHeight }]}>
-            <Text style={styles.eyes}>◉   ◉</Text>
-          </View>
+          <GameSurfaceSlot kind="preview" aspectRatio={PREVIEW_SURFACE_ASPECT} maxWidth={360}>
+            {({ width, height: frameHeight }) => (
+              <View style={[styles.curtain, { width, height: frameHeight }]}>
+                <Text style={styles.eyes}>◉   ◉</Text>
+              </View>
+            )}
+          </GameSurfaceSlot>
         )}
       </View>
 

@@ -5,16 +5,16 @@ import {
   Platform,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import Svg, { G, Path } from 'react-native-svg';
+import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
+import { PREVIEW_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, PartTransform, Point } from '@/src/types/game';
 
 const VIRTUAL_WIDTH = 360;
 const VIRTUAL_HEIGHT = 760;
-const ASPECT_RATIO = VIRTUAL_WIDTH / VIRTUAL_HEIGHT;
 const SPLIT_X = VIRTUAL_WIDTH / 2;
 const SPLIT_Y = VIRTUAL_HEIGHT / 2;
 const CONNECTION_INSET = 20;
@@ -32,7 +32,6 @@ type Props = {
   bodyTransform?: PartTransform;
   interactive?: boolean;
   onMovePart?: (role: GameRole, dx: number, dy: number) => void;
-  maxHeightRatio?: number;
 };
 
 function Part({
@@ -76,18 +75,11 @@ export function DrawingPreview({
   bodyTransform = { x: 0, y: 0, scale: 1 },
   interactive = false,
   onMovePart,
-  maxHeightRatio = 0.56,
 }: Props) {
-  const { height: viewportHeight, width: viewportWidth } = useWindowDimensions();
   const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
   const roleRef = useRef<GameRole | null>(null);
   const lastGestureRef = useRef({ x: 0, y: 0 });
   const [activeRole, setActiveRole] = useState<GameRole | null>(null);
-
-  const horizontalRoom = Math.max(160, viewportWidth - (viewportWidth < 480 ? 28 : 48));
-  const heightCap = Math.max(220, Math.min(620, viewportHeight * maxHeightRatio));
-  const frameHeight = Math.min(heightCap, horizontalRoom / ASPECT_RATIO);
-  const frameWidth = frameHeight * ASPECT_RATIO;
 
   const responder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => interactive,
@@ -126,52 +118,55 @@ export function DrawingPreview({
     onPanResponderTerminationRequest: () => false,
   }), [interactive, onMovePart]);
 
-  const onLayout = (event: LayoutChangeEvent) => {
+  const onFrameLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (width > 0 && height > 0) layoutRef.current = { width, height };
   };
 
   return (
-    <View
-      style={[
-        styles.frame,
-        { width: frameWidth, height: frameHeight },
-        interactive && Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as never),
-      ]}
-      onLayout={onLayout}
-      {...(interactive ? responder.panHandlers : {})}
-    >
-      <Svg
-        pointerEvents="none"
-        width="100%"
-        height="100%"
-        viewBox="0 0 360 760"
-        preserveAspectRatio="none"
-      >
-        <Part drawing={head} transform={headTransform} connectionY={HEAD_CONNECTION_Y} />
-        <Part drawing={body} transform={bodyTransform} connectionY={BODY_CONNECTION_Y} />
-      </Svg>
+    <GameSurfaceSlot kind="preview" aspectRatio={PREVIEW_SURFACE_ASPECT} maxWidth={360}>
+      {({ width, height }) => (
+        <View
+          style={[
+            styles.frame,
+            { width, height },
+            interactive && Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as never),
+          ]}
+          onLayout={onFrameLayout}
+          {...(interactive ? responder.panHandlers : {})}
+        >
+          <Svg
+            pointerEvents="none"
+            width="100%"
+            height="100%"
+            viewBox="0 0 360 760"
+            preserveAspectRatio="none"
+          >
+            <Part drawing={head} transform={headTransform} connectionY={HEAD_CONNECTION_Y} />
+            <Part drawing={body} transform={bodyTransform} connectionY={BODY_CONNECTION_Y} />
+          </Svg>
 
-      {interactive && (
-        <>
-          <View pointerEvents="none" style={[styles.partLabel, styles.headLabel]}>
-            <Text style={[styles.partLabelText, activeRole === 'HEAD' && styles.partLabelTextActive]}>HEAD · DRAG</Text>
-          </View>
-          <View pointerEvents="none" style={[styles.partLabel, styles.bodyLabel]}>
-            <Text style={[styles.partLabelText, activeRole === 'BODY' && styles.partLabelTextActive]}>BODY · DRAG</Text>
-          </View>
-          <View pointerEvents="none" style={styles.splitGuide} />
-        </>
+          {interactive && (
+            <>
+              <View pointerEvents="none" style={[styles.partLabel, styles.headLabel]}>
+                <Text style={[styles.partLabelText, activeRole === 'HEAD' && styles.partLabelTextActive]}>HEAD · DRAG</Text>
+              </View>
+              <View pointerEvents="none" style={[styles.partLabel, styles.bodyLabel]}>
+                <Text style={[styles.partLabelText, activeRole === 'BODY' && styles.partLabelTextActive]}>BODY · DRAG</Text>
+              </View>
+              <View pointerEvents="none" style={styles.splitGuide} />
+            </>
+          )}
+        </View>
       )}
-    </View>
+    </GameSurfaceSlot>
   );
 }
 
 const styles = StyleSheet.create({
   frame: {
     flexGrow: 0,
-    flexShrink: 1,
-    alignSelf: 'center',
+    flexShrink: 0,
     backgroundColor: colors.card,
     borderColor: colors.ink,
     borderWidth: 2,
