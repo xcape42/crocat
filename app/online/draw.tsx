@@ -7,6 +7,7 @@ import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
 import {
   advanceDrawing,
+  leaveRoom,
   loadRoomById,
   loadSubmissions,
   resumeDrawing,
@@ -180,6 +181,19 @@ export default function OnlineDrawScreen() {
     }
   };
 
+  const leave = async () => {
+    if (!params.roomId || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(params.roomId);
+    } catch {
+      // Returning home is still correct if the room disappeared first.
+    } finally {
+      reset();
+      router.replace('/');
+    }
+  };
+
   const undo = () => setDrawing((current) => ({
     ...current,
     strokes: current.strokes.slice(0, -1),
@@ -207,7 +221,17 @@ export default function OnlineDrawScreen() {
             <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
+          <View style={styles.headerActions}>
+            <View style={styles.headerActions}>
           <CountdownBadge remaining={remaining} />
+          <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+            <Text style={styles.leave}>LEAVE ROUND</Text>
+          </Pressable>
+        </View>
+            <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+              <Text style={styles.leave}>LEAVE ROUND</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.waiting}>
@@ -290,6 +314,8 @@ const styles = StyleSheet.create({
   waitingScreen: { gap: 10 },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
   waitingTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
+  headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
+  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1.3, color: colors.muted },
   role: { fontSize: 29, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
   roleCompact: { fontSize: 25 },
