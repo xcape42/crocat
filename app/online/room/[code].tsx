@@ -10,6 +10,7 @@ import { leaveRoom, loadRoom, setReady, startRound, updateRoomSettings } from '@
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { clearActiveRoomCode, rememberActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useCoalescedAsync } from '@/src/hooks/useCoalescedAsync';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function OnlineRoomScreen() {
@@ -33,13 +34,14 @@ export default function OnlineRoomScreen() {
   const [joinNotice, setJoinNotice] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigationRef = useRef<string | null>(null);
 
   const goHome = useCallback(() => {
     reset();
     router.replace('/');
   }, [reset, router]);
 
-  const refresh = useCallback(async () => {
+  const refreshOnce = useCallback(async () => {
     if (!code) return;
 
     try {
@@ -55,6 +57,8 @@ export default function OnlineRoomScreen() {
       if (me && !activeRole) setIdentity(me.user_id, me.role);
 
       if (state.room.status === 'prompt_select' && state.round && me) {
+        if (navigationRef.current === 'prompt') return;
+        navigationRef.current = 'prompt';
         router.replace({
           pathname: '/online/prompt',
           params: {
@@ -66,6 +70,8 @@ export default function OnlineRoomScreen() {
       }
 
       if (state.room.status === 'drawing' && state.round && me) {
+        if (navigationRef.current === 'draw') return;
+        navigationRef.current = 'draw';
         router.replace({
           pathname: '/online/draw',
           params: {
@@ -80,6 +86,8 @@ export default function OnlineRoomScreen() {
       }
 
       if (state.room.status === 'adjusting' && state.round && me) {
+        if (navigationRef.current === 'adjust') return;
+        navigationRef.current = 'adjust';
         router.replace({
           pathname: '/online/adjust',
           params: {
@@ -92,6 +100,8 @@ export default function OnlineRoomScreen() {
       }
 
       if ((state.room.status === 'final_reveal' || state.room.status === 'reveal') && state.round) {
+        if (navigationRef.current === 'reveal') return;
+        navigationRef.current = 'reveal';
         router.replace({
           pathname: '/online/reveal',
           params: {
@@ -103,7 +113,9 @@ export default function OnlineRoomScreen() {
     } catch {
       setError('Connection interrupted. Reconnecting…');
     }
-  }, [code, goHome, router, setIdentity, setRoomState]);
+  }, [code, router, setIdentity, setRoomState]);
+
+  const refresh = useCoalescedAsync(refreshOnce);
 
   useEffect(() => {
     if (code) void rememberActiveRoomCode(String(code));
@@ -163,6 +175,10 @@ export default function OnlineRoomScreen() {
   const isHost = Boolean(room && userId === room.host_id);
   const guest = players.find((player) => player.user_id !== room?.host_id);
   const guestReady = players.length === 2 && Boolean(guest?.ready);
+  const bothOnline =
+    players.length === 2
+    && players.every((player) => onlineUserIds.includes(player.user_id));
+  const canStart = guestReady && bothOnline;
 
   const toggleReady = async () => {
     if (!room || !me || isHost) return;
@@ -271,13 +287,17 @@ export default function OnlineRoomScreen() {
           <>
             <CrocatButton
               variant="coral"
-              disabled={busy || !guestReady || room?.status !== 'waiting'}
+              disabled={busy || !canStart || room?.status !== 'waiting'}
               onPress={start}
             >
               START ROUND
             </CrocatButton>
             <Text style={styles.hostNote}>
-              {guestReady ? 'Sarah is ready. Start when you are.' : 'Waiting for Sarah to be ready…'}
+              {!bothOnline
+                ? 'Waiting until both players are actively online…'
+                : guestReady
+                  ? 'Sarah is ready. Start when you are.'
+                  : 'Waiting for Sarah to be ready…'}
             </Text>
           </>
         ) : (
