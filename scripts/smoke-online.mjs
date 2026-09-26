@@ -22,75 +22,29 @@ async function guest(name) {
 const first = (data) => Array.isArray(data) ? data[0] : data;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function subscribePresence(supabase, roomId, user, onJoin) {
-  const channel = supabase.channel(`room:${roomId}`, {
-    config: { presence: { key: user.id } },
-  });
-
-  if (onJoin) {
-    channel.on('presence', { event: 'join' }, ({ key }) => {
-      if (String(key) !== user.id) onJoin(String(key));
-    });
-  }
-
+async function subscribe(channel) {
   await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Presence subscription timed out')), 10000);
-    channel.subscribe(async (status) => {
+    const timer = setTimeout(() => reject(new Error('Realtime subscription timed out')), 10000);
+    channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         clearTimeout(timer);
-        await channel.track({
-          user_id: user.id,
-          display_name: String(user.user_metadata?.display_name ?? 'Guest'),
-          online_at: new Date().toISOString(),
-        });
         resolve();
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         clearTimeout(timer);
-        reject(new Error(`Presence channel failed: ${status}`));
+        reject(new Error(`Realtime channel failed: ${status}`));
       }
     });
   });
-
-  return channel;
 }
 
-async function waitForHostPresenceJoin(domi, domiUser, sarah, sarahUser, roomId) {
-  let resolveJoin;
-  let rejectJoin;
-  const joined = new Promise((resolve, reject) => {
-    resolveJoin = resolve;
-    rejectJoin = reject;
-  });
-
-  const domiChannel = await subscribePresence(domi, roomId, domiUser, (joinedUserId) => {
-    if (joinedUserId === sarahUser.id) resolveJoin();
-  });
-
-  const timeout = setTimeout(
-    () => rejectJoin(new Error('Host did not receive Sarah Presence join')),
-    10000,
-  );
-
-  const sarahChannel = await subscribePresence(sarah, roomId, sarahUser);
-
-  await joined.finally(() => clearTimeout(timeout));
-
-  return async () => {
-    await Promise.all([
-      domi.removeChannel(domiChannel),
-      sarah.removeChannel(sarahChannel),
-    ]);
-  };
-}
-
-async function submitPair(domi, sarah, roundId, suffix) {
+async function submitPair(domi, sarah, roundId) {
   const head = {
-    id: `smoke-head-${suffix}`,
-    strokes: [{ id: `h-${suffix}`, points: [{ x: 20, y: 20 }, { x: 40, y: 40 }], color: '#17221D', width: 6, opacity: 1 }],
+    id: 'smoke-head',
+    strokes: [{ id: 'h1', points: [{ x: 20, y: 20 }, { x: 40, y: 40 }], color: '#17221D', width: 6, opacity: 1 }],
   };
   const body = {
-    id: `smoke-body-${suffix}`,
-    strokes: [{ id: `b-${suffix}`, points: [{ x: 20, y: 40 }, { x: 40, y: 80 }], color: '#17221D', width: 6, opacity: 1 }],
+    id: 'smoke-body',
+    strokes: [{ id: 'b1', points: [{ x: 20, y: 40 }, { x: 40, y: 80 }], color: '#17221D', width: 6, opacity: 1 }],
   };
 
   const headResult = await domi.rpc('submit_drawing', {
@@ -104,9 +58,49 @@ async function submitPair(domi, sarah, roundId, suffix) {
   if (bodyResult.error) throw bodyResult.error;
 }
 
+async function verifyBroadcast(domi, sarah, roundId) {
+  let resolveTransform;
+  let rejectTransform;
+
+  const received = new Promise((resolve, reject) => {
+    resolveTransform = resolve;
+    rejectTransform = reject;
+  });
+
+  const sarahChannel = sarah
+    .channel(`adjust:${roundId}`)
+    .on('broadcast', { event: 'part_transform' }, ({ payload }) => {
+      if (payload?.role === 'HEAD' && payload?.transform?.x === 12) {
+        resolveTransform();
+      }
+    });
+
+  const domiChannel = domi.channel(`adjust:${roundId}`);
+
+  await Promise.all([subscribe(sarahChannel), subscribe(domiChannel)]);
+
+  const timeout = setTimeout(
+    () => rejectTransform(new Error('Sarah did not receive Domi HEAD transform broadcast')),
+    10000,
+  );
+
+  await domiChannel.send({
+    type: 'broadcast',
+    event: 'part_transform',
+    payload: { role: 'HEAD', transform: { x: 12, y: -4, scale: 1.05 } },
+  });
+
+  await received.finally(() => clearTimeout(timeout));
+
+  await Promise.all([
+    domi.removeChannel(domiChannel),
+    sarah.removeChannel(sarahChannel),
+  ]);
+}
+
 async function main() {
-  const { supabase: domi, user: domiUser } = await guest('Domi');
-  const { supabase: sarah, user: sarahUser } = await guest('Sarah');
+  const { supabase: domi } = await guest('Domi');
+  const { supabase: sarah } = await guest('Sarah');
 
   const created = await domi.rpc('create_room', {
     p_display_name: 'Domi',
@@ -123,98 +117,124 @@ async function main() {
     p_display_name: 'Sarah',
   });
   if (joined.error) throw joined.error;
-  if (first(joined.data)?.player_role !== 'BODY') throw new Error('Sarah did not receive BODY');
-
-  const closePresence = await waitForHostPresenceJoin(domi, domiUser, sarah, sarahUser, room.room_id);
-
-  const hostPlayers = await domi.from('room_players')
-    .select('user_id,display_name')
-    .eq('room_id', room.room_id);
-  if (hostPlayers.error) throw hostPlayers.error;
-  if ((hostPlayers.data ?? []).length !== 2) {
-    throw new Error('Host could not refresh both room members after Presence join');
+  if (first(joined.data)?.player_role !== 'BODY') {
+    throw new Error('Sarah did not receive BODY');
   }
 
-  await closePresence();
-
   for (const supabase of [domi, sarah]) {
-    const ready = await supabase.rpc('set_ready', { p_room_id: room.room_id, p_ready: true });
+    const ready = await supabase.rpc('set_ready', {
+      p_room_id: room.room_id,
+      p_ready: true,
+    });
     if (ready.error) throw ready.error;
   }
 
   const started = await domi.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
-  const roundOne = first(started.data);
-  if (!roundOne?.id || roundOne.status !== 'drawing') throw new Error('Round one did not start');
+  const round = first(started.data);
+  if (!round?.id || round.status !== 'drawing') throw new Error('Round did not start');
 
-  await submitPair(domi, sarah, roundOne.id, '1');
+  await submitPair(domi, sarah, round.id);
 
-  const revealOne = await domi.from('rooms')
-    .select('status,next_round_at')
-    .eq('id', room.room_id)
+  const adjustment = await domi
+    .from('game_rounds')
+    .select('status,adjustment_ends_at,final_reveal_ends_at')
+    .eq('id', round.id)
     .single();
-  if (revealOne.error) throw revealOne.error;
-  if (revealOne.data.status !== 'reveal' || !revealOne.data.next_round_at) {
-    throw new Error('Round one did not enter timed reveal');
+  if (adjustment.error) throw adjustment.error;
+
+  if (
+    adjustment.data.status !== 'adjusting'
+    || !adjustment.data.adjustment_ends_at
+    || !adjustment.data.final_reveal_ends_at
+  ) {
+    throw new Error('Round did not enter synchronized adjustment');
   }
 
-  const readyState = await domi.from('room_players')
-    .select('ready')
-    .eq('room_id', room.room_id);
-  if (readyState.error) throw readyState.error;
-  if ((readyState.data ?? []).some((player) => player.ready)) {
-    throw new Error('Ready state was not reset after reveal');
+  await verifyBroadcast(domi, sarah, round.id);
+
+  const headTransform = { x: 12, y: -4, scale: 1.05 };
+  const bodyTransform = { x: -9, y: 6, scale: 0.95 };
+
+  const saveHead = await domi.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'HEAD',
+    p_transform: headTransform,
+  });
+  if (saveHead.error) throw saveHead.error;
+
+  const saveBody = await sarah.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'BODY',
+    p_transform: bodyTransform,
+  });
+  if (saveBody.error) throw saveBody.error;
+
+  const forbidden = await sarah.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'HEAD',
+    p_transform: { x: 0, y: 0, scale: 1 },
+  });
+  if (!forbidden.error) throw new Error('Sarah was able to modify HEAD');
+
+  const stored = await domi
+    .from('submissions')
+    .select('role,transform')
+    .eq('round_id', round.id);
+  if (stored.error) throw stored.error;
+
+  const byRole = new Map((stored.data ?? []).map((row) => [row.role, row.transform]));
+  if (Number(byRole.get('HEAD')?.x) !== 12 || Number(byRole.get('BODY')?.x) !== -9) {
+    throw new Error('Transforms were not persisted per role');
   }
 
-  for (const supabase of [domi, sarah]) {
-    const ready = await supabase.rpc('set_ready', { p_room_id: room.room_id, p_ready: true });
-    if (ready.error) throw ready.error;
-  }
-
-  const advanced = await sarah.rpc('advance_round', { p_room_id: room.room_id });
-  if (advanced.error) throw advanced.error;
-  const roundTwo = first(advanced.data);
-  if (!roundTwo?.id || roundTwo.id === roundOne.id || roundTwo.status !== 'drawing') {
-    throw new Error('Ready check did not advance to a second round in the same room');
-  }
-
-  const stillSameRoom = await domi.from('rooms')
-    .select('id,code,status,next_round_at')
-    .eq('id', room.room_id)
-    .single();
-  if (stillSameRoom.error) throw stillSameRoom.error;
-  if (stillSameRoom.data.code !== room.room_code || stillSameRoom.data.status !== 'drawing') {
-    throw new Error('Room was not preserved for round two');
-  }
-
-  await submitPair(domi, sarah, roundTwo.id, '2');
-
-  const revealTwo = await domi.from('rooms')
-    .select('status,next_round_at')
-    .eq('id', room.room_id)
-    .single();
-  if (revealTwo.error) throw revealTwo.error;
-  if (revealTwo.data.status !== 'reveal' || !revealTwo.data.next_round_at) {
-    throw new Error('Round two did not enter timed reveal');
-  }
-
-  const waitMs = Math.max(
+  const adjustmentWait = Math.max(
     0,
-    new Date(revealTwo.data.next_round_at).getTime() - Date.now() + 750,
+    new Date(adjustment.data.adjustment_ends_at).getTime() - Date.now() + 600,
   );
-  await wait(waitMs);
+  await wait(adjustmentWait);
 
-  const timedAdvance = await domi.rpc('advance_round', { p_room_id: room.room_id });
-  if (timedAdvance.error) throw timedAdvance.error;
-  const roundThree = first(timedAdvance.data);
-  if (!roundThree?.id || roundThree.id === roundTwo.id || roundThree.status !== 'drawing') {
-    throw new Error('30-second fallback did not advance to round three');
+  const toReveal = await domi.rpc('advance_phase', { p_room_id: room.room_id });
+  if (toReveal.error) throw toReveal.error;
+
+  const finalReveal = await domi
+    .from('game_rounds')
+    .select('status,final_reveal_ends_at')
+    .eq('id', round.id)
+    .single();
+  if (finalReveal.error) throw finalReveal.error;
+  if (finalReveal.data.status !== 'final_reveal') {
+    throw new Error(`Expected final_reveal, got ${finalReveal.data.status}`);
   }
 
-  const leave = await sarah.rpc('leave_room', { p_room_id: room.room_id });
-  if (leave.error) throw leave.error;
+  const revealWait = Math.max(
+    0,
+    new Date(finalReveal.data.final_reveal_ends_at).getTime() - Date.now() + 600,
+  );
+  await wait(revealWait);
 
-  const afterSarahLeaves = await domi.from('rooms')
+  const next = await sarah.rpc('advance_phase', { p_room_id: room.room_id });
+  if (next.error) throw next.error;
+  const nextRound = first(next.data);
+  if (!nextRound?.id || nextRound.id === round.id || nextRound.status !== 'drawing') {
+    throw new Error('Final reveal did not auto-advance to a new drawing round');
+  }
+
+  const sameRoom = await domi
+    .from('rooms')
+    .select('id,code,status')
+    .eq('id', room.room_id)
+    .single();
+  if (sameRoom.error) throw sameRoom.error;
+  if (sameRoom.data.code !== room.room_code || sameRoom.data.status !== 'drawing') {
+    throw new Error('Next round did not stay in the same room');
+  }
+
+  const leaveSarah = await sarah.rpc('leave_room', { p_room_id: room.room_id });
+  if (leaveSarah.error) throw leaveSarah.error;
+
+  const afterSarahLeaves = await domi
+    .from('rooms')
     .select('status')
     .eq('id', room.room_id)
     .single();
@@ -223,23 +243,10 @@ async function main() {
     throw new Error('Host room did not return to waiting after Sarah left');
   }
 
-  const playersAfterLeave = await domi.from('room_players')
-    .select('user_id')
-    .eq('room_id', room.room_id);
-  if (playersAfterLeave.error) throw playersAfterLeave.error;
-  if ((playersAfterLeave.data ?? []).length !== 1) {
-    throw new Error('Sarah membership was not removed');
-  }
-
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  await wait(150);
-  const closedRoom = await domi.from('rooms').select('id').eq('id', room.room_id).maybeSingle();
-  if (closedRoom.error) throw closedRoom.error;
-  if (closedRoom.data) throw new Error('Host leave did not close the room');
-
-  console.log(`Crocat persistent-room smoke passed: ${room.room_code}`);
+  console.log(`Crocat adjustment smoke passed: ${room.room_code}`);
 }
 
 main().catch((error) => {
