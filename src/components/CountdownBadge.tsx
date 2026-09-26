@@ -19,7 +19,7 @@ export function CountdownBadge({ remaining, label }: Props) {
       warning && styles.warning,
       critical && styles.critical,
     ]}>
-      <Text style={styles.label}>
+      <Text style={[styles.label, warning && styles.labelWarning]}>
         {critical ? 'HURRY' : (warning ? 'LAST SECONDS' : (label ?? 'TIME'))}
       </Text>
       <Text style={[styles.time, warning && styles.timeWarning]}>{min}:{sec}</Text>
@@ -29,33 +29,46 @@ export function CountdownBadge({ remaining, label }: Props) {
 
 const styles = StyleSheet.create({
   pill: {
-    minWidth: 82,
+    width: 98,
+    height: 58,
+    flexShrink: 0,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
     backgroundColor: colors.ink,
     borderRadius: radius.pill,
-    paddingHorizontal: 13,
-    paddingVertical: 7,
     borderWidth: 2,
     borderColor: colors.ink,
+    paddingHorizontal: 8,
+    paddingVertical: 0,
   },
   warning: {
     backgroundColor: colors.lime,
   },
   critical: {
     backgroundColor: colors.coral,
-    transform: [{ scale: 1.06 }],
+    borderWidth: 3,
   },
   label: {
-    color: colors.ink,
+    width: '100%',
+    color: colors.white,
     fontWeight: '900',
     fontSize: 8,
-    letterSpacing: 0.7,
+    lineHeight: 10,
+    letterSpacing: 0.55,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
+  labelWarning: { color: colors.ink },
   time: {
+    width: '100%',
     color: colors.white,
     fontWeight: '900',
     fontVariant: ['tabular-nums'],
-    fontSize: 16,
+    fontSize: 17,
+    lineHeight: 20,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   timeWarning: { color: colors.ink },
 });
