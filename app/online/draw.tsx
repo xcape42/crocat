@@ -7,6 +7,7 @@ import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
 import {
   advanceDrawing,
+  leaveRoom,
   loadRoomById,
   loadSubmissions,
   resumeDrawing,
@@ -20,6 +21,7 @@ import {
 } from '@/src/features/multiplayer/drawingDraft';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
@@ -193,6 +195,23 @@ export default function OnlineDrawScreen() {
     }
   };
 
+  const leave = async () => {
+    if (!params.roomId || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(params.roomId);
+    } catch {
+      // Explicit leave still returns Home if the room vanished first.
+    } finally {
+      if (params.roundId && userId) {
+        await clearDrawingDraft(params.roundId, userId);
+      }
+      await clearActiveRoomCode();
+      reset();
+      router.replace('/');
+    }
+  };
+
   const updateDrawing = useCallback((next: CrocatDrawing) => {
     setDrawing(next);
     if (params.roundId && userId) {
@@ -237,7 +256,12 @@ export default function OnlineDrawScreen() {
             <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
-          <CountdownBadge remaining={remaining} />
+          <View style={styles.headerActions}>
+            <CountdownBadge remaining={remaining} />
+            <Pressable accessibilityRole="button" onPress={leave}>
+              <Text style={styles.leave}>LEAVE ROUND</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.waiting}>
@@ -267,7 +291,12 @@ export default function OnlineDrawScreen() {
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
           <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
         </View>
-        <CountdownBadge remaining={remaining} />
+        <View style={styles.headerActions}>
+          <CountdownBadge remaining={remaining} />
+          <Pressable accessibilityRole="button" onPress={leave}>
+            <Text style={styles.leave}>LEAVE ROUND</Text>
+          </Pressable>
+        </View>
       </View>
 
       {!!promptTerm && (
@@ -320,6 +349,8 @@ const styles = StyleSheet.create({
   waitingScreen: { gap: 10 },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
   waitingTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
+  headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
+  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1.3, color: colors.muted },
   role: { fontSize: 29, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
   roleCompact: { fontSize: 25 },
