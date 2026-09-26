@@ -1,6 +1,9 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { AppState } from 'react-native';
 import type { GameRole, PartTransform } from '@/src/types/game';
 import { requireSupabase } from '@/src/lib/supabase';
+
+const channelCleanup = new WeakMap<RealtimeChannel, () => void>();
 
 type RoomRealtimeHandlers = {
   onSync?: (onlineUserIds: string[]) => void;
@@ -59,14 +62,21 @@ export async function subscribeToRoom(
       () => handlers.onRoundChange?.(),
     );
 
+  const trackActivePresence = async () => {
+    await channel.track({
+      user_id: userId,
+      display_name: displayName,
+      online_at: new Date().toISOString(),
+      active: true,
+    });
+  };
+
   await new Promise<void>((resolve, reject) => {
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await channel.track({
-          user_id: userId,
-          display_name: displayName,
-          online_at: new Date().toISOString(),
-        });
+        if (AppState.currentState === 'active') {
+          await trackActivePresence();
+        }
         handlers.onPlayerChange?.();
         resolve();
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -74,6 +84,16 @@ export async function subscribeToRoom(
       }
     });
   });
+
+  const appStateSubscription = AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      void trackActivePresence();
+    } else {
+      void channel.untrack();
+    }
+  });
+
+  channelCleanup.set(channel, () => appStateSubscription.remove());
 
   return channel;
 }
@@ -144,6 +164,11 @@ export async function subscribeToAdjustment(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
       onChange,
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` },
+      onChange,
     );
 
   await new Promise<void>((resolve, reject) => {
@@ -172,5 +197,13 @@ export async function broadcastTransform(
 }
 
 export async function removeChannel(channel: RealtimeChannel | null) {
-  if (channel) await requireSupabase().removeChannel(channel);
+  if (!channel) return;
+  channelCleanup.get(channel)?.();
+  channelCleanup.delete(channel);
+  try {
+    await channel.untrack();
+  } catch {
+    // The channel may already be disconnected.
+  }
+  await requireSupabase().removeChannel(channel);
 }

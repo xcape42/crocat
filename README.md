@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.1
+## Stable version: 1.4.2
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.1 includes two Split modes:
+Crocat 1.4.2 includes two Split modes:
 
 ### Local Split
 
@@ -31,6 +31,8 @@ The player assigned the first part gets three prompts from three different theme
 Early submission remains reversible while the other player is still drawing. A player can submit, return to the canvas, edit, and submit again. As soon as **both players are submitted**, Crocat starts Adjustment immediately. Likewise, when both players are Ready in Final Reveal, the next Prompt Select begins immediately.
 
 Online state is server-authoritative and resumable. The active room is stored separately from the recent-room convenience value. On app/browser foreground, reconnect, reload, or a fresh page open, Crocat reloads the active room, reconciles expired server phases, restores the current player/role, and navigates to the correct Lobby, Prompt, Drawing, Adjustment, or Reveal screen. If the room is inactive, the player returns to its lobby. Explicit **Home / Leave** is what clears the active-room pointer.
+
+Realtime Presence now represents **active-in-game** state: backgrounding the app/tab removes the player from active Presence and returning restores it. A new round never starts from Final Reveal while one player is inactive; Crocat visibly waits for that player to return. During Adjustment both players can mark themselves Ready while remaining on the live composition screen. At 2/2 Ready, Final Reveal begins early; otherwise the 15-second Adjustment timer remains authoritative. Prompt, Drawing and Adjustment also expose a compact **Leave Round** control.
 
 The current drawing canvas is also saved locally per round so a reload during an unfinished Drawing phase can restore it. Realtime remains the primary update path; a lightweight active-session watchdog provides recovery when a websocket event was missed or the browser throttled the background tab.
 
@@ -70,7 +72,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.1 release passed:
+The 1.4.2 release passed:
 
 - dependency install
 - TypeScript

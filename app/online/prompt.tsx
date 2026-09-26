@@ -8,6 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
   advancePrompt,
+  leaveRoom,
   loadRoomById,
   rerollPrompt,
   selectPrompt,
@@ -15,6 +16,7 @@ import {
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
 import type { PromptOption } from '@/src/features/multiplayer/types';
 
@@ -116,6 +118,20 @@ export default function OnlinePromptScreen() {
     }
   }, [refresh, roundId]);
 
+  const leave = async () => {
+    if (!roomId || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(roomId);
+    } catch {
+      // Explicit leave should still return Home if the room already disappeared.
+    } finally {
+      await clearActiveRoomCode();
+      reset();
+      router.replace('/');
+    }
+  };
+
   const remaining = useDeadlineCountdown(
     round?.id === roundId ? round.prompt_selection_ends_at : null,
     autoChoose,
@@ -179,7 +195,12 @@ export default function OnlinePromptScreen() {
             Three prompts, three different themes. Each option also shows who draws which matching part.
           </Text>
         </View>
-        <CountdownBadge remaining={remaining} label="PICK" />
+        <View style={styles.headerActions}>
+          <CountdownBadge remaining={remaining} label="PICK" />
+          <Pressable accessibilityRole="button" onPress={leave}>
+            <Text style={styles.leave}>LEAVE ROUND</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.options}>
@@ -227,6 +248,8 @@ const styles = StyleSheet.create({
   screen: { gap: 12 },
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
   headerText: { flex: 1 },
+  headerActions: { alignItems: 'center', gap: 6, flexShrink: 0 },
+  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 5, color: colors.ink, fontSize: 30, lineHeight: 33, fontWeight: '900', letterSpacing: -1.1 },
   copy: { marginTop: 6, color: colors.muted, fontSize: 12, lineHeight: 17 },
