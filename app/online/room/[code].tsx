@@ -5,8 +5,16 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
 import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
-import { currentUser } from '@/src/features/multiplayer/auth';
-import { leaveRoom, loadRoom, setReady, startRound, updateRoomSettings } from '@/src/features/multiplayer/room';
+import { currentUser, ensureGuest } from '@/src/features/multiplayer/auth';
+import {
+  joinRoom,
+  leaveRoom,
+  loadRoom,
+  loadRoomById,
+  setReady,
+  startRound,
+  updateRoomSettings,
+} from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
@@ -23,6 +31,7 @@ export default function OnlineRoomScreen() {
     players,
     round,
     onlineUserIds,
+    setDisplayName,
     setIdentity,
     setRoomState,
     setOnlineUserIds,
@@ -106,18 +115,35 @@ export default function OnlineRoomScreen() {
   }, [code, goHome, router, setIdentity, setRoomState]);
 
   useEffect(() => {
-    if (code) void rememberRoomCode(String(code));
-  }, [code]);
-
-  useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
         setError('');
-        const user = await currentUser();
-        if (!user) throw new Error('Guest session missing. Rejoin the room.');
-        if (!userId) setIdentity(user.id, role);
+
+        const roomCode = String(code ?? '').trim().toUpperCase();
+        if (!/^[A-Z0-9]{6}$/.test(roomCode)) {
+          goHome();
+          return;
+        }
+
+        let user = null;
+        try {
+          user = await currentUser();
+        } catch {
+          // A direct room link may be opened before Crocat created a guest session.
+        }
+        if (!user) user = await ensureGuest('Sarah');
+
+        const ticket = await joinRoom(roomCode, 'Sarah');
+        const initialState = await loadRoomById(ticket.roomId);
+        const me = initialState.players.find((player) => player.user_id === user.id);
+        if (!me) throw new Error('Room membership could not be established.');
+
+        await rememberRoomCode(ticket.code);
+        setDisplayName(me.display_name);
+        setIdentity(user.id, me.role);
+        setRoomState(initialState.room, initialState.players, initialState.round);
 
         await refresh();
         if (cancelled) return;
@@ -128,7 +154,7 @@ export default function OnlineRoomScreen() {
         channelRef.current = await subscribeToRoom(
           active.id,
           user.id,
-          displayName || String(user.user_metadata?.display_name ?? 'Guest'),
+          me.display_name,
           {
             onSync: setOnlineUserIds,
             onPresenceJoin: (joinedUserId) => {
@@ -144,8 +170,8 @@ export default function OnlineRoomScreen() {
             onRoundChange: refresh,
           },
         );
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load room.');
+      } catch {
+        if (!cancelled) goHome();
       }
     })();
 
