@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.8
+## Stable version: 1.4.9
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.8 keeps the stable 1.4.7 game flow and makes online room URLs first-class entry points: a shared room link can create the requested room, join an available room, rejoin the same membership after a reload, and recover into the correct active phase. GitHub Pages now boots Crocat through an SPA fallback for arbitrary room-code URLs, and the room lobby can copy either the six-character code or the complete shareable link:
+Crocat 1.4.9 keeps the stable 1.4.8 room-link flow and removes lobby ownership. Both players are equal in the waiting room: both can change game settings, both must mark themselves Ready, and once both are Ready either player can start the round. If one player leaves, the other remains in the room and a replacement player can join:
 
 ### Local Split
 
@@ -22,9 +22,9 @@ The drawing connection guide is role-aware:
 
 Two devices connect through a six-character room code.
 
-`Create or enter room code → Sarah Ready → Domi Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
+`Create or enter room code → both players Ready → either player Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
 
-Host and drawing role are separate: **Domi remains host**, but HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options. The active catalog contains 60 curated prompts in **Mystisch, Fantasy, Natur, Elegant and Genuss**, with 12 prompts per theme.
+There is no gameplay owner in the lobby. Both room members have the same permissions. HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options. The active catalog contains 60 curated prompts in **Mystisch, Fantasy, Natur, Elegant and Genuss**, with 12 prompts per theme.
 
 The BODY player sees the same prompt-selection screen live, but cannot choose or reroll. Each option also shows its split labels. As soon as HEAD chooses a prompt, the server switches to Drawing immediately and the other client resynchronizes as soon as its realtime subscription is live. During Drawing and Adjustment each player sees the selected term plus the semantic label for their assigned half; the theme is hidden again until the Final Reveal.
 
@@ -70,13 +70,13 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.8 release validation includes:
+The 1.4.9 release validation includes:
 
 - dependency install
 - TypeScript
 - Expo Doctor
 - production Expo web export with verified GitHub Pages direct-link fallback
-- automated Supabase multiplayer smoke coverage for direct-link create/join/rejoin/full/started-room behavior, prompt flow, immediate two-submit handoff, Adjustment Ready and heartbeat
+- automated Supabase multiplayer smoke coverage for equal-player settings, 2/2 lobby Ready, start permissions, leave/replacement behavior, direct-link create/join/rejoin/full/started-room behavior, prompt flow, immediate two-submit handoff, Adjustment Ready and heartbeat
 - database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
 - exact phase-deadline validation for Adjustment and Final Reveal
 - room-code clipboard interaction with global browser text-selection protection
@@ -94,6 +94,6 @@ The 1.4.8 release validation includes:
 
 Global Settings are reserved for app-wide preferences such as theme, sound and accessibility.
 
-Game-specific settings live in the game lobby. For Online Split, only the host can edit them; the guest sees the current configuration read-only. Changing a room setting clears the guest Ready state so the guest explicitly confirms the new configuration before the host can start.
+Game-specific settings live in the game lobby. For Online Split, both players can edit them while the room is waiting. Changing a room setting clears both Ready states so both players explicitly confirm the new configuration before either player can start.
 
 Local Split also exposes its round duration in its local lobby.

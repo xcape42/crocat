@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.9 — Equal lobby players
+
+- Remove gameplay ownership from the online waiting room
+- Let both room members change game settings while waiting
+- Reset both Ready states whenever either player changes a room setting
+- Require both players to mark themselves Ready before a round can start
+- Let either Ready player start once the lobby is 2/2 Ready and both players are active
+- Remove HOST / guest-only lobby labels and controls from the UI
+- Keep HEAD/BODY independent from lobby identity and randomized server-side every round
+- Keep the room alive when either player leaves while the other remains
+- Return an interrupted active round to the waiting lobby when one player leaves
+- Allow a replacement player to join the remaining player without lobby-role collisions
+- Retain rooms.host_id only as a compatibility reference; it grants no lobby privileges
+- Ship the backend transition in two forward migrations so the deployed 1.4.8 client stays playable during rollout
+- Add rollback-tested and automated smoke coverage for equal settings, Ready, Start, leave and replacement behavior
+- Align package, Expo and visible app versions to 1.4.9
+
 ## 1.4.8 — Shareable, reload-safe room links
 
 - Make `/online/room/CODE` use the same atomic join-or-create backend flow as manual room-code entry
