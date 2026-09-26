@@ -80,7 +80,7 @@ export default function OnlineEntryScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>CROCAT ONLINE · 1.4.0</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
-        <Text style={styles.copy}>No account and no name form. Entering a code joins that room; if it does not exist yet, Crocat creates it. HEAD and BODY are randomized every round.</Text>
+        <Text style={styles.copy}>No account and no name form. Entering a code joins that room; if it does not exist yet, Crocat creates it. The two drawing parts are reassigned every round.</Text>
       </View>
 
       {!hasSupabaseConfig && (
