@@ -316,6 +316,10 @@ async function main() {
   if (adjustment.data.status !== 'adjusting') {
     throw new Error('Drawing deadline did not enter adjustment');
   }
+  assertFreshDeadline(adjustment.data.adjustment_ends_at, 'Adjustment deadline');
+  if (adjustment.data.final_reveal_ends_at !== null) {
+    throw new Error('Final Reveal deadline was precomputed before Final Reveal started');
+  }
 
   const headTransform = await head.rpc('save_transform', {
     p_round_id: round.id,
@@ -361,12 +365,28 @@ async function main() {
 
   const twoReadyState = await domi
     .from('game_rounds')
-    .select('status')
+    .select('status,final_reveal_ends_at')
     .eq('id', round.id)
     .single();
   if (twoReadyState.error) throw twoReadyState.error;
   if (twoReadyState.data.status !== 'final_reveal') {
     throw new Error('2/2 Adjustment Ready did not start Final Reveal');
+  }
+  assertFreshDeadline(twoReadyState.data.final_reveal_ends_at, 'Final Reveal deadline');
+
+  const revealRoom = await domi
+    .from('rooms')
+    .select('next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (revealRoom.error) throw revealRoom.error;
+  if (
+    Math.abs(
+      new Date(revealRoom.data.next_round_at).getTime()
+      - new Date(twoReadyState.data.final_reveal_ends_at).getTime(),
+    ) > 100
+  ) {
+    throw new Error('Room next-round deadline is not synchronized with Final Reveal');
   }
 
   for (const activeClient of [domi, sarah]) {
@@ -422,7 +442,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.6 gameplay smoke passed: ${code}`);
+  console.log(`Crocat 1.4.7 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {
