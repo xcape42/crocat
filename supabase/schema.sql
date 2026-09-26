@@ -49,9 +49,11 @@ create table if not exists public.submissions (
 );
 
 create index if not exists rooms_code_idx on public.rooms(code);
+create index if not exists rooms_host_id_idx on public.rooms(host_id);
 create index if not exists room_players_user_idx on public.room_players(user_id);
 create index if not exists game_rounds_room_idx on public.game_rounds(room_id, started_at desc);
 create index if not exists submissions_round_idx on public.submissions(round_id);
+create index if not exists submissions_player_id_idx on public.submissions(player_id);
 
 alter table public.rooms enable row level security;
 alter table public.room_players enable row level security;

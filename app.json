@@ -14,7 +14,8 @@
       "output": "static"
     },
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/crocat"
     }
   }
 }
