@@ -2,13 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
 import {
   advancePhase,
+  leaveRoom,
   loadRoomById,
   loadSubmissions,
   saveTransform,
+  setReady,
 } from '@/src/features/multiplayer/room';
 import {
   broadcastTransform,
@@ -41,7 +44,13 @@ export default function OnlineAdjustScreen() {
   }>();
 
   const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
-  const { round, setRoomState, reset } = useOnlineGameStore();
+  const {
+    userId,
+    players,
+    round,
+    setRoomState,
+    reset,
+  } = useOnlineGameStore();
 
   const [head, setHead] = useState<CrocatDrawing | null>(null);
   const [body, setBody] = useState<CrocatDrawing | null>(null);
@@ -49,6 +58,7 @@ export default function OnlineAdjustScreen() {
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [readyBusy, setReadyBusy] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const ownTransformRef = useRef<PartTransform>(ZERO);
@@ -248,6 +258,43 @@ export default function OnlineAdjustScreen() {
     round?.id === params.roundId ? round.adjustment_ends_at : null;
   const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment);
 
+  const me = useMemo(
+    () => players.find((player) => player.user_id === userId),
+    [players, userId],
+  );
+  const readyCount = players.filter((player) => player.ready).length;
+
+  const toggleReady = async () => {
+    if (!params.roomId || !params.roundId || !me || readyBusy) return;
+
+    try {
+      setReadyBusy(true);
+      setError('');
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+      await saveTransform(params.roundId, role, ownTransformRef.current);
+      await setReady(params.roomId, !me.ready);
+      await advancePhase(params.roomId);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update adjustment ready state.');
+    } finally {
+      setReadyBusy(false);
+    }
+  };
+
+  const leave = async () => {
+    if (!params.roomId || readyBusy) return;
+    try {
+      setReadyBusy(true);
+      await leaveRoom(params.roomId);
+    } catch {
+      // Returning home is still correct if the room disappeared first.
+    } finally {
+      reset();
+      router.replace('/');
+    }
+  };
+
   const ownTransform = useMemo(
     () => role === 'HEAD' ? headTransform : bodyTransform,
     [bodyTransform, headTransform, role],
@@ -267,13 +314,15 @@ export default function OnlineAdjustScreen() {
   return (
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerText}>
           <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {role}</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
         </View>
-        <View style={styles.countdown}>
-          <Text style={styles.countdownLabel}>ADJUST</Text>
-          <Text style={styles.countdownValue}>0:{String(secondsLeft).padStart(2, '0')}</Text>
+        <View style={styles.headerActions}>
+          <CountdownBadge remaining={secondsLeft} label="ADJUST" />
+          <Pressable accessibilityRole="button" disabled={readyBusy} onPress={leave}>
+            <Text style={styles.leave}>LEAVE ROUND</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -294,15 +343,29 @@ export default function OnlineAdjustScreen() {
         />
       </View>
 
-      <View style={styles.zoomGroup}>
-        <Text style={styles.zoomTitle}>{role} · ZOOM</Text>
-        <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
-          <Text style={styles.zoomText}>−</Text>
-        </Pressable>
-        <Text style={styles.scaleText}>{Math.round(ownTransform.scale * 100)}%</Text>
-        <Pressable accessibilityRole="button" onPress={() => zoom(0.05)} style={styles.zoomButton}>
-          <Text style={styles.zoomText}>+</Text>
-        </Pressable>
+      <View style={styles.controls}>
+        <View style={styles.zoomGroup}>
+          <Text style={styles.zoomTitle}>{role} · ZOOM</Text>
+          <Pressable accessibilityRole="button" onPress={() => zoom(-0.05)} style={styles.zoomButton}>
+            <Text style={styles.zoomText}>−</Text>
+          </Pressable>
+          <Text style={styles.scaleText}>{Math.round(ownTransform.scale * 100)}%</Text>
+          <Pressable accessibilityRole="button" onPress={() => zoom(0.05)} style={styles.zoomButton}>
+            <Text style={styles.zoomText}>+</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.readyGroup}>
+          <Text style={styles.readyCount}>{readyCount}/2 READY</Text>
+          <Pressable
+            accessibilityRole="button"
+            disabled={readyBusy || !me}
+            onPress={toggleReady}
+            style={[styles.readyButton, me?.ready && styles.readyButtonActive]}
+          >
+            <Text style={styles.readyText}>{me?.ready ? 'NOT READY' : 'READY TO REVEAL'}</Text>
+          </Pressable>
+        </View>
       </View>
 
       {!!error && <Text style={styles.error}>{error}</Text>}
@@ -316,21 +379,20 @@ const styles = StyleSheet.create({
   header: {
     flexShrink: 0,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 10,
   },
+  headerText: { flex: 1 },
+  headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
+  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.2, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
-  countdown: { alignItems: 'flex-end' },
-  countdownLabel: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
-  countdownValue: { color: colors.ink, fontSize: 22, fontWeight: '900' },
   copy: { color: colors.muted, fontSize: 11, lineHeight: 15, textAlign: 'center', flexShrink: 0 },
   previewArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
+  controls: { flexShrink: 0, gap: 7, alignItems: 'center' },
   zoomGroup: {
-    alignSelf: 'center',
-    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -352,6 +414,19 @@ const styles = StyleSheet.create({
   },
   zoomText: { fontSize: 18, fontWeight: '900', color: colors.ink },
   scaleText: { minWidth: 36, textAlign: 'center', fontSize: 10, fontWeight: '900', color: colors.ink },
+  readyGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  readyCount: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  readyButton: {
+    minHeight: 34,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.ink,
+    backgroundColor: colors.card,
+  },
+  readyButtonActive: { backgroundColor: colors.lime },
+  readyText: { color: colors.ink, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textAlign: 'center' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   error: { color: '#A74343', textAlign: 'center', fontWeight: '700', fontSize: 11 },
 });
