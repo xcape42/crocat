@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.4.6
+## Stable version: 1.4.7
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.4.6 keeps the stable 1.4.5 multiplayer flow and replaces the old prompt catalog with a curated aesthetic set of 60 prompts across five themes. Prompt options now carry server-authoritative split labels so character rounds stay Kopf/Körper while selected objects can use natural splits such as Kugel/Ständer, Pflanze/Topf or Blüte/Vase:
+Crocat 1.4.7 keeps the stable 1.4.6 game flow and hardens timing and browser interaction: every countdown is derived from its active deadline, Final Reveal gets a fresh 15-second deadline when it actually begins, and accidental browser text selection is disabled everywhere except the room code:
 
 ### Local Split
 
@@ -70,7 +70,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.4.6 release validation includes:
+The 1.4.7 release validation includes:
 
 - dependency install
 - TypeScript
@@ -78,6 +78,8 @@ The 1.4.6 release validation includes:
 - production Expo web export
 - automated Supabase multiplayer smoke coverage for prompt flow, immediate two-submit handoff, Adjustment Ready, heartbeat and full-room rejection
 - database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
+- exact phase-deadline validation for Adjustment and Final Reveal
+- room-code clipboard interaction with global browser text-selection protection
 - GitHub Pages deployment
 
 ## Git workflow
