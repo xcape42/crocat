@@ -22,6 +22,14 @@ async function guest(name) {
 const first = (data) => Array.isArray(data) ? data[0] : data;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function assertFreshDeadline(value, label) {
+  if (!value) throw new Error(`${label} is missing`);
+  const remainingMs = new Date(value).getTime() - Date.now();
+  if (remainingMs < 10000 || remainingMs > 16000) {
+    throw new Error(`${label} is not a fresh 15-second deadline: ${remainingMs}ms`);
+  }
+}
+
 function drawing(id) {
   return {
     id,
