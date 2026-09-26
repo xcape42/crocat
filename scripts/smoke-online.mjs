@@ -142,6 +142,14 @@ async function main() {
   const initialThemes = new Set(round.prompt_options.map((option) => option.theme));
   if (initialThemes.size !== 3) throw new Error('Initial prompt themes are not distinct');
 
+  const allowedPromptThemes = new Set(['Mystisch', 'Fantasy', 'Natur', 'Elegant', 'Genuss']);
+  if (round.prompt_options.some((option) => !allowedPromptThemes.has(option.theme))) {
+    throw new Error('Prompt selection returned a legacy or invalid theme');
+  }
+  if (round.prompt_options.some((option) => !option.headLabel || !option.bodyLabel)) {
+    throw new Error('Prompt selection is missing semantic split labels');
+  }
+
   const head = round.head_player_id === domiGuest.user.id ? domi : sarah;
   const body = round.body_player_id === domiGuest.user.id ? domi : sarah;
   const headUser = round.head_player_id === domiGuest.user.id ? domiGuest.user : sarahGuest.user;
@@ -171,6 +179,12 @@ async function main() {
   if (!rerolledRound.prompt_reroll_used) throw new Error('Reroll flag was not set');
   const rerolledThemes = new Set(rerolledRound.prompt_options.map((option) => option.theme));
   if (rerolledThemes.size !== 3) throw new Error('Rerolled prompt themes are not distinct');
+  if (rerolledRound.prompt_options.some((option) => !allowedPromptThemes.has(option.theme))) {
+    throw new Error('Reroll returned a legacy or invalid theme');
+  }
+  if (rerolledRound.prompt_options.some((option) => !option.headLabel || !option.bodyLabel)) {
+    throw new Error('Rerolled prompts are missing semantic split labels');
+  }
   if (rerolledRound.prompt_options.some((option) => originalTerms.has(option.term))) {
     throw new Error('Reroll repeated an old prompt term');
   }
@@ -212,6 +226,13 @@ async function main() {
     || drawingRound.prompt_theme !== picked.theme
   ) {
     throw new Error('Prompt selection did not start drawing correctly');
+  }
+
+  const selectedPrompt = drawingRound.prompt_options.find(
+    (option) => option.term === drawingRound.prompt_term,
+  );
+  if (!selectedPrompt?.headLabel || !selectedPrompt?.bodyLabel) {
+    throw new Error('Selected prompt lost its semantic split labels');
   }
 
   for (let attempt = 0; attempt < 30 && !promptRealtimeSeen; attempt += 1) {
@@ -401,7 +422,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.5 gameplay smoke passed: ${code}`);
+  console.log(`Crocat 1.4.6 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {
