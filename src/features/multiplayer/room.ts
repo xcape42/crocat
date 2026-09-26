@@ -175,3 +175,12 @@ export async function loadSubmissions(roundId: string): Promise<OnlineSubmission
   if (error) throw error;
   return (data ?? []) as OnlineSubmission[];
 }
+
+
+export async function updateRoomSettings(roomId: string, roundSeconds: number) {
+  const { error } = await requireSupabase().rpc('update_room_settings', {
+    p_room_id: roomId,
+    p_round_seconds: roundSeconds,
+  });
+  if (error) throw error;
+}

@@ -4,8 +4,9 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
+import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { currentUser } from '@/src/features/multiplayer/auth';
-import { leaveRoom, loadRoom, setReady, startRound } from '@/src/features/multiplayer/room';
+import { leaveRoom, loadRoom, setReady, startRound, updateRoomSettings } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
@@ -165,6 +166,21 @@ export default function OnlineRoomScreen() {
     }
   };
 
+  const changeRoundSeconds = async (seconds: number) => {
+    if (!room || !isHost || busy || room.status !== 'waiting' || room.round_seconds === seconds) return;
+
+    try {
+      setBusy(true);
+      setError('');
+      await updateRoomSettings(room.id, seconds);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update room settings.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const start = async () => {
     if (!room) return;
     try {
@@ -228,6 +244,15 @@ export default function OnlineRoomScreen() {
           </View>
         )}
       </View>
+
+      {room && (
+        <RoomSettingsPanel
+          roundSeconds={room.round_seconds}
+          editable={isHost && room.status === 'waiting'}
+          busy={busy}
+          onChange={changeRoundSeconds}
+        />
+      )}
 
       <View style={styles.bottom}>
         {isHost ? (

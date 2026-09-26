@@ -2,12 +2,13 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
+import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { useGameStore } from '@/src/store/gameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function LobbyScreen() {
   const router = useRouter();
-  const { roomCode, roundSeconds, startRound } = useGameStore();
+  const { roomCode, roundSeconds, startRound, setRoundSeconds } = useGameStore();
 
   const begin = () => {
     startRound();
@@ -36,8 +37,13 @@ export default function LobbyScreen() {
       <View style={styles.note}>
         <Text style={styles.noteTitle}>Local Split</Text>
         <Text style={styles.noteCopy}>Domi draws the HEAD first. Then pass the device to Sarah for the BODY. No names need to be entered before the game.</Text>
-        <Text style={styles.noteMeta}>ROUND · {Math.round(roundSeconds / 60)} MINUTES</Text>
       </View>
+
+      <RoomSettingsPanel
+        roundSeconds={roundSeconds}
+        editable
+        onChange={setRoundSeconds}
+      />
 
       <View style={styles.bottom}><CrocatButton onPress={begin}>START ROUND</CrocatButton></View>
     </Screen>

@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.3.2
+## Stable version: 1.3.3
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.3.2 includes two Split modes:
+Crocat 1.3.3 includes two Split modes:
 
 ### Local Split
 
@@ -62,7 +62,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.3.2 release passed:
+The 1.3.3 release passed:
 
 - dependency install
 - TypeScript
@@ -77,3 +77,12 @@ The 1.3.2 release passed:
 - `dev` — integrated next version
 - `feat/*` — isolated feature work
 - `fix/*` — isolated fixes
+
+
+## Settings model
+
+Global Settings are reserved for app-wide preferences such as theme, sound and accessibility.
+
+Game-specific settings live in the game lobby. For Online Split, only the host can edit them; the guest sees the current configuration read-only. Changing a room setting clears the guest Ready state so the guest explicitly confirms the new configuration before the host can start.
+
+Local Split also exposes its round duration in its local lobby.
