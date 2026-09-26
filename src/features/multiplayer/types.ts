@@ -32,6 +32,7 @@ export type OnlinePlayer = {
   role: GameRole;
   ready: boolean;
   joined_at: string;
+  last_seen_at: string;
 };
 
 export type OnlineRound = {
