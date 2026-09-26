@@ -236,35 +236,63 @@ async function main() {
   });
   if (!wrongTransform.error) throw new Error('BODY was able to modify HEAD transform');
 
-  await wait(Math.max(
-    0,
-    new Date(adjustment.data.adjustment_ends_at).getTime() - Date.now() + 600,
-  ));
-
-  const syncReveal = await body.rpc('sync_room_state', { p_room_id: room.room_id });
-  if (syncReveal.error) throw syncReveal.error;
-
-  const firstReady = await domi.rpc('set_ready', {
+  const firstAdjustReady = await head.rpc('set_ready', {
     p_room_id: room.room_id,
     p_ready: true,
   });
-  if (firstReady.error) throw firstReady.error;
+  if (firstAdjustReady.error) throw firstAdjustReady.error;
 
-  const oneReadyState = await domi
+  const oneAdjustReadyState = await domi
     .from('rooms')
     .select('status')
     .eq('id', room.room_id)
     .single();
-  if (oneReadyState.error) throw oneReadyState.error;
-  if (oneReadyState.data.status !== 'final_reveal') {
-    throw new Error('One ready player advanced Final Reveal');
+  if (oneAdjustReadyState.error) throw oneAdjustReadyState.error;
+  if (oneAdjustReadyState.data.status !== 'adjusting') {
+    throw new Error('One ready player ended Adjustment');
   }
 
-  const secondReady = await sarah.rpc('set_ready', {
+  const secondAdjustReady = await body.rpc('set_ready', {
     p_room_id: room.room_id,
     p_ready: true,
   });
-  if (secondReady.error) throw secondReady.error;
+  if (secondAdjustReady.error) throw secondAdjustReady.error;
+
+  const syncReadyReveal = await body.rpc('sync_room_state', { p_room_id: room.room_id });
+  if (syncReadyReveal.error) throw syncReadyReveal.error;
+
+  const earlyReveal = await domi
+    .from('game_rounds')
+    .select('status,final_reveal_ends_at')
+    .eq('id', round.id)
+    .single();
+  if (earlyReveal.error) throw earlyReveal.error;
+  if (earlyReveal.data.status !== 'final_reveal') {
+    throw new Error('2/2 Adjustment Ready did not start Final Reveal');
+  }
+
+  await wait(Math.max(
+    0,
+    new Date(earlyReveal.data.final_reveal_ends_at).getTime() - Date.now() + 600,
+  ));
+
+  const syncExpiredReveal = await domi.rpc('sync_room_state', { p_room_id: room.room_id });
+  if (syncExpiredReveal.error) throw syncExpiredReveal.error;
+
+  const stillReveal = await domi
+    .from('game_rounds')
+    .select('id,status')
+    .eq('room_id', room.room_id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  if (stillReveal.error) throw stillReveal.error;
+  if (stillReveal.data.id !== round.id || stillReveal.data.status !== 'final_reveal') {
+    throw new Error('sync_room_state started a new round without the client Presence gate');
+  }
+
+  const explicitAdvance = await domi.rpc('advance_phase', { p_room_id: room.room_id });
+  if (explicitAdvance.error) throw explicitAdvance.error;
 
   const nextState = await domi
     .from('game_rounds')
@@ -277,7 +305,7 @@ async function main() {
   const nextRound = nextState.data;
 
   if (nextRound?.status !== 'prompt_select' || nextRound.id === round.id) {
-    throw new Error('Second ready player did not start the next Prompt Select immediately');
+    throw new Error('Explicit Presence-gated advance did not start the next Prompt Select');
   }
 
   const nextThemes = new Set(nextRound.prompt_options.map((option) => option.theme));
@@ -326,7 +354,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.1 recovery/phase/labels smoke passed: ${code}`);
+  console.log(`Crocat 1.4.2 presence/adjust-ready smoke passed: ${code}`);
 }
 
 main().catch((error) => {
