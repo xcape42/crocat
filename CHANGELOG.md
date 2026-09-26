@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.1 — Mobile layout and touch fixes
+
+- Fixed scrolling on standard mobile screens so bottom actions remain reachable
+- Kept drawing and image-manipulation screens fixed to the viewport without scrolling
+- Made drawing canvases responsive to small mobile and desktop viewports
+- Made reveal/result previews responsive instead of enforcing a fixed 520px minimum height
+- Kept the complete final-alignment workspace, controls and action button visible in one viewport
+- Removed the horizontal control scroller in Finalize
+- Added direct mouse/touch dragging for HEAD and BODY during final alignment
+- Added browser touch-gesture protection during direct image manipulation
+- Applied the same viewport rules to online drawing and online reveal
+- Allowed result actions to wrap on narrow screens
+
 ## 1.1.0 — Online multiplayer
 
 - Kept the complete local Split mode

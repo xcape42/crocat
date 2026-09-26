@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
@@ -13,6 +13,8 @@ const palette = [colors.ink, '#DB5C46', '#477A91', '#6A8E3A'];
 
 export default function DrawScreen() {
   const router = useRouter();
+  const { height } = useWindowDimensions();
+  const compact = height < 720;
   const { currentRole, roundSeconds, submitDrawing, makeBlankDrawing } = useGameStore();
   const [drawing, setDrawing] = useState<CrocatDrawing>(() => makeBlankDrawing());
   const [color, setColor] = useState(colors.ink);
@@ -29,11 +31,11 @@ export default function DrawScreen() {
   const clear = () => setDrawing((current) => ({ ...current, strokes: [] }));
 
   return (
-    <Screen contentStyle={styles.screen}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{currentRole === 'HEAD' ? 'DOMI · YOUR PART' : 'SARAH · YOUR PART'}</Text>
-          <Text style={styles.role}>{currentRole}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{currentRole}</Text>
         </View>
         <Timer seconds={roundSeconds} onComplete={finish} />
       </View>
@@ -41,12 +43,14 @@ export default function DrawScreen() {
       <View style={styles.hintWrap}>
         <Text style={styles.hint}>
           {currentRole === 'HEAD'
-            ? 'Draw the head. The dashed connection line is at the bottom.'
-            : 'Draw the body. The dashed connection line is at the top.'}
+            ? 'Draw the head. Connection line: bottom.'
+            : 'Draw the body. Connection line: top.'}
         </Text>
       </View>
 
-      <DrawingCanvas role={currentRole} drawing={drawing} onChange={setDrawing} color={color} />
+      <View style={styles.canvasArea}>
+        <DrawingCanvas role={currentRole} drawing={drawing} onChange={setDrawing} color={color} />
+      </View>
 
       <View style={styles.toolbar}>
         <View style={styles.palette}>
@@ -64,15 +68,18 @@ export default function DrawScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 12 },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  screen: { gap: 10 },
+  screenCompact: { gap: 7 },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
   kicker: { fontSize: 11, fontWeight: '900', letterSpacing: 1.4, color: colors.muted },
   role: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
-  hintWrap: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start' },
-  hint: { color: colors.ink, fontWeight: '700', fontSize: 12 },
-  toolbar: { minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  palette: { flexDirection: 'row', gap: 8 },
-  swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: colors.paper },
-  swatchActive: { borderColor: colors.ink, transform: [{ scale: 1.1 }] },
-  tool: { fontSize: 12, fontWeight: '900', letterSpacing: 0.8, color: colors.muted },
+  roleCompact: { fontSize: 26 },
+  hintWrap: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 7, alignSelf: 'flex-start', flexShrink: 0 },
+  hint: { color: colors.ink, fontWeight: '700', fontSize: 11 },
+  canvasArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
+  toolbar: { minHeight: 46, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  palette: { flexDirection: 'row', gap: 7 },
+  swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: colors.paper },
+  swatchActive: { borderColor: colors.ink, transform: [{ scale: 1.08 }] },
+  tool: { fontSize: 11, fontWeight: '900', letterSpacing: 0.7, color: colors.muted },
 });

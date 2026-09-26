@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
@@ -19,6 +19,8 @@ const blankDrawing = (): CrocatDrawing => ({
 
 export default function OnlineDrawScreen() {
   const router = useRouter();
+  const { height } = useWindowDimensions();
+  const compact = height < 720;
   const params = useLocalSearchParams<{
     roomId: string;
     roundId: string;
@@ -85,10 +87,10 @@ export default function OnlineDrawScreen() {
 
   if (waiting) {
     return (
-      <Screen>
+      <Screen scroll={false}>
         <View style={styles.waiting}>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · {role} SUBMITTED</Text>
-          <Text style={styles.waitTitle}>Your half is hidden.</Text>
+          <Text style={[styles.waitTitle, compact && styles.waitTitleCompact]}>Your half is hidden.</Text>
           <Text style={styles.waitCopy}>Waiting for the other player. The reveal starts automatically when both drawings arrive.</Text>
           <View style={styles.pulse}><Text style={styles.pulseText}>•••</Text></View>
           {!!error && <Text style={styles.error}>{error}</Text>}
@@ -98,11 +100,11 @@ export default function OnlineDrawScreen() {
   }
 
   return (
-    <Screen contentStyle={styles.screen}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
-          <Text style={styles.role}>{role}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{role}</Text>
         </View>
         <Timer seconds={initialSeconds} onComplete={finish} />
       </View>
@@ -110,12 +112,14 @@ export default function OnlineDrawScreen() {
       <View style={styles.hintWrap}>
         <Text style={styles.hint}>
           {role === 'HEAD'
-            ? 'Draw the head. The dashed connection line is at the bottom.'
-            : 'Draw the body. The dashed connection line is at the top.'}
+            ? 'Draw the head. Connection line: bottom.'
+            : 'Draw the body. Connection line: top.'}
         </Text>
       </View>
 
-      <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
+      <View style={styles.canvasArea}>
+        <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
+      </View>
 
       <View style={styles.toolbar}>
         <View style={styles.palette}>
@@ -138,19 +142,23 @@ export default function OnlineDrawScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 12 },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  screen: { gap: 10 },
+  screenCompact: { gap: 7 },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
   kicker: { fontSize: 11, fontWeight: '900', letterSpacing: 1.4, color: colors.muted },
   role: { fontSize: 30, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
-  hintWrap: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start' },
-  hint: { color: colors.ink, fontWeight: '700', fontSize: 12 },
-  toolbar: { minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  palette: { flexDirection: 'row', gap: 8 },
-  swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: colors.paper },
-  swatchActive: { borderColor: colors.ink, transform: [{ scale: 1.1 }] },
-  tool: { fontSize: 12, fontWeight: '900', letterSpacing: 0.8, color: colors.muted },
+  roleCompact: { fontSize: 26 },
+  hintWrap: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 7, alignSelf: 'flex-start', flexShrink: 0 },
+  hint: { color: colors.ink, fontWeight: '700', fontSize: 11 },
+  canvasArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
+  toolbar: { minHeight: 46, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  palette: { flexDirection: 'row', gap: 7 },
+  swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: colors.paper },
+  swatchActive: { borderColor: colors.ink, transform: [{ scale: 1.08 }] },
+  tool: { fontSize: 11, fontWeight: '900', letterSpacing: 0.7, color: colors.muted },
   waiting: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   waitTitle: { marginTop: 10, fontSize: 42, lineHeight: 45, fontWeight: '900', letterSpacing: -1.5, color: colors.ink, textAlign: 'center' },
+  waitTitleCompact: { fontSize: 34, lineHeight: 37 },
   waitCopy: { marginTop: 12, maxWidth: 440, color: colors.muted, lineHeight: 22, textAlign: 'center', fontSize: 16 },
   pulse: { marginTop: 28, minWidth: 86, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.card, alignItems: 'center' },
   pulseText: { fontSize: 22, fontWeight: '900', letterSpacing: 5, color: colors.ink },
