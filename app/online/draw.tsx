@@ -3,10 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { GameLeaveButton } from '@/src/components/GameLeaveButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
 import {
   advanceDrawing,
+  leaveRoom,
   loadRoomById,
   loadSubmissions,
   resumeDrawing,
@@ -20,6 +22,7 @@ import {
 } from '@/src/features/multiplayer/drawingDraft';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { clearActiveRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
@@ -193,6 +196,21 @@ export default function OnlineDrawScreen() {
     }
   };
 
+  const leave = async () => {
+    if (!params.roomId || busy) return;
+    try {
+      setBusy(true);
+      await leaveRoom(params.roomId);
+    } catch {
+      // Leaving remains valid if the room vanished first.
+    } finally {
+      if (params.roundId && userId) void clearDrawingDraft(params.roundId, userId);
+      await clearActiveRoomCode();
+      reset();
+      router.replace('/');
+    }
+  };
+
   const updateDrawing = useCallback((next: CrocatDrawing) => {
     setDrawing(next);
     if (params.roundId && userId) {
@@ -232,6 +250,7 @@ export default function OnlineDrawScreen() {
   if (waiting) {
     return (
       <Screen scroll={false} contentStyle={styles.waitingScreen}>
+        <GameLeaveButton disabled={busy} onPress={leave} />
         <View style={styles.waitingTop}>
           <View>
             <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
@@ -262,6 +281,7 @@ export default function OnlineDrawScreen() {
 
   return (
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+      <GameLeaveButton disabled={busy} onPress={leave} />
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
