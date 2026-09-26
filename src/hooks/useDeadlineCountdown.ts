@@ -21,35 +21,45 @@ export function useDeadlineCountdown(
   onComplete?: () => void,
 ) {
   const deadlineMs = useMemo(() => deadlineToMs(deadline), [deadline]);
-  const [remaining, setRemaining] = useState(() => secondsUntil(deadlineMs));
-  const firedRef = useRef(false);
+  const [, setTick] = useState(0);
+  const firedDeadlineRef = useRef<number | null>(null);
   const completeRef = useRef(onComplete);
   completeRef.current = onComplete;
 
   useEffect(() => {
-    firedRef.current = false;
+    let completionTimer: ReturnType<typeof setTimeout> | null = null;
 
     const sync = () => {
-      const next = secondsUntil(deadlineMs);
-      setRemaining(next);
+      setTick((tick) => (tick + 1) % 1000000);
 
-      if (deadlineMs != null && next === 0 && !firedRef.current) {
-        firedRef.current = true;
-        setTimeout(() => completeRef.current?.(), 0);
+      if (
+        deadlineMs != null
+        && Date.now() >= deadlineMs
+        && firedDeadlineRef.current !== deadlineMs
+      ) {
+        firedDeadlineRef.current = deadlineMs;
+        completeRef.current?.();
       }
     };
 
     sync();
-    const interval = setInterval(sync, 250);
+    const interval = setInterval(sync, 100);
+
+    if (deadlineMs != null) {
+      const delay = Math.max(0, deadlineMs - Date.now());
+      completionTimer = setTimeout(sync, delay + 2);
+    }
+
     const appState = AppState.addEventListener('change', (state) => {
       if (state === 'active') sync();
     });
 
     return () => {
       clearInterval(interval);
+      if (completionTimer) clearTimeout(completionTimer);
       appState.remove();
     };
   }, [deadlineMs]);
 
-  return remaining;
+  return secondsUntil(deadlineMs);
 }
