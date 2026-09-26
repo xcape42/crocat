@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.4 — 1.4.0 baseline with active-player gating and in-round controls
+
+- Kept the Crocat 1.4.0 gameplay flow as the baseline
+- Added active-app Presence tracking for round boundaries
+- Prevent the initial round and subsequent rounds from starting while one player is inactive
+- Show which player is currently away and explicitly wait for them
+- Added Leave Round controls during Prompt Select, Drawing, submitted-waiting and Adjustment
+- Added Ready during Adjustment while keeping the shared live composition visible
+- Keep Adjustment running at 1/2 Ready and advance immediately to Final Reveal at 2/2 Ready
+- Keep the original Adjustment timer as the fallback when both players do not ready early
+- Standardized Prompt, Drawing, Adjustment and Final Reveal on the shared centered countdown badge
+- Normalize countdown values defensively to avoid malformed timer output
+- Added smoke coverage for 1/2 and 2/2 Adjustment Ready transitions
+- Kept session-recovery and semantic prompt-label changes from the abandoned 1.4.1–1.4.3 line out of this release
+
 ## 1.4.0 — Random roles, prompt themes and reversible submissions
 
 - Randomize HEAD and BODY server-side for every online round, independent of host/guest
