@@ -200,10 +200,5 @@ export async function removeChannel(channel: RealtimeChannel | null) {
   if (!channel) return;
   channelCleanup.get(channel)?.();
   channelCleanup.delete(channel);
-  try {
-    await channel.untrack();
-  } catch {
-    // The channel may already be disconnected.
-  }
   await requireSupabase().removeChannel(channel);
 }
