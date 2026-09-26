@@ -46,13 +46,15 @@ function drawing(id) {
 async function main() {
   // Direct room-route regression coverage: /online/room/[code] now uses
   // the same atomic join-or-create operation as the room-code entry screen.
-  const routeHostGuest = await guest('RouteHost');
-  const routeJoinerGuest = await guest('RouteJoiner');
-  const routeHost = routeHostGuest.supabase;
-  const routeJoiner = routeJoinerGuest.supabase;
+  const routeFirstGuest = await guest('RouteFirst');
+  const routeSecondGuest = await guest('RouteSecond');
+  const routeReplacementGuest = await guest('RouteReplacement');
+  const routeFirst = routeFirstGuest.supabase;
+  const routeSecond = routeSecondGuest.supabase;
+  const routeReplacement = routeReplacementGuest.supabase;
   const routeCode = Date.now().toString(36).toUpperCase().slice(-6).padStart(6, '0');
 
-  const routeCreated = await routeHost.rpc('join_or_create_room', {
+  const routeCreated = await routeFirst.rpc('join_or_create_room', {
     p_code: routeCode,
     p_host_display_name: 'Domi',
     p_guest_display_name: 'Sarah',
@@ -64,32 +66,66 @@ async function main() {
     throw new Error('Unknown direct room link did not create the requested room');
   }
 
-  const routeHostRejoin = await routeHost.rpc('join_or_create_room', {
+  const routeFirstRejoin = await routeFirst.rpc('join_or_create_room', {
     p_code: routeCode,
     p_host_display_name: 'Domi',
     p_guest_display_name: 'Sarah',
     p_round_seconds: 10,
   });
-  if (routeHostRejoin.error) throw routeHostRejoin.error;
-  const rejoinedHost = first(routeHostRejoin.data);
-  if (rejoinedHost?.room_id !== routeRoom.room_id || rejoinedHost?.player_role !== 'HEAD') {
-    throw new Error('Existing host could not reload through direct room route');
+  if (routeFirstRejoin.error) throw routeFirstRejoin.error;
+  const rejoinedFirst = first(routeFirstRejoin.data);
+  if (rejoinedFirst?.room_id !== routeRoom.room_id || rejoinedFirst?.player_role !== 'HEAD') {
+    throw new Error('Existing first player could not reload through direct room route');
   }
 
-  const routeGuestJoin = await routeJoiner.rpc('join_or_create_room', {
+  const routeSecondJoin = await routeSecond.rpc('join_or_create_room', {
     p_code: routeCode,
     p_host_display_name: 'Domi',
     p_guest_display_name: 'Sarah',
     p_round_seconds: 10,
   });
-  if (routeGuestJoin.error) throw routeGuestJoin.error;
-  const joinedRouteGuest = first(routeGuestJoin.data);
-  if (joinedRouteGuest?.room_id !== routeRoom.room_id || joinedRouteGuest?.player_role !== 'BODY') {
+  if (routeSecondJoin.error) throw routeSecondJoin.error;
+  const joinedRouteSecond = first(routeSecondJoin.data);
+  if (joinedRouteSecond?.room_id !== routeRoom.room_id || joinedRouteSecond?.player_role !== 'BODY') {
     throw new Error('Available direct room link did not join the second player');
   }
 
-  const routeCleanup = await routeHost.rpc('leave_room', { p_room_id: routeRoom.room_id });
-  if (routeCleanup.error) throw routeCleanup.error;
+  const routeFirstLeave = await routeFirst.rpc('leave_room', { p_room_id: routeRoom.room_id });
+  if (routeFirstLeave.error) throw routeFirstLeave.error;
+
+  const preservedRoom = await routeSecond
+    .from('rooms')
+    .select('id,status')
+    .eq('id', routeRoom.room_id)
+    .single();
+  if (preservedRoom.error || preservedRoom.data.status !== 'waiting') {
+    throw new Error('First player leaving did not preserve the room for the remaining player');
+  }
+
+  const replacementJoin = await routeReplacement.rpc('join_or_create_room', {
+    p_code: routeCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
+  });
+  if (replacementJoin.error) throw replacementJoin.error;
+
+  const replacementPlayers = await routeSecond
+    .from('room_players')
+    .select('user_id,role')
+    .eq('room_id', routeRoom.room_id);
+  if (replacementPlayers.error) throw replacementPlayers.error;
+  if (
+    replacementPlayers.data.length !== 2
+    || new Set(replacementPlayers.data.map((player) => player.role)).size !== 2
+  ) {
+    throw new Error('Replacement player did not receive the free lobby role');
+  }
+
+  const routeSecondLeave = await routeSecond.rpc('leave_room', { p_room_id: routeRoom.room_id });
+  if (routeSecondLeave.error) throw routeSecondLeave.error;
+  const routeReplacementLeave = await routeReplacement.rpc('leave_room', { p_room_id: routeRoom.room_id });
+  if (routeReplacementLeave.error) throw routeReplacementLeave.error;
 
   const domiGuest = await guest('Domi');
   const sarahGuest = await guest('Sarah');
@@ -129,13 +165,61 @@ async function main() {
   });
   if (!fullJoin.error) throw new Error('Third player was able to open a full room link');
 
-  const guestReady = await sarah.rpc('set_ready', {
+  const firstSettings = await domi.rpc('update_room_settings', {
+    p_room_id: room.room_id,
+    p_round_seconds: 11,
+  });
+  if (firstSettings.error) throw firstSettings.error;
+
+  const firstReady = await domi.rpc('set_ready', {
     p_room_id: room.room_id,
     p_ready: true,
   });
-  if (guestReady.error) throw guestReady.error;
+  if (firstReady.error) throw firstReady.error;
 
-  const started = await domi.rpc('start_round', { p_room_id: room.room_id });
+  const secondSettings = await sarah.rpc('update_room_settings', {
+    p_room_id: room.room_id,
+    p_round_seconds: 10,
+  });
+  if (secondSettings.error) throw secondSettings.error;
+
+  const waitingState = await domi
+    .from('rooms')
+    .select('round_seconds')
+    .eq('id', room.room_id)
+    .single();
+  if (waitingState.error) throw waitingState.error;
+  if (waitingState.data.round_seconds !== 10) {
+    throw new Error('Second player could not change room settings');
+  }
+
+  const resetReadyState = await domi
+    .from('room_players')
+    .select('ready')
+    .eq('room_id', room.room_id);
+  if (resetReadyState.error) throw resetReadyState.error;
+  if (resetReadyState.data.some((player) => player.ready)) {
+    throw new Error('Changing room settings did not reset both Ready states');
+  }
+
+  const secondReady = await sarah.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (secondReady.error) throw secondReady.error;
+
+  const oneReadyStart = await sarah.rpc('start_round', { p_room_id: room.room_id });
+  if (!oneReadyStart.error) {
+    throw new Error('Round started with only one of two players Ready');
+  }
+
+  const firstReadyAgain = await domi.rpc('set_ready', {
+    p_room_id: room.room_id,
+    p_ready: true,
+  });
+  if (firstReadyAgain.error) throw firstReadyAgain.error;
+
+  const started = await sarah.rpc('start_round', { p_room_id: room.room_id });
   if (started.error) throw started.error;
   const round = first(started.data);
 
@@ -481,7 +565,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.8 gameplay smoke passed: ${code}`);
+  console.log(`Crocat 1.4.9 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {
