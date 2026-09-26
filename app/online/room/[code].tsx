@@ -163,6 +163,10 @@ export default function OnlineRoomScreen() {
   const isHost = Boolean(room && userId === room.host_id);
   const guest = players.find((player) => player.user_id !== room?.host_id);
   const guestReady = players.length === 2 && Boolean(guest?.ready);
+  const allPlayersActive =
+    players.length === 2
+    && players.every((player) => onlineUserIds.includes(player.user_id));
+  const missingPlayer = players.find((player) => !onlineUserIds.includes(player.user_id));
 
   const toggleReady = async () => {
     if (!room || !me || isHost) return;
@@ -270,13 +274,15 @@ export default function OnlineRoomScreen() {
           <>
             <CrocatButton
               variant="coral"
-              disabled={busy || !guestReady || room?.status !== 'waiting'}
+              disabled={busy || !guestReady || !allPlayersActive || room?.status !== 'waiting'}
               onPress={start}
             >
               START ROUND
             </CrocatButton>
             <Text style={styles.hostNote}>
-              {guestReady ? 'Sarah is ready. Start when you are.' : 'Waiting for Sarah to be ready…'}
+              {!allPlayersActive
+                ? `Waiting for ${missingPlayer?.display_name ?? 'the other player'} to be active…`
+                : (guestReady ? 'Both players are active and ready. Start when you are.' : 'Waiting for the guest to be ready…')}
             </Text>
           </>
         ) : (
