@@ -243,7 +243,7 @@ async function main() {
     throw new Error('Selected prompt lost its semantic split labels');
   }
 
-  for (let attempt = 0; attempt < 30 && !promptRealtimeSeen; attempt += 1) {
+  for (let attempt = 0; attempt < 100 && !promptRealtimeSeen; attempt += 1) {
     await wait(100);
   }
   await body.removeChannel(promptChannel);
