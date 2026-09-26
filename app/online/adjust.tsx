@@ -278,6 +278,7 @@ export default function OnlineAdjustScreen() {
       </View>
 
       <Text style={styles.copy}>
+        {round?.prompt_term ? `DRAW · ${round.prompt_term} · ` : ''}
         Drag only your {role.toLowerCase()}. Both players are adjusting at the same time.
       </Text>
 
