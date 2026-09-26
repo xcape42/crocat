@@ -20,6 +20,7 @@ import {
 } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { getPromptPartLabel } from '@/src/features/multiplayer/types';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
