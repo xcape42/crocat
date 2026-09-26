@@ -38,8 +38,10 @@ function drawing(id) {
 async function main() {
   const domiGuest = await guest('Domi');
   const sarahGuest = await guest('Sarah');
+  const thirdGuest = await guest('Third');
   const domi = domiGuest.supabase;
   const sarah = sarahGuest.supabase;
+  const third = thirdGuest.supabase;
 
   const code = Date.now().toString(36).toUpperCase().slice(-6).padStart(6, '0');
 
@@ -60,6 +62,15 @@ async function main() {
     p_round_seconds: 10,
   });
   if (joined.error) throw joined.error;
+
+  const heartbeat = await domi.rpc('touch_room_presence', { p_room_id: room.room_id });
+  if (heartbeat.error) throw heartbeat.error;
+
+  const fullJoin = await third.rpc('join_room', {
+    p_code: code,
+    p_display_name: 'Third',
+  });
+  if (!fullJoin.error) throw new Error('Third player was able to join a full room');
 
   const guestReady = await sarah.rpc('set_ready', {
     p_room_id: room.room_id,
@@ -203,18 +214,9 @@ async function main() {
     .eq('id', room.room_id)
     .single();
   if (earlyState.error) throw earlyState.error;
-  if (earlyState.data.status !== 'drawing') {
-    throw new Error('Both early submissions advanced before the drawing deadline');
+  if (earlyState.data.status !== 'adjusting') {
+    throw new Error('Both submitted drawings did not immediately enter Adjustment');
   }
-
-  const drawWait = Math.max(
-    0,
-    new Date(drawingRound.ends_at).getTime() - Date.now() + 600,
-  );
-  await wait(drawWait);
-
-  const advanceDrawing = await head.rpc('advance_drawing', { p_round_id: round.id });
-  if (advanceDrawing.error) throw advanceDrawing.error;
 
   const adjustment = await domi
     .from('game_rounds')
@@ -331,7 +333,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.4.0 gameplay smoke passed: ${code}`);
+  console.log(`Crocat 1.4.5 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {
