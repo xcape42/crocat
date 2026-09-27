@@ -473,7 +473,7 @@ async function main() {
     throw new Error('Profile visibility remained after friendship removal');
   }
 
-  console.log('Crocat 1.5.0 social + gallery smoke passed');
+  console.log('Crocat 1.5.1 social + gallery smoke passed');
 }
 
 main().catch((error) => {

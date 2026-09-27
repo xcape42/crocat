@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.1 — Server-synchronized online timers
+
+- Keep all multiplayer phase deadlines authoritative on Supabase
+- Add a read-only authenticated `server_clock_ms()` RPC for client clock calibration
+- Calibrate online clients from three server-clock samples and use the lowest-latency sample
+- Calculate Prompt, Drawing, Adjustment and Final Reveal countdowns against synchronized server time instead of raw device `Date.now()`
+- Prevent a device with a fast local clock from advancing a phase before server-clock synchronization succeeds
+- Re-sync the server clock after app/browser foregrounding and periodically during long rounds
+- Keep Local Split timers on local device time; no local-game behavior changed
+- Add an automated timer smoke test that simulates clients whose clocks are +120 seconds and -90 seconds wrong
+- Preserve all Crocat 1.5.0 profile, friends, gallery, room, Presence and Realtime behavior
+- Align package, Expo and visible app versions to 1.5.1
+
 ## 1.5.0 — Profiles, friends and private artwork gallery
 
 - Add persistent profiles for anonymous users with a free name, 7 colors, 3 avatars, 2 profile themes and 5 symbols
