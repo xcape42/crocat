@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.6.4
+## Stable version: 1.6.5
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.6.4 adds compact player removal in waiting online rooms, confirms early exits before a running game is abandoned, and gives every non-Home screen one reliable top-left back action with a Home fallback when no navigation history exists. Final result/reveal exits remain direct.
+Crocat 1.6.5 hardens touch drawing on Apple mobile browsers: artwork surfaces suppress native WebKit selection, long-press callouts, drag behavior and tap highlighting while Crocat captures drawing gestures itself. The protection stays scoped to drawing/artwork surfaces so normal app text remains unaffected.
 
 ### Local Split
 
