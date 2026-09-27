@@ -129,8 +129,7 @@ export default function ArtworkDetailScreen() {
 
   if (!artwork) {
     return (
-      <Screen>
-        <Text style={styles.back} onPress={() => router.back()}>← GALLERY</Text>
+      <Screen backLabel="GALLERY">
         {!error && <ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} />}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </Screen>
@@ -138,8 +137,7 @@ export default function ArtworkDetailScreen() {
   }
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>← GALLERY</Text>
+    <Screen backLabel="GALLERY">
 
       <View style={styles.header}>
         <Text style={styles.kicker}>{artwork.prompt_theme?.toUpperCase() ?? 'SAVED CROCAT'}</Text>
