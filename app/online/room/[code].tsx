@@ -201,13 +201,6 @@ export default function OnlineRoomScreen() {
           me.display_name,
           {
             onSync: setOnlineUserIds,
-            onPresenceJoin: (joinedUserId) => {
-              if (joinedUserId === user.id) return;
-
-              if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
-              setJoinNotice('Player joined the room ✓');
-              noticeTimerRef.current = setTimeout(() => setJoinNotice(''), 3500);
-            },
             onRoomChange: refresh,
             onPlayerChange: refresh,
             onRoundChange: refresh,
