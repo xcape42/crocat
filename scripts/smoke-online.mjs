@@ -565,7 +565,7 @@ async function main() {
   const close = await domi.rpc('leave_room', { p_room_id: room.room_id });
   if (close.error) throw close.error;
 
-  console.log(`Crocat 1.5.1 gameplay smoke passed: ${code}`);
+  console.log(`Crocat 1.6.0 gameplay smoke passed: ${code}`);
 }
 
 main().catch((error) => {

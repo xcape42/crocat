@@ -170,7 +170,7 @@ async function main() {
   if (alphaLeave.error) throw alphaLeave.error;
 
   console.log(
-    'Crocat 1.5.1 server-synced timer smoke passed',
+    'Crocat 1.6.0 server-synced timer smoke passed',
     { promptCountdown, drawingCountdown },
   );
 }
