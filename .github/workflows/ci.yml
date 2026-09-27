@@ -64,3 +64,7 @@ jobs:
       - name: Social profile and gallery smoke test
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
         run: node scripts/smoke-social.mjs
+
+      - name: Server-synced timer smoke test
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
+        run: node scripts/smoke-timer.mjs
