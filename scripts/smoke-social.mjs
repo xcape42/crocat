@@ -136,8 +136,8 @@ async function main() {
     throw new Error('Profile RLS exposed a non-friend profile');
   }
 
-  const request = await alpha.rpc('send_friend_request', {
-    p_friend_code: betaProfile.friend_code,
+  const request = await alpha.rpc('send_friend_request_to_user', {
+    p_other_user_id: betaGuest.user.id,
   });
   if (request.error) throw request.error;
   const friendship = first(request.data);
