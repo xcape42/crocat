@@ -78,8 +78,7 @@ export default function OnlineEntryScreen() {
   };
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>← PLAY</Text>
+    <Screen backLabel="PLAY">
       <View style={styles.header}>
         <Text style={styles.kicker}>CROCAT ONLINE · 1.6.3</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
