@@ -1,13 +1,24 @@
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
+import { useGameStore } from '@/src/store/gameStore';
 import { colors } from '@/src/theme/tokens';
 
 export default function RevealScreen() {
   const router = useRouter();
+  const setPhase = useGameStore((state) => state.setPhase);
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+
+  const leave = () => {
+    setPhase('HOME');
+    router.replace('/');
+  };
+
   return (
-    <Screen>
+    <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)}>
       <View style={styles.center}>
         <Text style={styles.kicker}>BOTH HALVES ARE IN</Text>
         <Text style={styles.eyes}>◉   ◉</Text>
@@ -15,6 +26,15 @@ export default function RevealScreen() {
         <Text style={styles.copy}>No more secrets. Time for the reveal.</Text>
       </View>
       <CrocatButton variant="coral" onPress={() => router.replace('/finalize')}>REVEAL</CrocatButton>
+      <ConfirmActionModal
+        visible={leaveConfirmOpen}
+        title="Leave the game?"
+        message="Your current local round will be abandoned."
+        confirmLabel="YES, LEAVE"
+        cancelLabel="NO"
+        onCancel={() => setLeaveConfirmOpen(false)}
+        onConfirm={leave}
+      />
     </Screen>
   );
 }
