@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.5.0 — Profiles, friends and private artwork gallery
+
+- Add persistent profiles for anonymous users with a free name, 7 colors, 3 avatars, 2 profile themes and 5 symbols
+- Add a stable eight-character Friend Code independent of editable display names
+- Reuse one ProfileAvatar presentation in profiles, rooms, friends, invitations and artwork history
+- Replace hard-coded online player names with the current persistent profile name
+- Reuse the existing 20-second room heartbeat for profile last-seen state and add the same heartbeat outside rooms
+- Add mutual friend requests with accept, decline, cancel and remove flows
+- Show friend avatar, subtle profile traits, online/last-seen state and joinable waiting-room status
+- Allow direct joining of a friend's open lobby
+- Allow inviting a friend from an existing lobby
+- Allow inviting a friend from the Friends list and atomically create/reuse an open lobby when needed
+- Deliver lobby invites through Supabase Realtime and surface them globally when the recipient is outside a room
+- Add private saved artworks from Online Final Reveal with deterministic Crocat names and artist profile snapshots
+- Keep one private gallery copy per participant and prevent duplicate saves for the same owner/round
+- Add gallery cards, detail view, rename, favorite/unfavorite and delete actions
+- Export the exact final vector composition as SVG on web and through the native save/share flow on iOS and Android
+- Share the same drawing composition geometry between preview, gallery thumbnails and export
+- Add RLS and scoped authenticated RPCs for profiles, friendships, invitations and saved artworks
+- Add Realtime publication for profiles, friendships and lobby invites
+- Add covering indexes for all newly introduced foreign-key access paths
+- Add transactional rollback assertions before production migration
+- Add an automated multi-client social/gallery smoke test alongside the existing full multiplayer smoke
+- Keep Crocat 1.4.9 equal-player rooms, direct links, timers, Presence and cleanup behavior intact
+- Align package, Expo and visible app versions to 1.5.0
+
 ## 1.4.9 — Equal lobby players
 
 - Remove gameplay ownership from the online waiting room
