@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
-import { FriendQuickBar } from '@/src/components/FriendQuickBar';
 import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
 import { Screen } from '@/src/components/Screen';
@@ -23,8 +22,6 @@ import {
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import {
-  inviteFriend,
-  joinFriendLobby,
   listFriendRequests,
   listFriends,
   removeSocialChannel,
@@ -275,32 +272,6 @@ export default function OnlineRoomScreen() {
     }
   };
 
-  const useFriend = async (friend: FriendSummary) => {
-    if (!room || players.length >= 2 || !friend.online || socialBusy) return;
-
-    try {
-      setSocialBusy(friend.friend_user_id);
-      setError('');
-
-      if (friend.open_room_code && friend.open_room_code !== room.code) {
-        const ticket = await joinFriendLobby(friend.friend_user_id, room.id);
-        await rememberRoomCode(ticket.code);
-        reset();
-        router.replace('/online/room/' + ticket.code);
-        return;
-      }
-
-      await inviteFriend(friend.friend_user_id, room.id);
-      setJoinNotice('Invite sent to ' + friend.display_name + ' ✓');
-      await refreshSocial();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open friend lobby.');
-      await refreshSocial();
-    } finally {
-      setSocialBusy('');
-    }
-  };
-
   const newCode = async () => {
     if (!room || players.length !== 1 || busy) return;
 
@@ -391,21 +362,9 @@ export default function OnlineRoomScreen() {
             </Pressable>
           )}
         </View>
-        <Text style={styles.copy}>Share the code or pick a friend below. Roles are randomized each round.</Text>
+        <Text style={styles.copy}>Share the code or open All Friends to invite someone. Roles are randomized each round.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
       </View>
-
-      {room?.status === 'waiting' && players.length < 2 && (
-        <View style={styles.quickFriends}>
-          <FriendQuickBar
-            friends={friends}
-            busyUserId={socialBusy}
-            title="ONLINE FRIENDS"
-            emptyText="No friends yet — share the room code instead."
-            onPress={(friend) => void useFriend(friend)}
-          />
-        </View>
-      )}
 
       <View style={styles.players}>
         {players.map((player) => {
@@ -534,7 +493,6 @@ const styles = StyleSheet.create({
   },
   newCodeText: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
-  quickFriends: { marginBottom: 16 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
   players: { gap: 12 },
   player: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },

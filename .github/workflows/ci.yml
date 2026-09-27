@@ -57,6 +57,9 @@ jobs:
           cp dist/index.html dist/404.html
           cmp --silent dist/index.html dist/404.html
 
+      - name: Verify online entry UX contract
+        run: node scripts/smoke-online-entry-ui.mjs
+
       - name: Online multiplayer smoke test
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
         run: node scripts/smoke-online.mjs

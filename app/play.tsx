@@ -87,7 +87,7 @@ export default function PlayScreen() {
       <View style={styles.hero}>
         <Text style={styles.title}>Choose your chaos.</Text>
         <Text style={styles.copy}>
-          Online starts a lobby immediately. Local Split stays available underneath.
+          Online lets you create a room or enter a code. Friends above stay available for one-tap play.
         </Text>
       </View>
 
@@ -98,8 +98,8 @@ export default function PlayScreen() {
           </View>
           <Text style={styles.mode}>Split Online</Text>
           <Text style={styles.modeCopy}>
-            Your lobby opens instantly. Invite an online friend, join their free lobby,
-            or share the room code.
+            Create a fresh room or enter a room code. Online friends above still open
+            the fastest route into a game.
           </Text>
           <View style={styles.metaRow}>
             <Text style={styles.meta}>2 DEVICES</Text>

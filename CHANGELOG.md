@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.1 — Classic online entry, cleaner lobby
+
+- Keep the 1.6.0 friend-first Play screen and one-tap friend shortcuts
+- Make PLAY ONLINE open the explicit Create Room / Join Room screen again
+- Do not create or reuse a room merely by opening the Online screen
+- Keep remembered room-code prefilling and direct room-link behavior
+- Remove the inline friend strip from the room lobby
+- Keep ALL FRIENDS as the single friend-browsing action inside a solo waiting lobby
+- Preserve direct Add Friend / Accept Friend and friendship level state for the player currently in the room
+- Preserve room-code regeneration, equal-player Ready/settings/start behavior and all 1.6.0 social backend functions
+- Add a CI UX-contract check so automatic online-room creation or inline room friend strips cannot return accidentally
+- Align package, Expo and visible app versions to 1.6.1
+
 ## 1.6.0 — Friend-first play, social lobbies and app themes
 
 - Make Online the primary mode on Play and keep Local Split directly underneath
