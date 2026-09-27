@@ -74,6 +74,9 @@ export function useDeadlineCountdown(
 
       try {
         await syncServerClock({ force });
+      } catch {
+        // Keep the countdown visible and retry soon. A transient clock-sync
+        // request must not crash the phase or produce an unhandled promise.
       } finally {
         sync();
       }
@@ -89,8 +92,8 @@ export function useDeadlineCountdown(
     if (clock === 'server') {
       void syncClock();
       clockSyncInterval = setInterval(
-        () => void syncClock(true),
-        60_000,
+        () => void syncClock(),
+        5_000,
       );
     }
 
