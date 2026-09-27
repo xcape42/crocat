@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { Screen } from '@/src/components/Screen';
@@ -15,10 +16,11 @@ export default function DrawScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
-  const { currentRole, roundSeconds, submitDrawing, makeBlankDrawing } = useGameStore();
+  const { currentRole, roundSeconds, submitDrawing, makeBlankDrawing, setPhase } = useGameStore();
   const [drawing, setDrawing] = useState<CrocatDrawing>(() => makeBlankDrawing());
   const [color, setColor] = useState(colors.ink);
   const [submitted, setSubmitted] = useState(false);
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
   const finish = useCallback(() => {
     if (submitted) return;
@@ -27,11 +29,21 @@ export default function DrawScreen() {
     router.replace(next === 'BODY' ? '/handoff' : '/reveal');
   }, [drawing, router, submitDrawing, submitted]);
 
+  const leave = () => {
+    setPhase('HOME');
+    router.replace('/');
+  };
+
   const undo = () => setDrawing((current) => ({ ...current, strokes: current.strokes.slice(0, -1) }));
   const clear = () => setDrawing((current) => ({ ...current, strokes: [] }));
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+    <Screen
+      scroll={false}
+      contentStyle={[styles.screen, compact && styles.screenCompact]}
+      backLabel="LEAVE"
+      onBack={() => setLeaveConfirmOpen(true)}
+    >
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{currentRole === 'HEAD' ? 'DOMI · YOUR PART' : 'SARAH · YOUR PART'}</Text>
@@ -63,6 +75,15 @@ export default function DrawScreen() {
       </View>
 
       <CrocatButton disabled={drawing.strokes.length === 0 || submitted} onPress={finish}>I'M DONE</CrocatButton>
+      <ConfirmActionModal
+        visible={leaveConfirmOpen}
+        title="Leave the game?"
+        message="Your current local round will be abandoned."
+        confirmLabel="YES, LEAVE"
+        cancelLabel="NO"
+        onCancel={() => setLeaveConfirmOpen(false)}
+        onConfirm={leave}
+      />
     </Screen>
   );
 }
