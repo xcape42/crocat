@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
@@ -11,6 +12,7 @@ import { currentUser } from '@/src/features/multiplayer/auth';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
 import {
   joinOrCreateRoom,
+  kickRoomPlayer,
   leaveRoom,
   loadRoom,
   loadRoomById,
@@ -18,7 +20,11 @@ import {
   startRound,
   updateRoomSettings,
 } from '@/src/features/multiplayer/room';
-import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
+import {
+  broadcastPlayerKick,
+  removeChannel,
+  subscribeToRoom,
+} from '@/src/features/multiplayer/realtime';
 import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import {
   listFriendRequests,
@@ -55,6 +61,8 @@ export default function OnlineRoomScreen() {
   const [friendRequests, setFriendRequests] = useState<FriendRequestSummary[]>([]);
   const [error, setError] = useState('');
   const [joinNotice, setJoinNotice] = useState('');
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [kickTargetId, setKickTargetId] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const socialChannelRef = useRef<RealtimeChannel | null>(null);
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -204,6 +212,7 @@ export default function OnlineRoomScreen() {
             onRoomChange: refresh,
             onPlayerChange: refresh,
             onRoundChange: refresh,
+            onKickSignal: refresh,
           },
         );
       } catch {
@@ -235,6 +244,9 @@ export default function OnlineRoomScreen() {
     : undefined;
   const otherRequest = otherPlayer
     ? friendRequests.find((request) => request.other_user_id === otherPlayer.user_id)
+    : undefined;
+  const kickTarget = kickTargetId
+    ? players.find((player) => player.user_id === kickTargetId)
     : undefined;
 
   const addOrAcceptFriend = async () => {
@@ -317,13 +329,35 @@ export default function OnlineRoomScreen() {
     }
   };
 
+  const requestLeave = () => {
+    if (!busy) setLeaveConfirmOpen(true);
+  };
+
+  const kickPlayer = async () => {
+    if (!room || !kickTargetId || busy) return;
+
+    try {
+      setBusy(true);
+      setError('');
+      await kickRoomPlayer(room.id, kickTargetId);
+      if (channelRef.current) {
+        await broadcastPlayerKick(channelRef.current, kickTargetId);
+      }
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not remove player.');
+    } finally {
+      setBusy(false);
+      setKickTargetId(null);
+    }
+  };
+
   if (!room && !error) {
     return <Screen><ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} /></Screen>;
   }
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={leave}>← HOME / LEAVE</Text>
+    <Screen backLabel="LEAVE" onBack={requestLeave}>
       <View style={styles.header}>
         <Text style={styles.kicker}>ONLINE LOBBY</Text>
         <View style={styles.codeRow}>
@@ -380,6 +414,21 @@ export default function OnlineRoomScreen() {
                 </View>
               </View>
               <View style={styles.state}>
+                {player.user_id !== userId && room?.status === 'waiting' && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${player.display_name} from room`}
+                    disabled={busy}
+                    hitSlop={8}
+                    onPress={() => setKickTargetId(player.user_id)}
+                    style={({ pressed }) => [
+                      styles.kickButton,
+                      pressed && !busy && styles.kickButtonPressed,
+                    ]}
+                  >
+                    <Text style={styles.kickButtonText}>×</Text>
+                  </Pressable>
+                )}
                 <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>
                 <Text style={styles.ready}>
                   {player.ready ? 'READY ✓' : 'NOT READY'}
@@ -440,6 +489,28 @@ export default function OnlineRoomScreen() {
         </Text>
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
+
+      <ConfirmActionModal
+        visible={leaveConfirmOpen}
+        title="Leave this room?"
+        message="You will leave the lobby and the other player will stay in the room."
+        confirmLabel="YES, LEAVE"
+        cancelLabel="NO"
+        busy={busy}
+        onCancel={() => setLeaveConfirmOpen(false)}
+        onConfirm={() => void leave()}
+      />
+
+      <ConfirmActionModal
+        visible={Boolean(kickTargetId)}
+        title={`Remove ${kickTarget?.display_name ?? 'this player'}?`}
+        message="They will be removed from this room. You can invite them again later."
+        confirmLabel="YES, REMOVE"
+        cancelLabel="NO"
+        busy={busy}
+        onCancel={() => setKickTargetId(null)}
+        onConfirm={() => void kickPlayer()}
+      />
     </Screen>
   );
 }
@@ -488,6 +559,19 @@ const styles = StyleSheet.create({
   name: { fontWeight: '900', fontSize: 18, color: colors.ink },
   role: { marginTop: 4, color: colors.ink, opacity: 0.6, fontWeight: '900', letterSpacing: 1.2, fontSize: 11 },
   state: { alignItems: 'flex-end', justifyContent: 'center' },
+  kickButton: {
+    width: 28,
+    height: 28,
+    marginBottom: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 14,
+    backgroundColor: colors.card,
+  },
+  kickButtonPressed: { opacity: 0.55, transform: [{ scale: 0.94 }] },
+  kickButtonText: { color: colors.muted, fontSize: 20, lineHeight: 21, fontWeight: '800' },
   online: { fontSize: 10, fontWeight: '900', color: colors.ink, opacity: 0.65 },
   ready: { marginTop: 5, fontSize: 11, fontWeight: '900', color: colors.ink },
   waiting: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md },
