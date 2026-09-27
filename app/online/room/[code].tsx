@@ -341,7 +341,11 @@ export default function OnlineRoomScreen() {
       setError('');
       await kickRoomPlayer(room.id, kickTargetId);
       if (channelRef.current) {
-        await broadcastPlayerKick(channelRef.current, kickTargetId);
+        try {
+          await broadcastPlayerKick(channelRef.current, kickTargetId);
+        } catch {
+          // The database removal is authoritative; a reconnect also forces a fresh room load.
+        }
       }
       await refresh();
     } catch (e) {
