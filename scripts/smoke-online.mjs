@@ -122,6 +122,62 @@ async function main() {
     throw new Error('Replacement player did not receive the free lobby role');
   }
 
+  const selfKick = await routeSecond.rpc('kick_room_player', {
+    p_room_id: routeRoom.room_id,
+    p_target_user_id: routeSecondGuest.user.id,
+  });
+  if (!selfKick.error) {
+    throw new Error('A room player was able to kick themselves instead of using leave');
+  }
+
+  const outsiderKick = await routeFirst.rpc('kick_room_player', {
+    p_room_id: routeRoom.room_id,
+    p_target_user_id: routeReplacementGuest.user.id,
+  });
+  if (!outsiderKick.error) {
+    throw new Error('A non-member was able to remove a room player');
+  }
+
+  const kickReplacement = await routeSecond.rpc('kick_room_player', {
+    p_room_id: routeRoom.room_id,
+    p_target_user_id: routeReplacementGuest.user.id,
+  });
+  if (kickReplacement.error) throw kickReplacement.error;
+
+  const afterKickPlayers = await routeSecond
+    .from('room_players')
+    .select('user_id,ready')
+    .eq('room_id', routeRoom.room_id);
+  if (afterKickPlayers.error) throw afterKickPlayers.error;
+  if (
+    afterKickPlayers.data.length !== 1
+    || afterKickPlayers.data[0].user_id !== routeSecondGuest.user.id
+    || afterKickPlayers.data[0].ready
+  ) {
+    throw new Error('Kick did not leave exactly one non-ready room member');
+  }
+
+  const kickedView = await routeReplacement
+    .from('rooms')
+    .select('id')
+    .eq('id', routeRoom.room_id)
+    .maybeSingle();
+  if (!kickedView.error && kickedView.data) {
+    throw new Error('Kicked player retained room visibility through RLS');
+  }
+
+  const replacementRejoin = await routeReplacement.rpc('join_or_create_room', {
+    p_code: routeCode,
+    p_host_display_name: 'Domi',
+    p_guest_display_name: 'Sarah',
+    p_round_seconds: 10,
+  });
+  if (replacementRejoin.error) throw replacementRejoin.error;
+  const replacementRejoined = first(replacementRejoin.data);
+  if (replacementRejoined?.room_id !== routeRoom.room_id) {
+    throw new Error('A kicked player could not later rejoin the free waiting slot');
+  }
+
   const routeSecondLeave = await routeSecond.rpc('leave_room', { p_room_id: routeRoom.room_id });
   if (routeSecondLeave.error) throw routeSecondLeave.error;
   const routeReplacementLeave = await routeReplacement.rpc('leave_room', { p_room_id: routeRoom.room_id });
