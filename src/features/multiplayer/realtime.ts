@@ -12,6 +12,7 @@ type RoomRealtimeHandlers = {
   onRoomChange?: () => void;
   onPlayerChange?: () => void;
   onRoundChange?: () => void;
+  onKickSignal?: () => void;
 };
 
 export async function subscribeToRoom(
@@ -32,6 +33,9 @@ export async function subscribeToRoom(
   };
 
   channel
+    .on('broadcast', { event: 'player_kicked' }, () => {
+      handlers.onKickSignal?.();
+    })
     .on('presence', { event: 'sync' }, () => {
       syncPresence();
       handlers.onPlayerChange?.();
@@ -195,6 +199,17 @@ export async function broadcastTransform(
     type: 'broadcast',
     event: 'part_transform',
     payload: { role, transform },
+  });
+}
+
+export async function broadcastPlayerKick(
+  channel: RealtimeChannel,
+  targetUserId: string,
+) {
+  await channel.send({
+    type: 'broadcast',
+    event: 'player_kicked',
+    payload: { user_id: targetUserId },
   });
 }
 
