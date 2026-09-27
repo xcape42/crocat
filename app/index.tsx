@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
 import { colors, spacing } from '@/src/theme/tokens';
@@ -9,7 +9,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.topRow}>
-        <Text style={styles.version}>CROCAT 1.6.5</Text>
+        <Text style={styles.version}>CROCAT 1.6.6</Text>
         <Text style={styles.dot}>●</Text>
       </View>
 
@@ -18,8 +18,12 @@ export default function HomeScreen() {
         <Text style={styles.logo}>crocat.</Text>
         <Text style={styles.subtitle}>Half yours. Half theirs. One beautiful accident.</Text>
         <View style={styles.creature}>
-          <Text style={styles.creatureFace}>◉ ᴗ ◉</Text>
-          <Text style={styles.creatureBody}>╱│╲</Text>
+          <Image
+            source={require('../assets/images/crocat-home-example.png')}
+            style={styles.creatureImage}
+            resizeMode="contain"
+            accessibilityLabel="Crocat mascot"
+          />
         </View>
       </View>
 
@@ -46,9 +50,8 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 12, fontWeight: '900', letterSpacing: 1.8, color: colors.muted, marginBottom: 10, textAlign: 'center' },
   logo: { fontSize: 72, lineHeight: 78, fontWeight: '900', letterSpacing: -4, color: colors.ink },
   subtitle: { marginTop: 8, maxWidth: 420, fontSize: 18, lineHeight: 25, color: colors.muted, textAlign: 'center' },
-  creature: { marginTop: 34, width: 170, height: 170, borderRadius: 85, backgroundColor: colors.moss, borderWidth: 2, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-4deg' }] },
-  creatureFace: { fontSize: 24, fontWeight: '800', color: colors.ink },
-  creatureBody: { fontSize: 36, marginTop: 8, color: colors.ink },
+  creature: { marginTop: 34, width: 170, height: 170, borderRadius: 85, backgroundColor: colors.moss, borderWidth: 2, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', transform: [{ rotate: '-4deg' }] },
+  creatureImage: { width: '88%', height: '88%' },
   actions: { gap: 12, paddingBottom: spacing.md },
   row: { flexDirection: 'row', gap: 12 },
   flex: { flex: 1 },

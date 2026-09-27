@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.6.5
+## Stable version: 1.6.6
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.6.5 hardens touch drawing on Apple mobile browsers: artwork surfaces suppress native WebKit selection, long-press callouts, drag behavior and tap highlighting while Crocat captures drawing gestures itself. The protection stays scoped to drawing/artwork surfaces so normal app text remains unaffected.
+Crocat 1.6.6 replaces the Home screen ASCII mascot with a real local image asset. The sample mascot lives at `assets/images/crocat-home-example.png`, so future artwork can be swapped in without changing the Home screen component. The existing responsive circular hero treatment remains intact across mobile and web.
 
 ### Local Split
 

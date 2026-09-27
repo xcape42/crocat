@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.6 — Home mascot image asset
+
+- Replace the ASCII Home mascot with a real React Native `Image`
+- Add a local transparent PNG sample asset at `assets/images/crocat-home-example.png`
+- Keep the existing circular moss hero treatment, border and slight rotation
+- Make the image scale responsively inside the existing Home hero container
+- Remove the obsolete ASCII face/body styles
+- Keep the asset local so Web and mobile do not depend on a remote image URL
+- Make future mascot changes a simple asset replacement at the same path
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.6.6
+
+
 ## 1.6.5 — iOS drawing interaction hardening
 
 - Prevent iOS/WebKit from selecting or highlighting drawn strokes during touch drawing
