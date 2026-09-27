@@ -228,7 +228,7 @@ export default function FriendsScreen() {
 
         <Text style={styles.meta}>
           LV {friend.friend_level} · {friend.friendship_label}
-          {' · '}{friend.theme_key.toUpperCase()} · {friend.symbol_key.toUpperCase()}
+          {' · '}{friend.theme_key.toUpperCase()}
           {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
         </Text>
 

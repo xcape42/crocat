@@ -85,17 +85,6 @@ export async function openOrCreateRoom(
   return { roomId: row.room_id, code: row.room_code, role: row.player_role };
 }
 
-export async function regenerateRoomCode(roomId: string): Promise<string> {
-  const { data, error } = await requireSupabase().rpc('regenerate_room_code', {
-    p_room_id: roomId,
-  });
-  if (error) throw error;
-  if (typeof data !== 'string' || data.length !== 6) {
-    throw new Error('Could not regenerate room code.');
-  }
-  return data;
-}
-
 export async function joinRoom(code: string, displayName: string): Promise<RoomTicket> {
   const { data, error } = await requireSupabase().rpc('join_room', {
     p_code: code.trim().toUpperCase(),

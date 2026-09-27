@@ -16,7 +16,7 @@ type Props = {
 export function ProfileAvatar({
   profile,
   size = 64,
-  showSymbol = true,
+  showSymbol = false,
 }: Props) {
   const dark = profile.themeKey === 'ink';
   const faceSize = Math.max(11, Math.round(size * 0.21));

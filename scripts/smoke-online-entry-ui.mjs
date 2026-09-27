@@ -12,6 +12,9 @@ const play = read('app/play.tsx');
 const entry = read('app/online/index.tsx');
 const room = read('app/online/room/[code].tsx');
 const friends = read('app/friends.tsx');
+const avatar = read('src/components/ProfileAvatar.tsx');
+const profile = read('app/profile.tsx');
+const multiplayer = read('src/features/multiplayer/room.ts');
 
 assert(
   play.includes("router.push('/online')"),
@@ -73,4 +76,30 @@ assert(
   'Friends must be visibly grouped into online and offline sections.',
 );
 
-console.log('Crocat 1.6.2 online entry + invite UX contract passed');
+assert(
+  !play.includes('FriendQuickBar')
+    && !play.includes('listFriends(')
+    && !play.includes('inviteFriend(')
+    && !play.includes('joinFriendLobby('),
+  'Play must not surface or load the friends list.',
+);
+
+assert(
+  !room.includes('NEW CODE')
+    && !room.includes('regenerateRoomCode')
+    && !multiplayer.includes('regenerateRoomCode'),
+  'Current clients must not expose room-code regeneration.',
+);
+
+assert(
+  avatar.includes('showSymbol = false')
+    && profile.includes('size={108} showSymbol'),
+  'Profile symbols must be hidden from shared avatars and visible only in the owner profile editor.',
+);
+
+assert(
+  !friends.includes('friend.symbol_key.toUpperCase()'),
+  'Friend metadata must not expose the personal profile symbol.',
+);
+
+console.log('Crocat 1.6.3 simplified social surface UX contract passed');

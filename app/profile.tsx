@@ -125,7 +125,7 @@ export default function ProfileScreen() {
       <Text style={styles.back} onPress={() => router.back()}>← HOME</Text>
 
       <View style={styles.hero}>
-        <ProfileAvatar profile={preview} size={108} />
+        <ProfileAvatar profile={preview} size={108} showSymbol />
         <View style={styles.heroText}>
           <Text style={styles.kicker}>YOUR CROCAT</Text>
           <Text style={styles.title}>{name || 'Profile'}</Text>

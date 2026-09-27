@@ -215,15 +215,6 @@ async function main() {
     throw new Error('Online entry did not reuse the waiting lobby');
   }
 
-  const regenerated = await beta.rpc('regenerate_room_code', {
-    p_room_id: betaRoom.room_id,
-  });
-  if (regenerated.error) throw regenerated.error;
-  if (regenerated.data === betaRoom.room_code) {
-    throw new Error('Lobby code did not regenerate');
-  }
-  betaRoom = { ...betaRoom, room_code: regenerated.data };
-
   const withOpenLobby = await alpha.rpc('list_friends');
   if (withOpenLobby.error) throw withOpenLobby.error;
   const discoverable = withOpenLobby.data.find(
@@ -584,7 +575,7 @@ async function main() {
     throw new Error('Profile visibility remained after friendship removal');
   }
 
-  console.log('Crocat 1.6.2 social + gallery smoke passed');
+  console.log('Crocat 1.6.3 social + gallery smoke passed');
 }
 
 main().catch((error) => {

@@ -165,7 +165,7 @@ export default function ArtworkDetailScreen() {
             <Text style={styles.partnerLabel}>MADE WITH</Text>
             <Text style={styles.partnerName}>{partner.displayName}</Text>
             <Text style={styles.partnerMeta}>
-              {partner.themeKey.toUpperCase()} · {partner.symbolKey.toUpperCase()}
+              {partner.themeKey.toUpperCase()}
             </Text>
           </View>
         </View>

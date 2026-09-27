@@ -14,7 +14,6 @@ import {
   leaveRoom,
   loadRoom,
   loadRoomById,
-  regenerateRoomCode,
   setReady,
   startRound,
   updateRoomSettings,
@@ -272,22 +271,6 @@ export default function OnlineRoomScreen() {
     }
   };
 
-  const newCode = async () => {
-    if (!room || players.length !== 1 || busy) return;
-
-    try {
-      setBusy(true);
-      setError('');
-      const nextCode = await regenerateRoomCode(room.id);
-      await rememberRoomCode(nextCode);
-      router.replace('/online/room/' + nextCode);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create a new code.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const toggleReady = async () => {
     if (!room || !me || busy || room.status !== 'waiting') return;
     try {
@@ -352,15 +335,6 @@ export default function OnlineRoomScreen() {
         <Text style={styles.kicker}>ONLINE LOBBY</Text>
         <View style={styles.codeRow}>
           <RoomCodeDisplay code={String(code)} />
-          {room?.status === 'waiting' && players.length === 1 && (
-            <Pressable
-              disabled={busy}
-              onPress={() => void newCode()}
-              style={styles.newCode}
-            >
-              <Text style={styles.newCodeText}>↻ NEW CODE</Text>
-            </Pressable>
-          )}
         </View>
         <Text style={styles.copy}>Share the code or open All Friends to invite someone. Roles are randomized each round.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
@@ -481,16 +455,7 @@ const styles = StyleSheet.create({
   back: { color: colors.muted, fontWeight: '800', letterSpacing: 1 },
   header: { marginTop: spacing.xl, marginBottom: spacing.lg },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.5, fontSize: 11 },
-  codeRow: { marginTop: 6, gap: 8, alignItems: 'flex-start' },
-  newCode: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.card,
-  },
-  newCodeText: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
+  codeRow: { marginTop: 6, alignItems: 'flex-start' },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
   players: { gap: 12 },
