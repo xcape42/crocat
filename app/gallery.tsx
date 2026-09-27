@@ -64,8 +64,7 @@ export default function GalleryScreen() {
   };
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>← HOME</Text>
+    <Screen backLabel="HOME">
 
       <View style={styles.header}>
         <Text style={styles.kicker}>YOUR COLLECTION</Text>
