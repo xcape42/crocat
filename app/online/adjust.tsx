@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
@@ -60,6 +61,7 @@ export default function OnlineAdjustScreen() {
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [readyBusy, setReadyBusy] = useState(false);
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const ownTransformRef = useRef<PartTransform>(ZERO);
@@ -296,6 +298,23 @@ export default function OnlineAdjustScreen() {
     }
   };
 
+  const requestLeave = () => {
+    if (!readyBusy) setLeaveConfirmOpen(true);
+  };
+
+  const leaveModal = (
+    <ConfirmActionModal
+      visible={leaveConfirmOpen}
+      title="Leave the game?"
+      message="The current round will end for the room."
+      confirmLabel="YES, LEAVE"
+      cancelLabel="NO"
+      busy={readyBusy}
+      onCancel={() => setLeaveConfirmOpen(false)}
+      onConfirm={() => void leave()}
+    />
+  );
+
   const ownTransform = useMemo(
     () => role === 'HEAD' ? headTransform : bodyTransform,
     [bodyTransform, headTransform, role],
@@ -304,17 +323,18 @@ export default function OnlineAdjustScreen() {
 
   if (!loaded || !head || !body) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} backLabel="LEAVE" onBack={requestLeave}>
         <View style={styles.loading}>
           <ActivityIndicator color={colors.ink} />
           <Text style={styles.copy}>{error || 'Preparing both parts…'}</Text>
         </View>
+        {leaveModal}
       </Screen>
     );
   }
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave}>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}</Text>
@@ -322,7 +342,7 @@ export default function OnlineAdjustScreen() {
         </View>
         <View style={styles.headerActions}>
           <CountdownBadge remaining={secondsLeft} label="ADJUST" />
-          <Pressable accessibilityRole="button" disabled={readyBusy} onPress={leave}>
+          <Pressable accessibilityRole="button" disabled={readyBusy} onPress={requestLeave}>
             <Text style={styles.leave}>LEAVE ROUND</Text>
           </Pressable>
         </View>
@@ -371,6 +391,7 @@ export default function OnlineAdjustScreen() {
       </View>
 
       {!!error && <Text style={styles.error}>{error}</Text>}
+      {leaveModal}
     </Screen>
   );
 }
