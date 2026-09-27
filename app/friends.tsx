@@ -269,10 +269,7 @@ export default function FriendsScreen() {
   }
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>
-        ← {inviteRoomId ? 'ROOM' : 'HOME'}
-      </Text>
+    <Screen backLabel={inviteRoomId ? 'ROOM' : 'HOME'}>
 
       <View style={styles.header}>
         <View>
