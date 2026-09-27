@@ -11,19 +11,15 @@ import Svg, { G, Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { PREVIEW_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { colors, radius } from '@/src/theme/tokens';
-import type { CrocatDrawing, GameRole, PartTransform, Point } from '@/src/types/game';
-
-const VIRTUAL_WIDTH = 360;
-const VIRTUAL_HEIGHT = 760;
-const SPLIT_X = VIRTUAL_WIDTH / 2;
-const SPLIT_Y = VIRTUAL_HEIGHT / 2;
-const CONNECTION_INSET = 20;
-const HEAD_CONNECTION_Y = 380 - CONNECTION_INSET;
-const BODY_CONNECTION_Y = CONNECTION_INSET;
-
-const pathFor = (points: Point[]) => points.length
-  ? points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
-  : '';
+import {
+  ARTWORK_BODY_CONNECTION_Y,
+  ARTWORK_HEAD_CONNECTION_Y,
+  ARTWORK_HEIGHT,
+  ARTWORK_WIDTH,
+  artworkPartTransform,
+  drawingPath,
+} from '@/src/features/artworks/geometry';
+import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
 type Props = {
   head: CrocatDrawing | null;
@@ -46,17 +42,12 @@ function Part({
 }) {
   if (!drawing) return null;
 
-  const targetX = SPLIT_X + transform.x;
-  const targetY = SPLIT_Y + transform.y;
-
   return (
-    <G
-      transform={`translate(${targetX} ${targetY}) scale(${transform.scale}) translate(${-SPLIT_X} ${-connectionY})`}
-    >
+    <G transform={artworkPartTransform(transform, connectionY)}>
       {drawing.strokes.map((stroke) => (
         <Path
           key={stroke.id}
-          d={pathFor(stroke.points)}
+          d={drawingPath(stroke.points)}
           fill="none"
           stroke={stroke.color}
           strokeWidth={stroke.width}
@@ -78,7 +69,7 @@ export function DrawingPreview({
   interactiveRole,
   onMovePart,
 }: Props) {
-  const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
+  const layoutRef = useRef({ width: ARTWORK_WIDTH, height: ARTWORK_HEIGHT });
   const roleRef = useRef<GameRole | null>(null);
   const lastGestureRef = useRef({ x: 0, y: 0 });
   const [activeRole, setActiveRole] = useState<GameRole | null>(null);
@@ -113,8 +104,8 @@ export function DrawingPreview({
       const deltaScreenY = gestureState.dy - lastGestureRef.current.y;
       lastGestureRef.current = { x: gestureState.dx, y: gestureState.dy };
 
-      const dx = (deltaScreenX / layoutRef.current.width) * VIRTUAL_WIDTH;
-      const dy = (deltaScreenY / layoutRef.current.height) * VIRTUAL_HEIGHT;
+      const dx = (deltaScreenX / layoutRef.current.width) * ARTWORK_WIDTH;
+      const dy = (deltaScreenY / layoutRef.current.height) * ARTWORK_HEIGHT;
       onMovePart(role, dx, dy);
     },
     onPanResponderRelease: () => {
@@ -151,11 +142,11 @@ export function DrawingPreview({
             pointerEvents="none"
             width="100%"
             height="100%"
-            viewBox="0 0 360 760"
+            viewBox={`0 0 ${ARTWORK_WIDTH} ${ARTWORK_HEIGHT}`}
             preserveAspectRatio="none"
           >
-            <Part drawing={head} transform={headTransform} connectionY={HEAD_CONNECTION_Y} />
-            <Part drawing={body} transform={bodyTransform} connectionY={BODY_CONNECTION_Y} />
+            <Part drawing={head} transform={headTransform} connectionY={ARTWORK_HEAD_CONNECTION_Y} />
+            <Part drawing={body} transform={bodyTransform} connectionY={ARTWORK_BODY_CONNECTION_Y} />
           </Svg>
 
           {interactive && (
