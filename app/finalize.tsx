@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
@@ -44,6 +46,12 @@ export default function FinalizeScreen() {
     nudgePart,
     setPhase,
   } = useGameStore();
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+
+  const leave = () => {
+    setPhase('HOME');
+    router.replace('/');
+  };
 
   const finish = () => {
     setPhase('RESULT');
@@ -51,7 +59,12 @@ export default function FinalizeScreen() {
   };
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+    <Screen
+      scroll={false}
+      contentStyle={[styles.screen, compact && styles.screenCompact]}
+      backLabel="LEAVE"
+      onBack={() => setLeaveConfirmOpen(true)}
+    >
       <View style={styles.header}>
         <Text style={styles.kicker}>REVEAL</Text>
         <Text style={[styles.title, compact && styles.titleCompact]}>A beautiful accident.</Text>
@@ -77,6 +90,15 @@ export default function FinalizeScreen() {
       </View>
 
       <CrocatButton onPress={finish}>LOCK IT IN</CrocatButton>
+      <ConfirmActionModal
+        visible={leaveConfirmOpen}
+        title="Leave the game?"
+        message="Your current local round will be abandoned."
+        confirmLabel="YES, LEAVE"
+        cancelLabel="NO"
+        onCancel={() => setLeaveConfirmOpen(false)}
+        onConfirm={leave}
+      />
     </Screen>
   );
 }
