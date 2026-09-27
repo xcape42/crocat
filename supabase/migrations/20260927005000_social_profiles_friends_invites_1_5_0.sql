@@ -79,6 +79,14 @@ using (
         or (f.user_b = (select auth.uid()) and f.user_a = profiles.user_id)
       )
   )
+  or exists (
+    select 1
+    from public.room_players me
+    join public.room_players them
+      on them.room_id = me.room_id
+    where me.user_id = (select auth.uid())
+      and them.user_id = profiles.user_id
+  )
 );
 
 create policy friendships_visible_to_members
