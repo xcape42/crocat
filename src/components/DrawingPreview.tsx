@@ -98,7 +98,8 @@ export function DrawingPreview({
       lastGestureRef.current = { x: 0, y: 0 };
       setActiveRole(role);
     },
-    onPanResponderMove: (_, gestureState) => {
+    onPanResponderMove: (event, gestureState) => {
+      if (Platform.OS === 'web') event.preventDefault();
       const role = roleRef.current;
       if (!interactive || !role || !onMovePart) return;
 
