@@ -277,9 +277,14 @@ export default function OnlineRevealScreen() {
   };
 
   const leave = async () => {
-    if (!room) return;
+    const activeRoomId = room?.id ?? roomId;
+    if (!activeRoomId) {
+      goHome();
+      return;
+    }
+
     try {
-      await leaveRoom(room.id);
+      await leaveRoom(activeRoomId);
     } catch {
       // Home remains the correct destination if the room already vanished.
     } finally {
@@ -289,7 +294,7 @@ export default function OnlineRevealScreen() {
 
   if (!head || !body || !room) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} backLabel="HOME" onBack={() => void leave()}>
         <View style={styles.loading}>
           <ActivityIndicator color={colors.ink} />
           <Text style={styles.copy}>{error || 'Preparing final reveal…'}</Text>
@@ -299,7 +304,7 @@ export default function OnlineRevealScreen() {
   }
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={() => void leave()}>
       <View style={styles.header}>
         <View>
           <Text style={styles.kicker}>ROOM {room.code} · FINAL REVEAL</Text>
