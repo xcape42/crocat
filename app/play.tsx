@@ -8,8 +8,7 @@ export default function PlayScreen() {
   const router = useRouter();
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>← HOME</Text>
+    <Screen backLabel="HOME">
 
       <View style={styles.hero}>
         <Text style={styles.title}>Choose your chaos.</Text>
