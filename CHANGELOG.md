@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.6.3 — Simpler play, fixed room code and private symbols
+
+- Remove the friend quick strip and all friend loading/subscriptions from the Play screen
+- Keep friends reachable from Home → Friends and through ALL FRIENDS inside a solo online room
+- Remove room-code regeneration from the room UI and current client API
+- Keep the legacy server RPC temporarily for compatibility with already-loaded older web clients
+- Make shared ProfileAvatar instances hide the personal symbol by default
+- Keep the symbol visible in the owner's Profile editor and preserve it in the profile model for future character customization
+- Remove the personal symbol from friend and artwork partner metadata
+- Delete the now-unused FriendQuickBar component
+- Update CI contract coverage to prevent friend-strip, code-regeneration and shared-symbol regressions
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.6.3
+
 ## 1.6.2 — Stable invites and clearer friend groups
 
 - Keep the 1.6.1 explicit Create / Join online entry flow unchanged

@@ -81,7 +81,7 @@ export default function OnlineEntryScreen() {
     <Screen>
       <Text style={styles.back} onPress={() => router.back()}>← PLAY</Text>
       <View style={styles.header}>
-        <Text style={styles.kicker}>CROCAT ONLINE · 1.6.2</Text>
+        <Text style={styles.kicker}>CROCAT ONLINE · 1.6.3</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
         <Text style={styles.copy}>Your Crocat profile follows you into every room. Entering a code joins that room; if it does not exist yet, Crocat creates it. HEAD and BODY are randomized every round.</Text>
       </View>

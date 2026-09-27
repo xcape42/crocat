@@ -9,7 +9,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.topRow}>
-        <Text style={styles.version}>CROCAT 1.6.2</Text>
+        <Text style={styles.version}>CROCAT 1.6.3</Text>
         <Text style={styles.dot}>●</Text>
       </View>
 
