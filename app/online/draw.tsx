@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
@@ -54,6 +55,7 @@ export default function OnlineDrawScreen() {
   const [otherSubmitted, setOtherSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const hydratedRef = useRef(false);
   const deadlineBusyRef = useRef(false);
 
@@ -195,6 +197,10 @@ export default function OnlineDrawScreen() {
     }
   };
 
+  const requestLeave = () => {
+    if (!busy) setLeaveConfirmOpen(true);
+  };
+
   const undo = () => setDrawing((current) => ({
     ...current,
     strokes: current.strokes.slice(0, -1),
@@ -207,6 +213,19 @@ export default function OnlineDrawScreen() {
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
   const partLabel = getPromptPartLabel(round, role);
 
+  const leaveModal = (
+    <ConfirmActionModal
+      visible={leaveConfirmOpen}
+      title="Leave the game?"
+      message="The current round will end for the room."
+      confirmLabel="YES, LEAVE"
+      cancelLabel="NO"
+      busy={busy}
+      onCancel={() => setLeaveConfirmOpen(false)}
+      onConfirm={() => void leave()}
+    />
+  );
+
   const status = (
     <View style={[styles.status, otherSubmitted && styles.statusDone]}>
       <Text style={styles.statusText}>
@@ -217,7 +236,7 @@ export default function OnlineDrawScreen() {
 
   if (waiting) {
     return (
-      <Screen scroll={false} contentStyle={styles.waitingScreen}>
+      <Screen scroll={false} contentStyle={styles.waitingScreen} backLabel="LEAVE" onBack={requestLeave}>
         <View style={styles.waitingTop}>
           <View>
             <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
@@ -225,7 +244,7 @@ export default function OnlineDrawScreen() {
           </View>
           <View style={styles.headerActions}>
             <CountdownBadge remaining={remaining} />
-            <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+            <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
               <Text style={styles.leave}>LEAVE ROUND</Text>
             </Pressable>
           </View>
@@ -247,12 +266,13 @@ export default function OnlineDrawScreen() {
           BACK TO DRAWING
         </CrocatButton>
         {!!error && <Text style={styles.error}>{error}</Text>}
+        {leaveModal}
       </Screen>
     );
   }
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave}>
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
@@ -260,7 +280,7 @@ export default function OnlineDrawScreen() {
         </View>
         <View style={styles.headerActions}>
           <CountdownBadge remaining={remaining} />
-          <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+          <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
             <Text style={styles.leave}>LEAVE ROUND</Text>
           </Pressable>
         </View>
@@ -306,6 +326,7 @@ export default function OnlineDrawScreen() {
         SUBMIT {partLabel.toUpperCase()}
       </CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
+      {leaveModal}
     </Screen>
   );
 }
