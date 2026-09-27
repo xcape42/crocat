@@ -74,7 +74,11 @@ export function Screen({ children, contentStyle, scroll = true }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, overflow: 'hidden' },
   pattern: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     opacity: 0.18,
   },
   patternOne: {
