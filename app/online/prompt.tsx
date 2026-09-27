@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
@@ -34,6 +35,7 @@ export default function OnlinePromptScreen() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advancingRef = useRef(false);
 
@@ -129,6 +131,10 @@ export default function OnlinePromptScreen() {
     }
   };
 
+  const requestLeave = () => {
+    if (!busy) setLeaveConfirmOpen(true);
+  };
+
   const remaining = useDeadlineCountdown(
     round?.id === roundId ? round.prompt_selection_ends_at : null,
     autoChoose,
@@ -170,7 +176,7 @@ export default function OnlinePromptScreen() {
 
   if (!room || !round) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} backLabel="LEAVE" onBack={requestLeave}>
         <View style={styles.loading}>
           <ActivityIndicator color={colors.ink} />
           <Text style={styles.copy}>{error || 'Preparing prompt choices…'}</Text>
@@ -180,7 +186,7 @@ export default function OnlinePromptScreen() {
   }
 
   return (
-    <Screen scroll={false} contentStyle={styles.screen}>
+    <Screen scroll={false} contentStyle={styles.screen} backLabel="LEAVE" onBack={requestLeave}>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.kicker}>ROOM {room.code} · PROMPT PICK</Text>
@@ -193,7 +199,7 @@ export default function OnlinePromptScreen() {
         </View>
         <View style={styles.headerActions}>
           <CountdownBadge remaining={remaining} label="PICK" />
-          <Pressable accessibilityRole="button" disabled={busy} onPress={leave}>
+          <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
             <Text style={styles.leave}>LEAVE ROUND</Text>
           </Pressable>
         </View>
@@ -235,6 +241,17 @@ export default function OnlinePromptScreen() {
         )}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
+
+      <ConfirmActionModal
+        visible={leaveConfirmOpen}
+        title="Leave the game?"
+        message="The current round will end for the room."
+        confirmLabel="YES, LEAVE"
+        cancelLabel="NO"
+        busy={busy}
+        onCancel={() => setLeaveConfirmOpen(false)}
+        onConfirm={() => void leave()}
+      />
     </Screen>
   );
 }
