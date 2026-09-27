@@ -222,13 +222,14 @@ export default function ProfileScreen() {
           ))}
         </View>
       </View>
-
-      <CrocatButton disabled={busy || name.trim().length < 2} onPress={save}>
-        {busy ? 'SAVING…' : 'SAVE PROFILE'}
-      </CrocatButton>
-
-      {!!notice && <Text style={styles.notice}>{notice}</Text>}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      <View style={styles.bottom}>
+        <CrocatButton disabled={busy || name.trim().length < 2} onPress={save}>
+          {busy ? 'SAVING…' : 'SAVE PROFILE'}
+        </CrocatButton>
+  
+        {!!notice && <Text style={styles.notice}>{notice}</Text>}
+        {!!error && <Text style={styles.error}>{error}</Text>}
+      </View>
     </Screen>
   );
 }
@@ -327,6 +328,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: colors.card,
   },
+  bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
   symbol: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   selected: { borderWidth: 3, borderColor: colors.ink },
   notice: { marginTop: 10, textAlign: 'center', color: colors.ink, fontWeight: '900', fontSize: 11 },
