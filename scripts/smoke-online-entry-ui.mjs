@@ -15,6 +15,9 @@ const friends = read('app/friends.tsx');
 const avatar = read('src/components/ProfileAvatar.tsx');
 const profile = read('app/profile.tsx');
 const multiplayer = read('src/features/multiplayer/room.ts');
+const drawingCanvas = read('src/components/DrawingCanvas.tsx');
+const drawingPreview = read('src/components/DrawingPreview.tsx');
+const interaction = read('src/theme/interaction.ts');
 
 assert(
   play.includes("router.push('/online')"),
@@ -102,4 +105,15 @@ assert(
   'Friend metadata must not expose the personal profile symbol.',
 );
 
-console.log('Crocat 1.6.3 simplified social surface UX contract passed');
+assert(
+  interaction.includes("WebkitUserSelect: 'none'")
+    && interaction.includes("WebkitTouchCallout: 'none'")
+    && interaction.includes("WebkitUserDrag: 'none'")
+    && interaction.includes("WebkitTapHighlightColor: 'transparent'")
+    && drawingCanvas.includes('onStartShouldSetPanResponderCapture: () => true')
+    && drawingCanvas.includes('webArtworkGestureLock')
+    && drawingPreview.includes('webArtworkGestureLock'),
+  'Artwork surfaces must block iOS/WebKit selection, callouts and drag takeover.',
+);
+
+console.log('Crocat UI interaction contracts passed');
