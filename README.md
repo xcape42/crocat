@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.5.1
+## Stable version: 1.6.0
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.5.1 keeps the stable 1.5.0 social/gallery release and fixes online countdown synchronization by calibrating client clocks against an authoritative Supabase server clock.
+Crocat 1.6.0 makes online play the primary social flow. Play and the online lobby surface friends directly, one tap joins a friend's open lobby or creates/reuses a lobby and sends an invite, lobby players can become friends in place, and the existing profile theme now changes Crocat's overall surface style.
 
 ### Local Split
 
@@ -22,7 +22,7 @@ The drawing connection guide is role-aware:
 
 Two devices connect through a six-character room code.
 
-`Create or enter room code → both players Ready → either player Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
+`Play Online → own lobby opens/reopens immediately → invite/join friend or share code → both players Ready → either player Start → random HEAD/BODY → 15s Prompt Pick → simultaneous Drawing → 15s Adjustment → up to 15s Final Reveal → next round in the same room`
 
 There is no gameplay owner in the lobby. Both room members have the same permissions. HEAD/BODY are randomized server-side every round. The current HEAD player receives three prompts from three different themes and has 15 seconds to choose. HEAD may reroll all three exactly once; rerolled terms never repeat the previous three. If no choice is made, the server randomly selects one of the currently visible options. The active catalog contains 60 curated prompts in **Mystisch, Fantasy, Natur, Elegant and Genuss**, with 12 prompts per theme.
 
@@ -32,13 +32,13 @@ Early drawing submission remains reversible while the other player is still draw
 
 During Adjustment each player can drag and zoom only their own part. Each player can also mark themselves Ready without hiding the shared composition. 1/2 Ready keeps Adjustment running; 2/2 Ready starts Final Reveal immediately. Final Reveal shows both the selected term and its theme. Both players can press Ready Next Round; the next round starts only while both players are actively present in Crocat. If one player is away, the game visibly waits for them.
 
-The most recently opened room code is remembered locally and prefilled on future online sessions. A direct `/online/room/CODE` link now uses the same atomic join-or-create flow as the room-code entry screen: a valid missing code creates that exact room, an existing member rejoins even after the round has started, and a new player joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
+Pressing **Play Online** now opens or reuses the player's current Crocat lobby immediately. The six-character room code remains shareable through the same direct-link flow; while alone in a waiting lobby it can be regenerated without replacing the room itself. A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
 ### Profiles, Friends and Gallery
 
-Every anonymous Crocat session now owns a persistent profile with a free 2–18 character name, one of seven colors, three avatar shapes, two avatar themes and five symbols. Profiles expose a stable eight-character Friend Code so editable or duplicate display names never become identity keys. The same profile component is reused in rooms, friend cards, invitations and artwork history.
+Every anonymous Crocat session now owns a persistent profile with a free 2–18 character name, one of seven colors, three avatar shapes, two avatar themes and five symbols. Profiles expose a stable eight-character Friend Code so editable or duplicate display names never become identity keys. The same profile component is reused in rooms, friend cards, invitations and artwork history. The two theme choices are application themes rather than character skins: **Paper** keeps the warm handmade Crocat surface, while **Ink** uses a cooler graphic palette, different accents and subtle background marks. This intentionally stays separate from the future customizable-character system.
 
-Friends are mutual server-side relationships. Accepted friends show profile details, online/last-seen state derived from the same heartbeat used by multiplayer, and an open waiting-room code when one is joinable. A friend can be invited into the current lobby or invited directly from the Friends list; if no open lobby exists, Crocat creates one automatically. Lobby invitations are delivered through Supabase Realtime and surfaced globally whenever the recipient is not already inside another room.
+Friends are mutual server-side relationships. Accepted friends show profile details, online/last-seen state derived from the same heartbeat used by multiplayer, a small friendship level derived from completed rounds together, and an open waiting-room code when one is joinable. The Play screen and a solo online lobby both expose a compact friend strip: tapping an online friend joins their free lobby when one exists; otherwise Crocat creates or reuses the player's own waiting lobby and sends the invite. Switching to a friend's open lobby atomically dissolves the caller's old solo lobby, while a lobby that already contains another player is never silently abandoned. Players in the same lobby can send or accept a friend request directly on the player card. Lobby invitations are delivered through Supabase Realtime and surfaced globally whenever the recipient is not already inside another room.
 
 During Final Reveal, either participant can star the result. The server stores the vector drawings, final HEAD/BODY transforms, prompt metadata and profile snapshots for both artists. Each owner gets a private gallery copy with a deterministic Crocat title such as `Coole Erdbeere 7`. Saved works can be renamed, favorited, deleted and exported as the actual composed SVG rather than as a UI screenshot.
 
@@ -78,14 +78,14 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.5.1 release validation includes:
+The 1.6.0 release validation includes:
 
 - dependency install
 - TypeScript
 - Expo Doctor
 - production Expo web export with verified GitHub Pages direct-link fallback
 - automated server-synchronized timer smoke coverage with artificial +120s / -90s client clock skew
-- automated social profile and gallery smoke coverage for profile persistence, RLS, friendships, presence, open-lobby discovery, realtime invites, auto-created invite rooms and private artwork CRUD
+- automated social profile and gallery smoke coverage for profile persistence, RLS, lobby add-friend, friendship levels, presence, online-entry room reuse, code regeneration, open-lobby discovery, atomic friend-lobby switching, realtime invites, auto-created invite rooms and private artwork CRUD
 - automated Supabase multiplayer smoke coverage for equal-player settings, 2/2 lobby Ready, start permissions, leave/replacement behavior, direct-link create/join/rejoin/full/started-room behavior, prompt flow, immediate two-submit handoff, Adjustment Ready and heartbeat
 - database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
 - exact phase-deadline validation for Adjustment and Final Reveal

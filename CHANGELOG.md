@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.6.0 — Friend-first play, social lobbies and app themes
+
+- Make Online the primary mode on Play and keep Local Split directly underneath
+- Show a compact friend strip at the top of Play with avatar, online state, friendship level and JOIN / INVITE state
+- Let one tap on an online friend join their free waiting lobby when available
+- Otherwise create or reuse the player's own waiting lobby and send that friend an invitation
+- Make PLAY ONLINE open or reuse the player's online lobby immediately instead of showing a separate create/join form
+- Preserve shareable six-character room links and direct-link create/join/rejoin behavior
+- Allow a solo waiting player to regenerate the room code without replacing the room
+- Show the same online-friend strip inside a solo waiting lobby
+- Atomically dissolve a player's old solo lobby when switching into a friend's open lobby
+- Refuse silent lobby switching when the current lobby already contains another player or an active game
+- Allow lobby players to send or accept a friend request directly from the other player's card
+- Show accepted friendship and a lightweight friendship level directly in the lobby and Friends screen
+- Derive friendship progress from completed rounds together: NEW FRIEND, DRAW BUDDIES and CROCAT CREW
+- Keep friendship progress normalized instead of storing a second mutable counter
+- Turn PAPER and INK into actual application themes with different surfaces, primary/accent colors and subtle decorative patterns
+- Keep avatar/color/symbol profile identity separate from the application theme so future customizable characters can evolve independently
+- Add authenticated scoped RPCs for friend-by-user requests, online-lobby reuse, safe room-code regeneration and atomic friend-lobby joins
+- Extend the social smoke suite for lobby reuse, code regeneration, lobby add-friend, friendship progress and safe friend-lobby switching
+- Preserve equal-player Ready/settings/start behavior, server-synchronized timers, Presence, Realtime, direct links and the private artwork gallery
+- Align package, Expo and visible app versions to 1.6.0
+
 ## 1.5.1 — Server-synchronized online timers
 
 - Keep all multiplayer phase deadlines authoritative on Supabase
