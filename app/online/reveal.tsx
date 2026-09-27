@@ -3,6 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
+import {
+  findSavedArtworkForRound,
+  saveArtwork,
+  setArtworkFavorite,
+} from '@/src/features/artworks/api';
+import type { SavedArtwork } from '@/src/features/artworks/types';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
@@ -47,6 +53,8 @@ export default function OnlineRevealScreen() {
   const [bodyTransform, setBodyTransform] = useState<PartTransform>(ZERO);
   const [error, setError] = useState('');
   const [readyBusy, setReadyBusy] = useState(false);
+  const [savedArtwork, setSavedArtwork] = useState<SavedArtwork | null>(null);
+  const [artworkBusy, setArtworkBusy] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const advanceRef = useRef(false);
 
@@ -121,6 +129,15 @@ export default function OnlineRevealScreen() {
     setBodyTransform(bodySubmission?.transform ?? ZERO);
   }, [roundId]);
 
+  const loadSavedArtwork = useCallback(async () => {
+    if (!roundId) return;
+    try {
+      setSavedArtwork(await findSavedArtworkForRound(roundId));
+    } catch {
+      // Gallery state is optional to loading the reveal itself.
+    }
+  }, [roundId]);
+
   const tryAdvance = useCallback(async () => {
     if (!roomId || advanceRef.current) return;
 
@@ -153,7 +170,7 @@ export default function OnlineRevealScreen() {
         if (!user) throw new Error('Guest session missing.');
         if (!userId) setIdentity(user.id, role);
 
-        await Promise.all([loadArtwork(), refresh()]);
+        await Promise.all([loadArtwork(), loadSavedArtwork(), refresh()]);
         if (cancelled) return;
 
         const activeRoom = useOnlineGameStore.getState().room;
@@ -238,6 +255,27 @@ export default function OnlineRevealScreen() {
     }
   };
 
+  const toggleArtwork = async () => {
+    if (!roundId || artworkBusy) return;
+
+    try {
+      setArtworkBusy(true);
+      setError('');
+
+      if (!savedArtwork) {
+        setSavedArtwork(await saveArtwork(roundId));
+      } else {
+        setSavedArtwork(
+          await setArtworkFavorite(savedArtwork.id, !savedArtwork.favorite),
+        );
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save artwork.');
+    } finally {
+      setArtworkBusy(false);
+    }
+  };
+
   const leave = async () => {
     if (!room) return;
     try {
@@ -291,6 +329,18 @@ export default function OnlineRevealScreen() {
           ? `${missingPlayer?.display_name ?? 'The other player'} is currently away. The next round waits until both players are active again.`
           : 'Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.'}
       </Text>
+
+      <CrocatButton
+        variant={savedArtwork?.favorite ? 'coral' : 'secondary'}
+        disabled={artworkBusy}
+        onPress={() => void toggleArtwork()}
+      >
+        {artworkBusy
+          ? 'SAVING…'
+          : (!savedArtwork
+            ? '☆ SAVE ARTWORK'
+            : (savedArtwork.favorite ? '★ FAVORITE' : '☆ SAVED'))}
+      </CrocatButton>
 
       <View style={styles.readyRow}>
         <Text style={styles.readyStatus}>{readyCount}/2 READY</Text>
