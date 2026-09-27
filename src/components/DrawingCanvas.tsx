@@ -50,6 +50,7 @@ export function DrawingCanvas({
       setActivePoints([point]);
     },
     onPanResponderMove: (event) => {
+      if (Platform.OS === 'web') event.preventDefault();
       const point = toVirtualPoint(event.nativeEvent.locationX, event.nativeEvent.locationY);
       const next = [...activeRef.current, point];
       activeRef.current = next;
