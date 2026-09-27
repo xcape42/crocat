@@ -3,6 +3,7 @@ import { LayoutChangeEvent, PanResponder, Platform, StyleSheet, View } from 'rea
 import Svg, { Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { DRAWING_SURFACE_ASPECT } from '@/src/theme/gameSurface';
+import { webArtworkGestureLock } from '@/src/theme/interaction';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, Point, Stroke } from '@/src/types/game';
 
@@ -40,7 +41,10 @@ export function DrawingCanvas({
   const responder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponderCapture: () => true,
+    onMoveShouldSetPanResponderCapture: () => true,
     onPanResponderGrant: (event) => {
+      if (Platform.OS === 'web') event.preventDefault();
       const point = toVirtualPoint(event.nativeEvent.locationX, event.nativeEvent.locationY);
       activeRef.current = [point];
       setActivePoints([point]);
@@ -84,7 +88,7 @@ export function DrawingCanvas({
           style={[
             styles.canvas,
             { width, height },
-            Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as never),
+            webArtworkGestureLock,
           ]}
           onLayout={onCanvasLayout}
           {...responder.panHandlers}
@@ -95,7 +99,7 @@ export function DrawingCanvas({
             height="100%"
             viewBox={`0 0 ${VIRTUAL_WIDTH} ${VIRTUAL_HEIGHT}`}
             preserveAspectRatio="none"
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, webArtworkGestureLock]}
           >
             {drawing.strokes.map((stroke) => (
               <Path
