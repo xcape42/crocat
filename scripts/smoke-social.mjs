@@ -158,8 +158,18 @@ async function main() {
 
   const alphaFriends = await alpha.rpc('list_friends');
   if (alphaFriends.error) throw alphaFriends.error;
-  if (!alphaFriends.data.some((item) => item.friend_user_id === betaGuest.user.id)) {
+  const acceptedFriend = alphaFriends.data.find(
+    (item) => item.friend_user_id === betaGuest.user.id,
+  );
+  if (!acceptedFriend) {
     throw new Error('Accepted friend was missing');
+  }
+  if (
+    acceptedFriend.friend_level !== 1
+    || acceptedFriend.shared_rounds !== 0
+    || acceptedFriend.friendship_label !== 'NEW FRIEND'
+  ) {
+    throw new Error('New friendship progress was not initialized correctly');
   }
 
   // Direct DML stays blocked; mutations must pass through the scoped RPCs.
@@ -185,13 +195,34 @@ async function main() {
     throw new Error('Fresh friend presence was not reported online');
   }
 
-  // Open-lobby discovery and direct friend join.
-  const created = await beta.rpc('create_room', {
+  // Primary online entry must create once and then reuse the same lobby.
+  const created = await beta.rpc('open_or_create_room', {
     p_display_name: betaProfile.display_name,
     p_round_seconds: 10,
   });
   if (created.error) throw created.error;
-  const betaRoom = first(created.data);
+  let betaRoom = first(created.data);
+
+  const reopened = await beta.rpc('open_or_create_room', {
+    p_display_name: betaProfile.display_name,
+    p_round_seconds: 10,
+  });
+  if (reopened.error) throw reopened.error;
+  if (
+    first(reopened.data).room_id !== betaRoom.room_id
+    || first(reopened.data).room_code !== betaRoom.room_code
+  ) {
+    throw new Error('Online entry did not reuse the waiting lobby');
+  }
+
+  const regenerated = await beta.rpc('regenerate_room_code', {
+    p_room_id: betaRoom.room_id,
+  });
+  if (regenerated.error) throw regenerated.error;
+  if (regenerated.data === betaRoom.room_code) {
+    throw new Error('Lobby code did not regenerate');
+  }
+  betaRoom = { ...betaRoom, room_code: regenerated.data };
 
   const withOpenLobby = await alpha.rpc('list_friends');
   if (withOpenLobby.error) throw withOpenLobby.error;
@@ -202,13 +233,14 @@ async function main() {
     throw new Error('Friends list did not expose the open lobby');
   }
 
-  const directJoin = await alpha.rpc('join_or_create_room', {
-    p_code: betaRoom.room_code,
-    p_host_display_name: alphaProfile.display_name,
-    p_guest_display_name: alphaProfile.display_name,
-    p_round_seconds: 10,
+  const directJoin = await alpha.rpc('join_friend_lobby', {
+    p_friend_user_id: betaGuest.user.id,
+    p_current_room_id: null,
   });
   if (directJoin.error) throw directJoin.error;
+  if (first(directJoin.data).room_id !== betaRoom.room_id) {
+    throw new Error('Direct friend click joined the wrong lobby');
+  }
 
   const alphaLeavesDiscovery = await alpha.rpc('leave_room', {
     p_room_id: betaRoom.room_id,
@@ -453,6 +485,49 @@ async function main() {
   });
   if (alphaLeaveAuto.error) throw alphaLeaveAuto.error;
 
+  // Switching to a friend's open lobby must dissolve the caller's solo lobby.
+  const alphaSolo = await alpha.rpc('open_or_create_room', {
+    p_display_name: alphaProfile.display_name,
+    p_round_seconds: 10,
+  });
+  if (alphaSolo.error) throw alphaSolo.error;
+  const alphaSoloRoom = first(alphaSolo.data);
+
+  const betaSolo = await beta.rpc('open_or_create_room', {
+    p_display_name: betaProfile.display_name,
+    p_round_seconds: 10,
+  });
+  if (betaSolo.error) throw betaSolo.error;
+  const betaSoloRoom = first(betaSolo.data);
+
+  const switched = await alpha.rpc('join_friend_lobby', {
+    p_friend_user_id: betaGuest.user.id,
+    p_current_room_id: alphaSoloRoom.room_id,
+  });
+  if (switched.error) throw switched.error;
+  if (first(switched.data).room_id !== betaSoloRoom.room_id) {
+    throw new Error('Friend-lobby switch did not join the target lobby');
+  }
+
+  const oldSolo = await alpha
+    .from('rooms')
+    .select('id')
+    .eq('id', alphaSoloRoom.room_id);
+  if (oldSolo.error) throw oldSolo.error;
+  if (oldSolo.data.length !== 0) {
+    throw new Error('Previous solo lobby survived friend-lobby switch');
+  }
+
+  const alphaLeaveSwitch = await alpha.rpc('leave_room', {
+    p_room_id: betaSoloRoom.room_id,
+  });
+  if (alphaLeaveSwitch.error) throw alphaLeaveSwitch.error;
+
+  const betaLeaveSwitch = await beta.rpc('leave_room', {
+    p_room_id: betaSoloRoom.room_id,
+  });
+  if (betaLeaveSwitch.error) throw betaLeaveSwitch.error;
+
   const removed = await alpha.rpc('remove_friend', {
     p_friend_user_id: betaGuest.user.id,
   });
@@ -473,7 +548,7 @@ async function main() {
     throw new Error('Profile visibility remained after friendship removal');
   }
 
-  console.log('Crocat 1.5.1 social + gallery smoke passed');
+  console.log('Crocat 1.6.0 social + gallery smoke passed');
 }
 
 main().catch((error) => {
