@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { LobbyInviteBanner } from '@/src/components/LobbyInviteBanner';
 import { ensureCurrentProfile, touchProfilePresence } from '@/src/features/profile/api';
 import { touchRoomPresence } from '@/src/features/multiplayer/room';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
@@ -60,6 +61,7 @@ export default function RootLayout() {
           animation: 'fade',
         }}
       />
+      <LobbyInviteBanner />
     </SafeAreaProvider>
   );
 }
