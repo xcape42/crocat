@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.6.3
+## Stable version: 1.6.4
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.6.3 simplifies the social surface: Play contains only Online and Local mode choices, friends live on Home → Friends or behind ALL FRIENDS inside a room, shared profile avatars no longer show the personal symbol, and room codes can no longer be regenerated from current clients.
+Crocat 1.6.4 adds compact player removal in waiting online rooms, confirms early exits before a running game is abandoned, and gives every non-Home screen one reliable top-left back action with a Home fallback when no navigation history exists. Final result/reveal exits remain direct.
 
 ### Local Split
 
@@ -32,7 +32,7 @@ Early drawing submission remains reversible while the other player is still draw
 
 During Adjustment each player can drag and zoom only their own part. Each player can also mark themselves Ready without hiding the shared composition. 1/2 Ready keeps Adjustment running; 2/2 Ready starts Final Reveal immediately. Final Reveal shows both the selected term and its theme. Both players can press Ready Next Round; the next round starts only while both players are actively present in Crocat. If one player is away, the game visibly waits for them.
 
-Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
+Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Prompt Select, Drawing and Adjustment ask for confirmation before the round is abandoned; Final Reveal exits directly. In the waiting lobby, either of the two equal room members can remove the other player through the small × action after confirming the removal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
 ### Profiles, Friends and Gallery
 
