@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 12, fontWeight: '900', letterSpacing: 1.8, color: colors.muted, marginBottom: 10, textAlign: 'center' },
   logo: { fontSize: 72, lineHeight: 78, fontWeight: '900', letterSpacing: -4, color: colors.ink },
   subtitle: { marginTop: 8, maxWidth: 420, fontSize: 18, lineHeight: 25, color: colors.muted, textAlign: 'center' },
-  creature: { marginTop: 34, width: 170, height: 170, borderRadius: 85, backgroundColor: colors.moss, borderWidth: 2, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', transform: [{ rotate: '-4deg' }] },
+  creature: { marginTop: 34, width: 420, height: 420 alignItems: 'center', justifyContent: 'center'},
   creatureImage: { width: '88%', height: '88%' },
   actions: { gap: 12, paddingBottom: spacing.md },
   row: { flexDirection: 'row', gap: 12 },
