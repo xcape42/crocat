@@ -19,7 +19,7 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>Half yours. Half theirs. One beautiful accident.</Text>
         <View style={styles.creature}>
           <Image
-            source={require('../assets/images/crocat-home-example.png')}
+            source={require('../assets/images/7886F04F-D43C-4DD5-AF91-BA1F78D30DF9.png')}
             style={styles.creatureImage}
             resizeMode="contain"
             accessibilityLabel="Crocat mascot"
