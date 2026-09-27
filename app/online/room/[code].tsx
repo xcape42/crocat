@@ -392,7 +392,7 @@ export default function OnlineRoomScreen() {
                 <View style={styles.playerCopy}>
                   <Text style={styles.name}>{player.display_name}</Text>
                   <Text style={styles.role}>
-                    {player.user_id === userId ? 'YOU' : 'PLAYER'} · RANDOM ROLE EACH ROUND
+                    {player.user_id === userId ? 'YOU' : 'OTHER CAT'}
                   </Text>
                   {player.user_id !== userId && (
                     otherFriend ? (
