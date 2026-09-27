@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: colors.card,
-    marginTop: 5,
+    marginTop: 12,
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' },
   eyebrow: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
