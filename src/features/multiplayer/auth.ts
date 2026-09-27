@@ -1,16 +1,12 @@
 import type { User } from '@supabase/supabase-js';
 import { requireSupabase } from '@/src/lib/supabase';
 
-export async function ensureGuest(displayName: string): Promise<User> {
+export async function ensureGuest(displayName = 'Crocat'): Promise<User> {
   const supabase = requireSupabase();
   const { data: sessionData } = await supabase.auth.getSession();
 
   if (sessionData.session?.user) {
-    const current = sessionData.session.user;
-    if (displayName && current.user_metadata?.display_name !== displayName) {
-      await supabase.auth.updateUser({ data: { display_name: displayName } });
-    }
-    return current;
+    return sessionData.session.user;
   }
 
   const { data, error } = await supabase.auth.signInAnonymously({

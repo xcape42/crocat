@@ -3,33 +3,49 @@ import { AppState } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { colors } from '@/src/theme/tokens';
+import { ensureCurrentProfile, touchProfilePresence } from '@/src/features/profile/api';
 import { touchRoomPresence } from '@/src/features/multiplayer/room';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { colors } from '@/src/theme/tokens';
 
 export default function RootLayout() {
   const roomId = useOnlineGameStore((state) => state.room?.id ?? null);
 
   useEffect(() => {
-    if (!roomId) return;
-
     let stopped = false;
-    const touch = () => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const touch = async () => {
       if (stopped || AppState.currentState !== 'active') return;
-      void touchRoomPresence(roomId).catch(() => {
-        // Realtime/route refreshes handle a room that disappeared while offline.
-      });
+
+      try {
+        if (roomId) {
+          await touchRoomPresence(roomId);
+        } else {
+          await touchProfilePresence();
+        }
+      } catch {
+        // Route refreshes and the next heartbeat recover transient offline state.
+      }
     };
 
-    touch();
-    const interval = setInterval(touch, 20_000);
+    void ensureCurrentProfile()
+      .then(() => {
+        if (stopped) return;
+        void touch();
+        interval = setInterval(() => void touch(), 20_000);
+      })
+      .catch(() => {
+        // Online screens surface backend/auth errors when the user interacts.
+      });
+
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') touch();
+      if (state === 'active') void touch();
     });
 
     return () => {
       stopped = true;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       subscription.remove();
     };
   }, [roomId]);
