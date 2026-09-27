@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.5 — iOS drawing interaction hardening
+
+- Prevent iOS/WebKit from selecting or highlighting drawn strokes during touch drawing
+- Disable WebKit long-press callouts, native drag behavior and tap highlight only on artwork surfaces
+- Keep normal app text selectable by scoping the gesture lock to DrawingCanvas and DrawingPreview
+- Capture drawing gestures before the browser can take ownership of the touch sequence
+- Prevent native browser gesture takeover during interactive artwork adjustment as well
+- Reuse one shared artwork interaction lock instead of scattering browser-specific CSS across screens
+- Add CI contract coverage for the iOS/WebKit interaction protections
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.6.5
+
+
 ## 1.6.4 — Room controls, confirmed leave and reliable back navigation
 
 - Add a small remove-player × action beside the other player in a waiting online lobby
