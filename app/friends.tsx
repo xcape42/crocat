@@ -79,9 +79,8 @@ function lastSeenText(friend: FriendSummary) {
 
 export default function FriendsScreen() {
   const router = useRouter();
-  const { inviteRoomId, returnCode } = useLocalSearchParams<{
+  const { inviteRoomId } = useLocalSearchParams<{
     inviteRoomId?: string;
-    returnCode?: string;
   }>();
 
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
@@ -174,8 +173,14 @@ export default function FriendsScreen() {
 
   const invite = async (friend: FriendSummary) => {
     await run('invite:' + friend.friend_user_id, async () => {
-      const ticket = await inviteFriend(friend.friend_user_id, inviteRoomId ?? null);
-      router.replace('/online/room/' + (returnCode ?? ticket.code));
+      if (inviteRoomId) {
+        await inviteFriend(friend.friend_user_id, inviteRoomId);
+        setNotice('INVITE SENT TO ' + friend.display_name.toUpperCase() + ' ✓');
+        return;
+      }
+
+      const ticket = await inviteFriend(friend.friend_user_id, null);
+      router.replace('/online/room/' + ticket.code);
     });
   };
 
@@ -192,6 +197,68 @@ export default function FriendsScreen() {
       router.replace('/online/room/' + ticket.code);
     });
   };
+
+  const onlineFriends = friends
+    .filter((friend) => friend.online)
+    .sort((left, right) => {
+      const leftOpen = left.open_room_code ? 1 : 0;
+      const rightOpen = right.open_room_code ? 1 : 0;
+      if (leftOpen !== rightOpen) return rightOpen - leftOpen;
+      return left.display_name.localeCompare(right.display_name);
+    });
+
+  const offlineFriends = friends
+    .filter((friend) => !friend.online)
+    .sort(
+      (left, right) =>
+        new Date(right.last_seen_at).getTime()
+        - new Date(left.last_seen_at).getTime(),
+    );
+
+  const renderFriend = (friend: FriendSummary) => (
+    <View key={friend.friend_user_id} style={styles.friendCard}>
+      <ProfileAvatar profile={socialProfileVisual(friend)} size={58} />
+      <View style={styles.friendMain}>
+        <View style={styles.friendTop}>
+          <Text style={styles.name}>{friend.display_name}</Text>
+          <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
+            {lastSeenText(friend)}
+          </Text>
+        </View>
+
+        <Text style={styles.meta}>
+          LV {friend.friend_level} · {friend.friendship_label}
+          {' · '}{friend.theme_key.toUpperCase()} · {friend.symbol_key.toUpperCase()}
+          {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
+        </Text>
+
+        <View style={styles.friendActions}>
+          {!!friend.open_room_code && !inviteRoomId && (
+            <MiniButton
+              strong
+              label="JOIN"
+              disabled={!!busyKey}
+              onPress={() => void joinOpenLobby(friend)}
+            />
+          )}
+          <MiniButton
+            strong={!friend.open_room_code || !!inviteRoomId}
+            label="INVITE"
+            disabled={!!busyKey}
+            onPress={() => void invite(friend)}
+          />
+          <MiniButton
+            label="REMOVE"
+            disabled={!!busyKey}
+            onPress={() => void run(
+              'remove:' + friend.friend_user_id,
+              () => removeFriend(friend.friend_user_id),
+            )}
+          />
+        </View>
+      </View>
+    </View>
+  );
 
   if (loading) {
     return (
@@ -350,50 +417,27 @@ export default function FriendsScreen() {
             <Text style={styles.emptyCopy}>Share your friend code or add someone above.</Text>
           </View>
         ) : (
-          friends.map((friend) => (
-            <View key={friend.friend_user_id} style={styles.friendCard}>
-              <ProfileAvatar profile={socialProfileVisual(friend)} size={58} />
-              <View style={styles.friendMain}>
-                <View style={styles.friendTop}>
-                  <Text style={styles.name}>{friend.display_name}</Text>
-                  <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
-                    {lastSeenText(friend)}
-                  </Text>
-                </View>
-
-                <Text style={styles.meta}>
-                  LV {friend.friend_level} · {friend.friendship_label}
-                  {' · '}{friend.theme_key.toUpperCase()} · {friend.symbol_key.toUpperCase()}
-                  {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
-                </Text>
-
-                <View style={styles.friendActions}>
-                  {!!friend.open_room_code && !inviteRoomId && (
-                    <MiniButton
-                      strong
-                      label="JOIN"
-                      disabled={!!busyKey}
-                      onPress={() => void joinOpenLobby(friend)}
-                    />
-                  )}
-                  <MiniButton
-                    strong={!friend.open_room_code || !!inviteRoomId}
-                    label="INVITE"
-                    disabled={!!busyKey}
-                    onPress={() => void invite(friend)}
-                  />
-                  <MiniButton
-                    label="REMOVE"
-                    disabled={!!busyKey}
-                    onPress={() => void run(
-                      'remove:' + friend.friend_user_id,
-                      () => removeFriend(friend.friend_user_id),
-                    )}
-                  />
-                </View>
+          <>
+            <View style={styles.friendGroup}>
+              <View style={styles.groupHeader}>
+                <Text style={styles.groupTitle}>ONLINE · {onlineFriends.length}</Text>
+                <View style={styles.onlineDot} />
               </View>
+              {onlineFriends.length
+                ? onlineFriends.map(renderFriend)
+                : <Text style={styles.groupEmpty}>No friends online right now.</Text>}
             </View>
-          ))
+
+            <View style={styles.friendGroup}>
+              <View style={styles.groupHeader}>
+                <Text style={styles.groupTitle}>OFFLINE · {offlineFriends.length}</Text>
+                <View style={styles.offlineDot} />
+              </View>
+              {offlineFriends.length
+                ? offlineFriends.map(renderFriend)
+                : <Text style={styles.groupEmpty}>Everyone is online.</Text>}
+            </View>
+          </>
         )}
       </View>
 
@@ -451,6 +495,38 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: colors.card,
+  },
+  friendGroup: { gap: 9, marginTop: 4 },
+  groupHeader: {
+    minHeight: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 2,
+  },
+  groupTitle: {
+    color: colors.ink,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  onlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 7,
+    backgroundColor: '#4F7B4A',
+  },
+  offlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 7,
+    backgroundColor: colors.line,
+  },
+  groupEmpty: {
+    paddingVertical: 12,
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '700',
   },
   friendCard: {
     flexDirection: 'row',

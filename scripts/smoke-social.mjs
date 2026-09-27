@@ -273,12 +273,48 @@ async function main() {
     });
   });
 
+  const beforeExistingInviteRoom = await beta
+    .from('rooms')
+    .select('id, code, status')
+    .eq('id', betaRoom.room_id)
+    .single();
+  if (beforeExistingInviteRoom.error) throw beforeExistingInviteRoom.error;
+
+  const beforeExistingInviteMembers = await beta
+    .from('room_players')
+    .select('user_id')
+    .eq('room_id', betaRoom.room_id);
+  if (beforeExistingInviteMembers.error) throw beforeExistingInviteMembers.error;
+
   const inviteExisting = await beta.rpc('invite_friend', {
     p_friend_user_id: alphaGuest.user.id,
     p_room_id: betaRoom.room_id,
   });
   if (inviteExisting.error) throw inviteExisting.error;
   const existingInvite = first(inviteExisting.data);
+
+  const afterExistingInviteRoom = await beta
+    .from('rooms')
+    .select('id, code, status')
+    .eq('id', betaRoom.room_id)
+    .single();
+  if (afterExistingInviteRoom.error) throw afterExistingInviteRoom.error;
+
+  const afterExistingInviteMembers = await beta
+    .from('room_players')
+    .select('user_id')
+    .eq('room_id', betaRoom.room_id);
+  if (afterExistingInviteMembers.error) throw afterExistingInviteMembers.error;
+
+  if (
+    existingInvite.room_id !== betaRoom.room_id
+    || afterExistingInviteRoom.data.id !== beforeExistingInviteRoom.data.id
+    || afterExistingInviteRoom.data.code !== beforeExistingInviteRoom.data.code
+    || afterExistingInviteRoom.data.status !== beforeExistingInviteRoom.data.status
+    || afterExistingInviteMembers.data.length !== beforeExistingInviteMembers.data.length
+  ) {
+    throw new Error('Existing-room invite mutated or replaced the active lobby');
+  }
 
   for (let attempt = 0; attempt < 150 && !realtimeInviteSeen; attempt += 1) {
     await wait(100);
@@ -548,7 +584,7 @@ async function main() {
     throw new Error('Profile visibility remained after friendship removal');
   }
 
-  console.log('Crocat 1.6.0 social + gallery smoke passed');
+  console.log('Crocat 1.6.2 social + gallery smoke passed');
 }
 
 main().catch((error) => {

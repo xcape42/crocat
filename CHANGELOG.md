@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.2 — Stable invites and clearer friend groups
+
+- Keep the 1.6.1 explicit Create / Join online entry flow unchanged
+- Make INVITE from ALL FRIENDS inside an existing lobby side-effect free for the inviter
+- Do not navigate, recreate, replace or leave the current room when inviting from that room
+- Keep the recipient's existing realtime lobby-invite popup behavior
+- Keep INVITE outside a room creating/reusing a waiting lobby, navigating the inviter there and sending the invitation
+- Remove the obsolete returnCode navigation parameter from room-context invites
+- Group accepted friends into clear ONLINE and OFFLINE sections
+- Sort online friends with joinable open lobbies first and offline friends by most recent activity
+- Add CI contract coverage for both invite contexts and Online/Offline grouping
+- Strengthen the social smoke test to assert that an existing-room invite preserves room id, code, status and member count
+- No Supabase schema or RPC migration required; the existing invite RPC was verified transactionally as side-effect free
+- Align package, Expo and visible app versions to 1.6.2
+
 ## 1.6.1 — Classic online entry, cleaner lobby
 
 - Keep the 1.6.0 friend-first Play screen and one-tap friend shortcuts

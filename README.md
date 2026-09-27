@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.6.1
+## Stable version: 1.6.2
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.6.1 keeps the 1.6 social layer but restores the explicit online room entry flow: PLAY ONLINE opens Create / Join Room again, while friends remain available as shortcuts on Play and through ALL FRIENDS inside a solo lobby.
+Crocat 1.6.2 keeps the classic online entry from 1.6.1 and hardens invitations: inviting from an existing lobby no longer remounts or replaces the room, while invites from outside a room still create/reuse a lobby and take the inviter there. Friends are grouped clearly into Online and Offline.
 
 ### Local Split
 
@@ -38,7 +38,7 @@ Pressing **Play Online** opens the explicit online entry screen again, where the
 
 Every anonymous Crocat session now owns a persistent profile with a free 2–18 character name, one of seven colors, three avatar shapes, two avatar themes and five symbols. Profiles expose a stable eight-character Friend Code so editable or duplicate display names never become identity keys. The same profile component is reused in rooms, friend cards, invitations and artwork history. The two theme choices are application themes rather than character skins: **Paper** keeps the warm handmade Crocat surface, while **Ink** uses a cooler graphic palette, different accents and subtle background marks. This intentionally stays separate from the future customizable-character system.
 
-Friends are mutual server-side relationships. Accepted friends show profile details, online/last-seen state derived from the same heartbeat used by multiplayer, a small friendship level derived from completed rounds together, and an open waiting-room code when one is joinable. The Play screen keeps the compact friend strip: tapping an online friend joins their free lobby when one exists; otherwise Crocat creates or reuses the player's own waiting lobby and sends the invite. Inside a solo online lobby, the friend strip stays hidden; **ALL FRIENDS** is the single entry point for browsing, joining or inviting friends. Switching to a friend's open lobby atomically dissolves the caller's old solo lobby, while a lobby that already contains another player is never silently abandoned. Players in the same lobby can send or accept a friend request directly on the player card. Lobby invitations are delivered through Supabase Realtime and surfaced globally whenever the recipient is not already inside another room.
+Friends are mutual server-side relationships. Accepted friends show profile details, online/last-seen state derived from the same heartbeat used by multiplayer, a small friendship level derived from completed rounds together, and an open waiting-room code when one is joinable. The Play screen keeps the compact friend strip: tapping an online friend joins their free lobby when one exists; otherwise Crocat creates or reuses the player's own waiting lobby and sends the invite. Inside a solo online lobby, the friend strip stays hidden; **ALL FRIENDS** is the single entry point for browsing, joining or inviting friends. When opened from an existing lobby, pressing **INVITE** only creates the invitation for that exact room and leaves the current room untouched. Outside a room, **INVITE** still creates or reuses a waiting lobby, navigates the inviter there, and sends the invitation. The Friends screen separates Online and Offline friends into distinct groups. Switching to a friend's open lobby atomically dissolves the caller's old solo lobby, while a lobby that already contains another player is never silently abandoned. Players in the same lobby can send or accept a friend request directly on the player card. Lobby invitations are delivered through Supabase Realtime and surfaced globally whenever the recipient is not already inside another room.
 
 During Final Reveal, either participant can star the result. The server stores the vector drawings, final HEAD/BODY transforms, prompt metadata and profile snapshots for both artists. Each owner gets a private gallery copy with a deterministic Crocat title such as `Coole Erdbeere 7`. Saved works can be renamed, favorited, deleted and exported as the actual composed SVG rather than as a UI screenshot.
 
@@ -78,15 +78,15 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.6.1 release validation includes:
+The 1.6.2 release validation includes:
 
 - dependency install
-- online-entry UX contract: PLAY ONLINE must remain side-effect free until Create/Join is chosen, and room friends must stay behind ALL FRIENDS
+- online-entry/invite UX contract: PLAY ONLINE remains side-effect free until Create/Join, room friends stay behind ALL FRIENDS, existing-room invites do not navigate, and friends are grouped Online/Offline
 - TypeScript
 - Expo Doctor
 - production Expo web export with verified GitHub Pages direct-link fallback
 - automated server-synchronized timer smoke coverage with artificial +120s / -90s client clock skew
-- automated social profile and gallery smoke coverage for profile persistence, RLS, lobby add-friend, friendship levels, presence, online-entry room reuse, code regeneration, open-lobby discovery, atomic friend-lobby switching, realtime invites, auto-created invite rooms and private artwork CRUD
+- automated social profile and gallery smoke coverage for profile persistence, RLS, lobby add-friend, friendship levels, presence, code regeneration, open-lobby discovery, side-effect-free existing-room invites, atomic friend-lobby switching, realtime invites, auto-created invite rooms and private artwork CRUD
 - automated Supabase multiplayer smoke coverage for equal-player settings, 2/2 lobby Ready, start permissions, leave/replacement behavior, direct-link create/join/rejoin/full/started-room behavior, prompt flow, immediate two-submit handoff, Adjustment Ready and heartbeat
 - database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
 - exact phase-deadline validation for Adjustment and Final Reveal

@@ -446,7 +446,6 @@ export default function OnlineRoomScreen() {
               pathname: '/friends',
               params: {
                 inviteRoomId: room.id,
-                returnCode: room.code,
               },
             })}
           >
