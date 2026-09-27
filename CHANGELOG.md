@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.4 — Room controls, confirmed leave and reliable back navigation
+
+- Add a small remove-player × action beside the other player in a waiting online lobby
+- Require confirmation before removing another player and keep lobby permissions equal for both members
+- Add an authenticated room-player kick RPC limited to waiting rooms, with membership checks, self-kick rejection, ready reset and compatibility host transfer
+- Refresh room clients through Realtime after removal so the removed player is routed out of the room immediately
+- Confirm early leave from Online Prompt, Drawing and Adjustment before ending the current round
+- Confirm early leave from active Local Split stages as well
+- Keep Final Reveal / final result exit direct, without an extra confirmation
+- Move back navigation into the shared Screen shell so every non-Home screen has a top-left back action
+- Fall back to Home whenever no navigation history is available
+- Preserve contextual labels such as HOME, PLAY, MODES, ROOM and GALLERY on existing navigation surfaces
+- Add multiplayer smoke coverage for self-kick rejection, outsider rejection, removal cleanup, RLS visibility and later rejoining
+- Add the production Supabase migration and update the schema snapshot
+- Align package, Expo and visible app versions to 1.6.4
+
+
 ## 1.6.3 — Simpler play, fixed room code and private symbols
 
 - Remove the friend quick strip and all friend loading/subscriptions from the Play screen
