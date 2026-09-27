@@ -16,8 +16,7 @@ export default function LobbyScreen() {
   };
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>← MODES</Text>
+    <Screen backLabel="MODES">
       <View style={styles.header}>
         <Text style={styles.kicker}>LOCAL ROOM · {roomCode}</Text>
         <Text style={styles.title}>Ready to make a creature?</Text>
