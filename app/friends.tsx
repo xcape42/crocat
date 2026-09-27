@@ -17,6 +17,7 @@ import {
   acceptLobbyInvite,
   declineLobbyInvite,
   inviteFriend,
+  joinFriendLobby,
   listFriendRequests,
   listFriends,
   listLobbyInvites,
@@ -175,6 +176,13 @@ export default function FriendsScreen() {
     await run('invite:' + friend.friend_user_id, async () => {
       const ticket = await inviteFriend(friend.friend_user_id, inviteRoomId ?? null);
       router.replace('/online/room/' + (returnCode ?? ticket.code));
+    });
+  };
+
+  const joinOpenLobby = async (friend: FriendSummary) => {
+    await run('join:' + friend.friend_user_id, async () => {
+      const ticket = await joinFriendLobby(friend.friend_user_id);
+      router.replace('/online/room/' + ticket.code);
     });
   };
 
@@ -354,7 +362,8 @@ export default function FriendsScreen() {
                 </View>
 
                 <Text style={styles.meta}>
-                  {friend.theme_key.toUpperCase()} · {friend.symbol_key.toUpperCase()}
+                  LV {friend.friend_level} · {friend.friendship_label}
+                  {' · '}{friend.theme_key.toUpperCase()} · {friend.symbol_key.toUpperCase()}
                   {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
                 </Text>
 
@@ -364,7 +373,7 @@ export default function FriendsScreen() {
                       strong
                       label="JOIN"
                       disabled={!!busyKey}
-                      onPress={() => router.replace('/online/room/' + friend.open_room_code)}
+                      onPress={() => void joinOpenLobby(friend)}
                     />
                   )}
                   <MiniButton
