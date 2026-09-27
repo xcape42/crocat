@@ -51,7 +51,7 @@ export function LobbyInviteBanner() {
     };
   }, [refresh]);
 
-  if (!invite || (room && room.status !== 'waiting')) return null;
+  if (!invite || room) return null;
 
   const accept = async () => {
     try {
