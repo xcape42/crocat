@@ -22,9 +22,30 @@ export const PROFILE_AVATARS: Array<{ key: ProfileAvatarKey; label: string; face
   { key: 'spiky', label: 'SPIKY', face: '✦ᴗ✦' },
 ];
 
-export const PROFILE_THEMES: Array<{ key: ProfileThemeKey; label: string }> = [
-  { key: 'paper', label: 'PAPER' },
-  { key: 'ink', label: 'INK' },
+export const PROFILE_THEMES: Array<{
+  key: ProfileThemeKey;
+  label: string;
+  description: string;
+  background: string;
+  accent: string;
+  pattern: string;
+}> = [
+  {
+    key: 'paper',
+    label: 'PAPER',
+    description: 'Warm, soft and handmade',
+    background: colors.paper,
+    accent: colors.coral,
+    pattern: '· — ·',
+  },
+  {
+    key: 'ink',
+    label: 'INK',
+    description: 'Cool, graphic and playful',
+    background: '#E8EFEC',
+    accent: colors.blue,
+    pattern: '✦ ╱ ✦',
+  },
 ];
 
 export const PROFILE_SYMBOLS: Array<{ key: ProfileSymbolKey; label: string; glyph: string }> = [

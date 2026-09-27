@@ -29,6 +29,7 @@ import type {
   ProfileSymbolKey,
   ProfileThemeKey,
 } from '@/src/features/profile/types';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function ProfileScreen() {
@@ -42,6 +43,7 @@ export default function ProfileScreen() {
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const setUiThemeKey = useUiThemeStore((state) => state.setThemeKey);
 
   const apply = (next: PlayerProfile) => {
     setProfile(next);
@@ -50,6 +52,7 @@ export default function ProfileScreen() {
     setAvatarKey(next.avatar_key);
     setThemeKey(next.theme_key);
     setSymbolKey(next.symbol_key);
+    setUiThemeKey(next.theme_key);
   };
 
   useEffect(() => {
@@ -182,7 +185,8 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>THEME · 1 OF 2</Text>
+        <Text style={styles.label}>APP THEME · 1 OF 2</Text>
+        <Text style={styles.themeHint}>Changes Crocat’s surfaces, accents and little background details.</Text>
         <View style={styles.options}>
           {PROFILE_THEMES.map((item) => (
             <Pressable
@@ -190,13 +194,16 @@ export default function ProfileScreen() {
               onPress={() => setThemeKey(item.key)}
               style={[
                 styles.themeOption,
-                item.key === 'ink' && styles.inkTheme,
+                { backgroundColor: item.background },
                 themeKey === item.key && styles.selected,
               ]}
             >
-              <Text style={[styles.optionLabel, item.key === 'ink' && styles.inkText]}>
-                {item.label}
-              </Text>
+              <View style={styles.themePreviewTop}>
+                <Text style={styles.themeName}>{item.label}</Text>
+                <View style={[styles.themeAccent, { backgroundColor: item.accent }]} />
+              </View>
+              <Text style={styles.themePattern}>{item.pattern}</Text>
+              <Text style={styles.themeDescription}>{item.description}</Text>
             </Pressable>
           ))}
         </View>
@@ -274,17 +281,43 @@ const styles = StyleSheet.create({
   },
   avatarFace: { color: colors.ink, fontSize: 17, fontWeight: '900' },
   optionLabel: { marginTop: 5, color: colors.ink, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  themeHint: { color: colors.muted, fontSize: 11, lineHeight: 16 },
   themeOption: {
-    minWidth: 104,
+    minWidth: 150,
+    flexGrow: 1,
     padding: 14,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.line,
     borderRadius: radius.md,
-    backgroundColor: colors.card,
   },
-  inkTheme: { backgroundColor: colors.ink },
-  inkText: { color: colors.paper },
+  themePreviewTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  themeName: { color: colors.ink, fontSize: 11, fontWeight: '900', letterSpacing: 1 },
+  themeAccent: {
+    width: 30,
+    height: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.ink,
+  },
+  themePattern: {
+    marginTop: 12,
+    color: colors.ink,
+    opacity: 0.45,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 5,
+  },
+  themeDescription: {
+    marginTop: 6,
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: '700',
+  },
   symbolOption: {
     width: 48,
     height: 48,

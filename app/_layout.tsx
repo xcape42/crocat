@@ -8,10 +8,14 @@ import { ensureCurrentProfile, touchProfilePresence } from '@/src/features/profi
 import { touchRoomPresence } from '@/src/features/multiplayer/room';
 import { syncServerClock } from '@/src/features/time/serverClock';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { colors } from '@/src/theme/tokens';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { crocatUiTheme } from '@/src/theme/profileTheme';
 
 export default function RootLayout() {
   const roomId = useOnlineGameStore((state) => state.room?.id ?? null);
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const setThemeKey = useUiThemeStore((state) => state.setThemeKey);
+  const uiTheme = crocatUiTheme(themeKey);
 
   useEffect(() => {
     let stopped = false;
@@ -32,8 +36,9 @@ export default function RootLayout() {
     };
 
     void ensureCurrentProfile()
-      .then(() => {
+      .then(({ profile }) => {
         if (stopped) return;
+        setThemeKey(profile.theme_key);
         void syncServerClock();
         void touch();
         interval = setInterval(() => void touch(), 20_000);
@@ -54,15 +59,15 @@ export default function RootLayout() {
       if (interval) clearInterval(interval);
       subscription.remove();
     };
-  }, [roomId]);
+  }, [roomId, setThemeKey]);
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor={uiTheme.background} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.paper },
+          contentStyle: { backgroundColor: uiTheme.background },
           animation: 'fade',
         }}
       />
