@@ -13,7 +13,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { crocatUiTheme } from '@/src/theme/profileTheme';
-import { spacing } from '@/src/theme/tokens';
+import { colors, spacing } from '@/src/theme/tokens';
 
 type Props = PropsWithChildren<{
   contentStyle?: StyleProp<ViewStyle>;
@@ -86,7 +86,7 @@ export function Screen({
             onPress={handleBack}
             style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}
           >
-            <Text style={[styles.backText, { color: theme.muted }]}>← {backLabel}</Text>
+            <Text style={[styles.backText, { color: colors.muted }]}>← {backLabel}</Text>
           </Pressable>
         </View>
       )}
