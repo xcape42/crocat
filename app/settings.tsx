@@ -13,8 +13,7 @@ export default function SettingsScreen() {
   const router = useRouter();
 
   return (
-    <Screen>
-      <Text style={styles.back} onPress={() => router.back()}>← HOME</Text>
+    <Screen backLabel="HOME">
       <Text style={styles.title}>Settings</Text>
       <Text style={styles.copy}>General Crocat preferences live here. Settings for a specific game belong to that game room.</Text>
 
