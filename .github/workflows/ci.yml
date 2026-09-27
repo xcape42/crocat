@@ -60,3 +60,7 @@ jobs:
       - name: Online multiplayer smoke test
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
         run: node scripts/smoke-online.mjs
+
+      - name: Social profile and gallery smoke test
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
+        run: node scripts/smoke-social.mjs
