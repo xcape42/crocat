@@ -150,7 +150,7 @@ export default function OnlineDrawScreen() {
     round?.id === params.roundId
       ? round.ends_at
       : params.endsAt;
-  const remaining = useDeadlineCountdown(deadline, deadlineFinish);
+  const remaining = useDeadlineCountdown(deadline, deadlineFinish, { clock: 'server' });
 
   const submitCurrent = async () => {
     if (!params.roundId || busy || remaining <= 0) return;

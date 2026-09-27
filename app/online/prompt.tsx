@@ -131,8 +131,7 @@ export default function OnlinePromptScreen() {
 
   const remaining = useDeadlineCountdown(
     round?.id === roundId ? round.prompt_selection_ends_at : null,
-    autoChoose,
-  );
+    autoChoose,, { clock: 'server' });
 
   const isHead = Boolean(userId && round?.head_player_id === userId);
   const headName =

@@ -205,7 +205,7 @@ export default function OnlineRevealScreen() {
 
   const revealDeadline =
     round?.id === roundId ? round.final_reveal_ends_at : null;
-  const secondsLeft = useDeadlineCountdown(revealDeadline, tryAdvance);
+  const secondsLeft = useDeadlineCountdown(revealDeadline, tryAdvance, { clock: 'server' });
 
   const me = useMemo(
     () => players.find((player) => player.user_id === userId),

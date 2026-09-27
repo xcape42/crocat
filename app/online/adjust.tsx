@@ -257,7 +257,7 @@ export default function OnlineAdjustScreen() {
 
   const adjustmentDeadline =
     round?.id === params.roundId ? round.adjustment_ends_at : null;
-  const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment);
+  const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment, { clock: 'server' });
 
   const me = useMemo(
     () => players.find((player) => player.user_id === userId),

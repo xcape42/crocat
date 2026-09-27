@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LobbyInviteBanner } from '@/src/components/LobbyInviteBanner';
 import { ensureCurrentProfile, touchProfilePresence } from '@/src/features/profile/api';
 import { touchRoomPresence } from '@/src/features/multiplayer/room';
+import { syncServerClock } from '@/src/features/time/serverClock';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors } from '@/src/theme/tokens';
 
@@ -33,6 +34,7 @@ export default function RootLayout() {
     void ensureCurrentProfile()
       .then(() => {
         if (stopped) return;
+        void syncServerClock();
         void touch();
         interval = setInterval(() => void touch(), 20_000);
       })
@@ -41,7 +43,10 @@ export default function RootLayout() {
       });
 
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void touch();
+      if (state === 'active') {
+        void syncServerClock({ force: true });
+        void touch();
+      }
     });
 
     return () => {
