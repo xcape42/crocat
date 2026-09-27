@@ -366,6 +366,9 @@ export default function FriendsScreen() {
         </Pressable>
       </View>
 
+      {!!notice && <Text style={styles.notice}>{notice}</Text>}
+      {!!error && <Text style={styles.error}>{error}</Text>}
+
       {!!requests.length && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>REQUESTS</Text>
@@ -448,8 +451,7 @@ export default function FriendsScreen() {
         )}
       </View>
 
-      {!!notice && <Text style={styles.notice}>{notice}</Text>}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+
     </Screen>
   );
 }
