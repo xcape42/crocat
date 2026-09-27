@@ -1,3 +1,4 @@
+import type { PlayerProfile } from '@/src/features/profile/types';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
 export type PromptOption = {
@@ -35,6 +36,7 @@ export type OnlinePlayer = {
   ready: boolean;
   joined_at: string;
   last_seen_at: string;
+  profile?: PlayerProfile;
 };
 
 export type OnlineRound = {

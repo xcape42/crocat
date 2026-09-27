@@ -32,9 +32,32 @@ async function loadRoomRelations(room: OnlineRoom) {
     .limit(1);
   if (roundResult.error) throw roundResult.error;
 
+  const rawPlayers = (playersResult.data ?? []) as OnlinePlayer[];
+  const userIds = rawPlayers.map((player) => player.user_id);
+  let profilesByUser = new Map<string, OnlinePlayer['profile']>();
+
+  if (userIds.length) {
+    const profilesResult = await supabase
+      .from('profiles')
+      .select('*')
+      .in('user_id', userIds);
+
+    if (!profilesResult.error) {
+      profilesByUser = new Map(
+        (profilesResult.data ?? []).map((profile) => [
+          profile.user_id,
+          profile as OnlinePlayer['profile'],
+        ]),
+      );
+    }
+  }
+
   return {
     room,
-    players: (playersResult.data ?? []) as OnlinePlayer[],
+    players: rawPlayers.map((player) => ({
+      ...player,
+      profile: profilesByUser.get(player.user_id),
+    })),
     round: (roundResult.data?.[0] as OnlineRound | undefined) ?? null,
   };
 }

@@ -29,7 +29,10 @@ export default function HomeScreen() {
           <CrocatButton variant="secondary" style={styles.flex} onPress={() => router.push('/friends')}>FRIENDS</CrocatButton>
           <CrocatButton variant="secondary" style={styles.flex} onPress={() => router.push('/gallery')}>GALLERY</CrocatButton>
         </View>
-        <CrocatButton variant="ghost" onPress={() => router.push('/settings')}>SETTINGS</CrocatButton>
+        <View style={styles.row}>
+          <CrocatButton variant="ghost" style={styles.flex} onPress={() => router.push('/profile')}>PROFILE</CrocatButton>
+          <CrocatButton variant="ghost" style={styles.flex} onPress={() => router.push('/settings')}>SETTINGS</CrocatButton>
+        </View>
       </View>
     </Screen>
   );

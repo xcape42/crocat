@@ -3,10 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
 import { Screen } from '@/src/components/Screen';
 import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
-import { currentUser, ensureGuest } from '@/src/features/multiplayer/auth';
+import { currentUser } from '@/src/features/multiplayer/auth';
+import { ensureCurrentProfile } from '@/src/features/profile/api';
 import {
   joinOrCreateRoom,
   leaveRoom,
@@ -20,9 +22,6 @@ import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realt
 import { rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
-
-const FIRST_PLAYER_NAME = 'Domi';
-const SECOND_PLAYER_NAME = 'Sarah';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
@@ -140,9 +139,16 @@ export default function OnlineRoomScreen() {
         } catch {
           // A direct room link may be opened before Crocat created a guest session.
         }
-        if (!user) user = await ensureGuest(SECOND_PLAYER_NAME);
 
-        const ticket = await joinOrCreateRoom(roomCode, FIRST_PLAYER_NAME, SECOND_PLAYER_NAME, 180);
+        const identity = await ensureCurrentProfile();
+        user = user ?? identity.user;
+
+        const ticket = await joinOrCreateRoom(
+          roomCode,
+          identity.profile.display_name,
+          identity.profile.display_name,
+          180,
+        );
         const initialState = await loadRoomById(ticket.roomId);
         const me = initialState.players.find((player) => player.user_id === user.id);
         if (!me) throw new Error('Room membership could not be established.');
@@ -271,9 +277,23 @@ export default function OnlineRoomScreen() {
           const online = onlineUserIds.includes(player.user_id);
           return (
             <View key={player.user_id} style={styles.player}>
-              <View>
-                <Text style={styles.name}>{player.display_name}</Text>
-                <Text style={styles.role}>ROLE · RANDOM EACH ROUND</Text>
+              <View style={styles.playerIdentity}>
+                {player.profile ? (
+                  <ProfileAvatar
+                    profile={{
+                      displayName: player.profile.display_name,
+                      colorKey: player.profile.color_key,
+                      avatarKey: player.profile.avatar_key,
+                      themeKey: player.profile.theme_key,
+                      symbolKey: player.profile.symbol_key,
+                    }}
+                    size={48}
+                  />
+                ) : null}
+                <View>
+                  <Text style={styles.name}>{player.display_name}</Text>
+                  <Text style={styles.role}>ROLE · RANDOM EACH ROUND</Text>
+                </View>
               </View>
               <View style={styles.state}>
                 <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>
@@ -301,6 +321,21 @@ export default function OnlineRoomScreen() {
       )}
 
       <View style={styles.bottom}>
+        {room?.status === 'waiting' && players.length < 2 && (
+          <CrocatButton
+            variant="secondary"
+            disabled={busy || !me}
+            onPress={() => router.push({
+              pathname: '/friends',
+              params: {
+                inviteRoomId: room.id,
+                returnCode: room.code,
+              },
+            })}
+          >
+            INVITE FRIEND
+          </CrocatButton>
+        )}
         <CrocatButton disabled={busy || !me || room?.status !== 'waiting'} onPress={toggleReady}>
           {me?.ready ? 'NOT READY' : 'I’M READY'}
         </CrocatButton>
@@ -333,7 +368,8 @@ const styles = StyleSheet.create({
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
   players: { gap: 12 },
-  player: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
+  player: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
+  playerIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   head: { backgroundColor: colors.moss },
   body: { backgroundColor: colors.blue },
   name: { fontWeight: '900', fontSize: 18, color: colors.ink },

@@ -4,14 +4,11 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-nati
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Screen } from '@/src/components/Screen';
 import { colors, radius, spacing } from '@/src/theme/tokens';
-import { ensureGuest } from '@/src/features/multiplayer/auth';
+import { ensureCurrentProfile } from '@/src/features/profile/api';
 import { createRoom, joinOrCreateRoom, loadRoomById } from '@/src/features/multiplayer/room';
 import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-
-const FIRST_PLAYER_NAME = 'Domi';
-const SECOND_PLAYER_NAME = 'Sarah';
 
 export default function OnlineEntryScreen() {
   const router = useRouter();
@@ -30,21 +27,21 @@ export default function OnlineEntryScreen() {
     };
   }, []);
 
-  const prepare = async (displayName: string) => {
+  const prepare = async () => {
     if (!hasSupabaseConfig) throw new Error('Supabase is not configured yet.');
-    const user = await ensureGuest(displayName);
-    setDisplayName(displayName);
-    return user;
+    const identity = await ensureCurrentProfile();
+    setDisplayName(identity.profile.display_name);
+    return identity;
   };
 
   const create = async () => {
     try {
       setError('');
       setBusy('create');
-      const user = await prepare(FIRST_PLAYER_NAME);
-      const ticket = await createRoom(FIRST_PLAYER_NAME, 180);
+      const { user, profile } = await prepare();
+      const ticket = await createRoom(profile.display_name, 180);
       await rememberRoomCode(ticket.code);
-      setDisplayName(FIRST_PLAYER_NAME);
+      setDisplayName(profile.display_name);
       setIdentity(user.id, ticket.role);
       router.replace(`/online/room/${ticket.code}`);
     } catch (e) {
@@ -58,9 +55,14 @@ export default function OnlineEntryScreen() {
     try {
       setError('');
       setBusy('join');
-      const user = await prepare(SECOND_PLAYER_NAME);
+      const { user, profile } = await prepare();
       if (code.trim().length !== 6) throw new Error('Enter the 6-character room code.');
-      const ticket = await joinOrCreateRoom(code, FIRST_PLAYER_NAME, SECOND_PLAYER_NAME, 180);
+      const ticket = await joinOrCreateRoom(
+        code,
+        profile.display_name,
+        profile.display_name,
+        180,
+      );
       const roomState = await loadRoomById(ticket.roomId);
       const me = roomState.players.find((player) => player.user_id === user.id);
       if (!me) throw new Error('Room membership could not be established.');
@@ -81,7 +83,7 @@ export default function OnlineEntryScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>CROCAT ONLINE · 1.4.9</Text>
         <Text style={styles.title}>Draw apart. Reveal together.</Text>
-        <Text style={styles.copy}>No account and no name form. Entering a code joins that room; if it does not exist yet, Crocat creates it. HEAD and BODY are randomized every round.</Text>
+        <Text style={styles.copy}>Your Crocat profile follows you into every room. Entering a code joins that room; if it does not exist yet, Crocat creates it. HEAD and BODY are randomized every round.</Text>
       </View>
 
       {!hasSupabaseConfig && (
@@ -92,7 +94,7 @@ export default function OnlineEntryScreen() {
       )}
 
       <View style={styles.card}>
-        <Text style={styles.label}>CREATE AS DOMI</Text>
+        <Text style={styles.label}>CREATE ONLINE ROOM</Text>
         <CrocatButton disabled={busy !== null || !hasSupabaseConfig} onPress={create}>
           {busy === 'create' ? 'CREATING…' : 'CREATE ROOM'}
         </CrocatButton>
