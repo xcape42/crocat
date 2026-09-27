@@ -10,6 +10,7 @@ import {
 import Svg, { G, Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { PREVIEW_SURFACE_ASPECT } from '@/src/theme/gameSurface';
+import { webArtworkGestureLock } from '@/src/theme/interaction';
 import { colors, radius } from '@/src/theme/tokens';
 import {
   ARTWORK_BODY_CONNECTION_Y,
@@ -133,13 +134,14 @@ export function DrawingPreview({
           style={[
             styles.frame,
             { width, height },
-            interactive && Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as never),
+            webArtworkGestureLock,
           ]}
           onLayout={onFrameLayout}
           {...(interactive ? responder.panHandlers : {})}
         >
           <Svg
             pointerEvents="none"
+            style={webArtworkGestureLock}
             width="100%"
             height="100%"
             viewBox={`0 0 ${ARTWORK_WIDTH} ${ARTWORK_HEIGHT}`}
