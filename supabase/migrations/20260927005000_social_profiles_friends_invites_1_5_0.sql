@@ -340,6 +340,7 @@ set search_path = public, private, pg_temp
 as $function$
 declare
   v_user uuid := auth.uid();
+  v_display_name text;
 begin
   if v_user is null then
     raise exception 'Authentication required';
@@ -348,13 +349,14 @@ begin
   update public.room_players rp
   set last_seen_at = now()
   where rp.room_id = p_room_id
-    and rp.user_id = v_user;
+    and rp.user_id = v_user
+  returning rp.display_name into v_display_name;
 
   if not found then
     raise exception 'You are not a member of this room';
   end if;
 
-  perform private.ensure_profile_impl(null);
+  perform private.ensure_profile_impl(v_display_name);
 
   update public.profiles p
   set last_seen_at = now()
