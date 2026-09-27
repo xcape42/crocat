@@ -184,6 +184,13 @@ export default function FriendsScreen() {
     });
   };
 
+  const copyCode = async () => {
+    if (!profile) return;
+    await Clipboard.setStringAsync(profile.friend_code);
+    setNotice('FRIEND CODE COPIED ✓');
+    setTimeout(() => setNotice(''), 1800);
+  };
+
   const joinOpenLobby = async (friend: FriendSummary) => {
     await run('join:' + friend.friend_user_id, async () => {
       const ticket = await joinFriendLobby(friend.friend_user_id);
@@ -328,7 +335,6 @@ export default function FriendsScreen() {
         <View style={styles.addTop}>
           <View>
             <Text style={styles.sectionTitle}>ADD FRIEND</Text>
-            {!!profile && <Text style={styles.yourCode}>YOURS · {profile.friend_code}</Text>}
           </View>
           <Pressable onPress={() => router.push('/profile')}>
             <Text style={styles.editProfile}>EDIT PROFILE →</Text>
@@ -354,6 +360,9 @@ export default function FriendsScreen() {
             onPress={() => void add()}
           />
         </View>
+        <Pressable onPress={copyCode}>
+          {!!profile && <Text style={styles.yourCode}>YOURS · {profile.friend_code}</Text>}
+        </Pressable>
       </View>
 
       {!!requests.length && (
