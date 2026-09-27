@@ -176,6 +176,14 @@ export async function leaveRoom(roomId: string) {
   if (error) throw error;
 }
 
+export async function kickRoomPlayer(roomId: string, targetUserId: string) {
+  const { error } = await requireSupabase().rpc('kick_room_player', {
+    p_room_id: roomId,
+    p_target_user_id: targetUserId,
+  });
+  if (error) throw error;
+}
+
 export async function touchRoomPresence(roomId: string) {
   const { error } = await requireSupabase().rpc('touch_room_presence', { p_room_id: roomId });
   if (error) throw error;
