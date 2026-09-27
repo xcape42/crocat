@@ -23,7 +23,7 @@ export default function ResultScreen() {
   };
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={home}>
       <View style={styles.header}>
         <Text style={styles.kicker}>CROCAT COMPLETE</Text>
         <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
