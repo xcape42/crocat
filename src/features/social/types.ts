@@ -17,6 +17,9 @@ export type FriendSummary = {
   last_seen_at: string;
   online: boolean;
   open_room_code: string | null;
+  friend_level: number;
+  shared_rounds: number;
+  friendship_label: string;
 };
 
 export type FriendRequestSummary = {

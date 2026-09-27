@@ -72,6 +72,30 @@ export async function createRoom(displayName: string, roundSeconds: number): Pro
   return { roomId: row.room_id, code: row.room_code, role: row.player_role };
 }
 
+export async function openOrCreateRoom(
+  displayName: string,
+  roundSeconds: number,
+): Promise<RoomTicket> {
+  const { data, error } = await requireSupabase().rpc('open_or_create_room', {
+    p_display_name: displayName,
+    p_round_seconds: roundSeconds,
+  });
+  if (error) throw error;
+  const row = one<{ room_id: string; room_code: string; player_role: GameRole }>(data);
+  return { roomId: row.room_id, code: row.room_code, role: row.player_role };
+}
+
+export async function regenerateRoomCode(roomId: string): Promise<string> {
+  const { data, error } = await requireSupabase().rpc('regenerate_room_code', {
+    p_room_id: roomId,
+  });
+  if (error) throw error;
+  if (typeof data !== 'string' || data.length !== 6) {
+    throw new Error('Could not regenerate room code.');
+  }
+  return data;
+}
+
 export async function joinRoom(code: string, displayName: string): Promise<RoomTicket> {
   const { data, error } = await requireSupabase().rpc('join_room', {
     p_code: code.trim().toUpperCase(),

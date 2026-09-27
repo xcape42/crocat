@@ -26,6 +26,13 @@ export async function sendFriendRequest(friendCode: string) {
   if (error) throw error;
 }
 
+export async function sendFriendRequestToUser(userId: string) {
+  const { error } = await requireSupabase().rpc('send_friend_request_to_user', {
+    p_other_user_id: userId,
+  });
+  if (error) throw error;
+}
+
 export async function respondFriendRequest(
   friendshipId: string,
   accept: boolean,
@@ -67,6 +74,26 @@ export async function inviteFriend(
     inviteId: row.invite_id,
     roomId: row.room_id,
     code: row.room_code,
+  };
+}
+
+export async function joinFriendLobby(
+  friendUserId: string,
+  currentRoomId?: string | null,
+): Promise<SocialRoomTicket> {
+  const { data, error } = await requireSupabase().rpc('join_friend_lobby', {
+    p_friend_user_id: friendUserId,
+    p_current_room_id: currentRoomId ?? null,
+  });
+  if (error) throw error;
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error('Friend lobby is unavailable.');
+
+  return {
+    roomId: row.room_id,
+    code: row.room_code,
+    role: row.player_role,
   };
 }
 
