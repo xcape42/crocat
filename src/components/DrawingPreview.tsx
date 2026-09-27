@@ -82,6 +82,7 @@ export function DrawingPreview({
     onMoveShouldSetPanResponderCapture: () => interactive,
     onPanResponderGrant: (event) => {
       if (!interactive) return;
+      if (Platform.OS === 'web') event.preventDefault();
 
       const touchedRole: GameRole =
         event.nativeEvent.locationY < layoutRef.current.height / 2 ? 'HEAD' : 'BODY';
