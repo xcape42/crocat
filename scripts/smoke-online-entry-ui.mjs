@@ -248,7 +248,7 @@ assert(
 assert(
   drawingCanvas.includes("guideMode = 'hard'")
     && drawingCanvas.includes("guideMode === 'soft'")
-    && drawingCanvas.includes("guideMode === 'none'")
+    && drawingCanvas.includes("guideMode !== 'none'")
     && drawingCanvas.includes('ARTWORK_HEAD_CONNECTION_Y')
     && drawingCanvas.includes('ARTWORK_BODY_CONNECTION_Y')
     && localDraw.includes('guideMode="hard"'),
