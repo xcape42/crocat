@@ -88,14 +88,14 @@ async function main() {
     name: 'Alpha Fox',
     color: 'violet',
     avatar: 'ears',
-    theme: 'ink',
+    theme: 'moon',
     symbol: 'moon',
   });
   betaProfile = await updateProfile(beta, {
     name: 'Beta Bird',
     color: 'coral',
     avatar: 'spiky',
-    theme: 'paper',
+    theme: 'candy',
     symbol: 'spark',
   });
 
@@ -103,7 +103,7 @@ async function main() {
     alphaProfile.display_name !== 'Alpha Fox'
     || alphaProfile.color_key !== 'violet'
     || alphaProfile.avatar_key !== 'ears'
-    || alphaProfile.theme_key !== 'ink'
+    || alphaProfile.theme_key !== 'moon'
     || alphaProfile.symbol_key !== 'moon'
   ) {
     throw new Error('Profile update did not persist all visual fields');
@@ -122,6 +122,7 @@ async function main() {
     reloadedProfile.user_id !== alphaGuest.user.id
     || reloadedProfile.display_name !== 'Alpha Fox'
     || reloadedProfile.friend_code !== alphaProfile.friend_code
+    || reloadedProfile.theme_key !== 'moon'
   ) {
     throw new Error('Profile did not survive a fresh client/session reload');
   }
@@ -168,8 +169,9 @@ async function main() {
     acceptedFriend.friend_level !== 1
     || acceptedFriend.shared_rounds !== 0
     || acceptedFriend.friendship_label !== 'NEW FRIEND'
+    || acceptedFriend.theme_key !== 'candy'
   ) {
-    throw new Error('New friendship progress was not initialized correctly');
+    throw new Error('New friendship progress or World identity was not initialized correctly');
   }
 
   // Direct DML stays blocked; mutations must pass through the scoped RPCs.
