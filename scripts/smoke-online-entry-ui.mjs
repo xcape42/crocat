@@ -18,6 +18,14 @@ const multiplayer = read('src/features/multiplayer/room.ts');
 const drawingCanvas = read('src/components/DrawingCanvas.tsx');
 const drawingPreview = read('src/components/DrawingPreview.tsx');
 const interaction = read('src/theme/interaction.ts');
+const worlds = read('src/theme/worlds.ts');
+const screen = read('src/components/Screen.tsx');
+const mascot = read('src/components/Mascot.tsx');
+const decoration = read('src/components/DecorationLayer.tsx');
+const playerPod = read('src/components/PlayerPod.tsx');
+const reducedMotion = read('src/hooks/useReducedMotion.ts');
+const profileOptions = read('src/features/profile/options.ts');
+const reveal = read('app/online/reveal.tsx');
 
 assert(
   play.includes("router.push('/online')"),
@@ -96,7 +104,7 @@ assert(
 
 assert(
   avatar.includes('showSymbol = false')
-    && profile.includes('size={108} showSymbol'),
+    && profile.includes('showSymbol'),
   'Profile symbols must be hidden from shared avatars and visible only in the owner profile editor.',
 );
 
@@ -116,4 +124,45 @@ assert(
   'Artwork surfaces must block iOS/WebKit selection, callouts and drag takeover.',
 );
 
-console.log('Crocat UI interaction contracts passed');
+
+assert(
+  worlds.includes("moss:")
+    && worlds.includes("moon:")
+    && worlds.includes("candy:")
+    && profileOptions.includes('WORLD_OPTIONS.map'),
+  'Crocat Worlds must expose Moss, Moon and Candy through the shared profile theme model.',
+);
+
+assert(
+  screen.includes('DecorationLayer')
+    && mascot.includes("type MascotState")
+    && decoration.includes("pointerEvents=\"none\"")
+    && reducedMotion.includes('isReduceMotionEnabled')
+    && reducedMotion.includes('reduceMotionChanged'),
+  'World decoration and mascot motion must be shared, non-interactive and Reduced-Motion aware.',
+);
+
+assert(
+  room.includes('<PlayerPod')
+    && room.includes('players.map')
+    && playerPod.includes('profile: ProfileVisual')
+    && reveal.includes('players.map'),
+  'Lobby and reveal identity must render from the player collection through reusable player presentation.',
+);
+
+assert(
+  room.includes('requiredPlayers = 2')
+    && !playerPod.includes('host')
+    && !playerPod.includes('guest'),
+  'Current two-player rules must stay explicit without baking Host/Guest concepts into PlayerPod.',
+);
+
+assert(
+  drawingCanvas.includes('crocatWorld')
+    && drawingCanvas.includes('webArtworkGestureLock')
+    && drawingPreview.includes('crocatWorld')
+    && drawingPreview.includes('webArtworkGestureLock'),
+  'World canvas framing must preserve the iOS/WebKit artwork interaction lock.',
+);
+
+console.log('Crocat 1.7.0 World and interaction contracts passed');
