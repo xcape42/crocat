@@ -15,6 +15,7 @@ import { colors } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 import {
   CURRENT_ARTWORK_GEOMETRY_VERSION,
+  LEGACY_ARTWORK_GEOMETRY_VERSION,
   artworkClipRect,
   artworkGeometryForVersion,
   artworkPartTransform,
@@ -182,20 +183,41 @@ export function DrawingPreview({
               </ClipPath>
             </Defs>
 
-            <Part
-              drawing={body}
-              transform={bodyTransform}
-              connectionY={geometry.bodyConnectionY}
-              geometry={geometry}
-              clipId="body-artwork-clip"
-            />
-            <Part
-              drawing={head}
-              transform={headTransform}
-              connectionY={geometry.headConnectionY}
-              geometry={geometry}
-              clipId="head-artwork-clip"
-            />
+            {geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION ? (
+              <>
+                <Part
+                  drawing={head}
+                  transform={headTransform}
+                  connectionY={geometry.headConnectionY}
+                  geometry={geometry}
+                  clipId="head-artwork-clip"
+                />
+                <Part
+                  drawing={body}
+                  transform={bodyTransform}
+                  connectionY={geometry.bodyConnectionY}
+                  geometry={geometry}
+                  clipId="body-artwork-clip"
+                />
+              </>
+            ) : (
+              <>
+                <Part
+                  drawing={body}
+                  transform={bodyTransform}
+                  connectionY={geometry.bodyConnectionY}
+                  geometry={geometry}
+                  clipId="body-artwork-clip"
+                />
+                <Part
+                  drawing={head}
+                  transform={headTransform}
+                  connectionY={geometry.headConnectionY}
+                  geometry={geometry}
+                  clipId="head-artwork-clip"
+                />
+              </>
+            )}
           </Svg>
 
           {interactive && (

@@ -259,10 +259,15 @@ assert(
   drawingPreview.includes('artworkClipRect')
     && drawingPreview.includes('body-artwork-clip')
     && drawingPreview.includes('head-artwork-clip')
-    && drawingPreview.indexOf('drawing={body}') < drawingPreview.indexOf('drawing={head}')
+    && drawingPreview.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
+    && drawingPreview.includes('geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION')
+    && artworkThumbnail.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
+    && artworkExport.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
+    && artworkExport.includes('? [head, body]')
+    && artworkExport.includes(': [body, head]')
     && localGameStore.includes('clampArtworkTransform')
     && adjust.includes('clampArtworkTransform'),
-  'Current previews must clip to the compact connection zone, render BODY before HEAD and share bounded Adjustment transforms in Local and Online.',
+  'Current previews must clip to the compact connection zone, preserve legacy HEAD/BODY layering, use BODY/HEAD layering for v2 and share bounded Adjustment transforms in Local and Online.',
 );
 
 assert(

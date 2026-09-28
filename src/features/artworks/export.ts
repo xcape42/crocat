@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import { colors } from '@/src/theme/tokens';
 import type { GameRole, Stroke } from '@/src/types/game';
 import {
+  LEGACY_ARTWORK_GEOMETRY_VERSION,
   artworkClipRect,
   artworkGeometryForVersion,
   artworkPartTransform,
@@ -59,6 +60,22 @@ function partSvg(
 export function renderArtworkSvg(artwork: SavedArtwork) {
   const geometry = artworkGeometryForVersion(artwork.geometry_version);
 
+  const head = partSvg(
+    'HEAD',
+    artwork.head_drawing.strokes,
+    artwork.head_transform,
+    geometry,
+  );
+  const body = partSvg(
+    'BODY',
+    artwork.body_drawing.strokes,
+    artwork.body_transform,
+    geometry,
+  );
+  const parts = geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION
+    ? [head, body]
+    : [body, head];
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + geometry.width +
@@ -69,18 +86,7 @@ export function renderArtworkSvg(artwork: SavedArtwork) {
     clipSvg('HEAD', geometry),
     '</defs>',
     '<rect width="100%" height="100%" fill="' + colors.card + '"/>',
-    partSvg(
-      'BODY',
-      artwork.body_drawing.strokes,
-      artwork.body_transform,
-      geometry,
-    ),
-    partSvg(
-      'HEAD',
-      artwork.head_drawing.strokes,
-      artwork.head_transform,
-      geometry,
-    ),
+    ...parts,
     '</svg>',
   ].join('');
 }

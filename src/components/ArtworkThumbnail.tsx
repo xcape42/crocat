@@ -1,6 +1,7 @@
 import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
 import { colors, radius } from '@/src/theme/tokens';
 import {
+  LEGACY_ARTWORK_GEOMETRY_VERSION,
   artworkClipRect,
   artworkGeometryForVersion,
   artworkPartTransform,
@@ -42,47 +43,93 @@ export function ArtworkThumbnail({ artwork, width = 126 }: Props) {
         fill={colors.card}
       />
 
-      <G clipPath="url(#thumbnail-body-clip)">
-        <G transform={artworkPartTransform(
-          artwork.body_transform,
-          geometry.bodyConnectionY,
-          geometry,
-        )}>
-          {artwork.body_drawing.strokes.map((stroke) => (
-            <Path
-              key={stroke.id}
-              d={drawingPath(stroke.points)}
-              fill="none"
-              stroke={stroke.color}
-              strokeWidth={stroke.width}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={stroke.opacity}
-            />
-          ))}
-        </G>
-      </G>
-
-      <G clipPath="url(#thumbnail-head-clip)">
-        <G transform={artworkPartTransform(
+      {geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION ? (
+        <>
+          <G clipPath="url(#thumbnail-head-clip)">
+          <G transform={artworkPartTransform(
           artwork.head_transform,
           geometry.headConnectionY,
           geometry,
-        )}>
+          )}>
           {artwork.head_drawing.strokes.map((stroke) => (
-            <Path
-              key={stroke.id}
-              d={drawingPath(stroke.points)}
-              fill="none"
-              stroke={stroke.color}
-              strokeWidth={stroke.width}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={stroke.opacity}
-            />
+          <Path
+          key={stroke.id}
+          d={drawingPath(stroke.points)}
+          fill="none"
+          stroke={stroke.color}
+          strokeWidth={stroke.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={stroke.opacity}
+          />
           ))}
-        </G>
-      </G>
+          </G>
+          </G>
+          <G clipPath="url(#thumbnail-body-clip)">
+          <G transform={artworkPartTransform(
+          artwork.body_transform,
+          geometry.bodyConnectionY,
+          geometry,
+          )}>
+          {artwork.body_drawing.strokes.map((stroke) => (
+          <Path
+          key={stroke.id}
+          d={drawingPath(stroke.points)}
+          fill="none"
+          stroke={stroke.color}
+          strokeWidth={stroke.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={stroke.opacity}
+          />
+          ))}
+          </G>
+          </G>
+        </>
+      ) : (
+        <>
+          <G clipPath="url(#thumbnail-body-clip)">
+          <G transform={artworkPartTransform(
+          artwork.body_transform,
+          geometry.bodyConnectionY,
+          geometry,
+          )}>
+          {artwork.body_drawing.strokes.map((stroke) => (
+          <Path
+          key={stroke.id}
+          d={drawingPath(stroke.points)}
+          fill="none"
+          stroke={stroke.color}
+          strokeWidth={stroke.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={stroke.opacity}
+          />
+          ))}
+          </G>
+          </G>
+          <G clipPath="url(#thumbnail-head-clip)">
+          <G transform={artworkPartTransform(
+          artwork.head_transform,
+          geometry.headConnectionY,
+          geometry,
+          )}>
+          {artwork.head_drawing.strokes.map((stroke) => (
+          <Path
+          key={stroke.id}
+          d={drawingPath(stroke.points)}
+          fill="none"
+          stroke={stroke.color}
+          strokeWidth={stroke.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={stroke.opacity}
+          />
+          ))}
+          </G>
+          </G>
+        </>
+      )}
     </Svg>
   );
 }
