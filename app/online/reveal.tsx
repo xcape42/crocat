@@ -23,6 +23,7 @@ import {
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors } from '@/src/theme/tokens';
 import type { CrocatDrawing, PartTransform } from '@/src/types/game';
@@ -117,6 +118,13 @@ export default function OnlineRevealScreen() {
       goHome();
     }
   }, [goHome, roomId, roundId, router, setIdentity, setRoomState]);
+
+  useReliablePhaseSync({
+    roomId,
+    roundId,
+    screen: 'reveal',
+    fallbackRole: role,
+  });
 
   const loadArtwork = useCallback(async () => {
     if (!roundId) return;

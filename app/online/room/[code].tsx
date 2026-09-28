@@ -38,6 +38,7 @@ import type {
   FriendRequestSummary,
   FriendSummary,
 } from '@/src/features/social/types';
+import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
@@ -155,6 +156,12 @@ export default function OnlineRoomScreen() {
       goPlay();
     }
   }, [code, goPlay, router, setIdentity, setRoomState]);
+
+  useReliablePhaseSync({
+    roomId: room?.id,
+    screen: 'lobby',
+    enabled: Boolean(room?.id),
+  });
 
   useEffect(() => {
     let cancelled = false;

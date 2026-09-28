@@ -133,6 +133,32 @@ export async function loadRoomById(roomId: string) {
   return loadRoomRelations(roomResult.data as OnlineRoom);
 }
 
+export async function loadRoomPhaseSnapshot(roomId: string) {
+  const supabase = requireSupabase();
+
+  const [roomResult, roundResult] = await Promise.all([
+    supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single(),
+    supabase
+      .from('game_rounds')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('started_at', { ascending: false })
+      .limit(1),
+  ]);
+
+  if (roomResult.error) throw roomResult.error;
+  if (roundResult.error) throw roundResult.error;
+
+  return {
+    room: roomResult.data as OnlineRoom,
+    round: (roundResult.data?.[0] as OnlineRound | undefined) ?? null,
+  };
+}
+
 export async function loadRound(roundId: string): Promise<OnlineRound> {
   const { data, error } = await requireSupabase()
     .from('game_rounds')

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.7.1 — Reliable online phase synchronization
+
+- Keep Supabase Realtime as the primary low-latency multiplayer path
+- Add one shared Reliable Phase Sync safety layer for Lobby, Prompt, Drawing, Adjustment and Final Reveal
+- Reconcile the authoritative server phase on mount and at a low-frequency active-game interval
+- Reconcile immediately when the native app returns active, the browser tab becomes visible, the window regains focus or connectivity returns
+- Reconcile Adjustment immediately whenever its Realtime channel reaches SUBSCRIBED, including reconnects
+- Use a lightweight room + latest-round snapshot instead of repeatedly loading player profile or social metadata
+- Keep fallback reconciliation non-fatal during transient network loss so a temporary connection issue cannot throw a player out of the game
+- Derive HEAD/BODY from the authoritative current round when recovering navigation
+- Preserve direct action refreshes and Realtime events as the fast path
+- Add UI-contract coverage proving every online phase uses the shared recovery layer
+- No Supabase schema migration required
+- Align package, Expo and visible app versions to 1.7.1
+
+
 ## 1.7.0 — Crocat Worlds
 
 - Establish a central Crocat World model instead of adding screen-specific theme variants

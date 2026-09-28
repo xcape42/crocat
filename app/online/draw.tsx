@@ -17,6 +17,7 @@ import {
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
@@ -118,6 +119,13 @@ export default function OnlineDrawScreen() {
       router.replace('/');
     }
   }, [params.roomId, params.roundId, reset, role, router, setRoomState, userId]);
+
+  useReliablePhaseSync({
+    roomId: params.roomId,
+    roundId: params.roundId,
+    screen: 'drawing',
+    fallbackRole: role,
+  });
 
   useEffect(() => {
     if (!params.roundId || !params.roomId) return;

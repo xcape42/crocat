@@ -17,6 +17,7 @@ import {
 } from '@/src/features/multiplayer/room';
 import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
 import type { PromptOption } from '@/src/features/multiplayer/types';
@@ -80,6 +81,12 @@ export default function OnlinePromptScreen() {
       goHome();
     }
   }, [goHome, roomId, roundId, router, setRoomState]);
+
+  useReliablePhaseSync({
+    roomId,
+    roundId,
+    screen: 'prompt',
+  });
 
   useEffect(() => {
     let cancelled = false;

@@ -21,6 +21,7 @@ import {
   subscribeToAdjustment,
 } from '@/src/features/multiplayer/realtime';
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
+import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
 import { colors, radius } from '@/src/theme/tokens';
@@ -130,6 +131,13 @@ export default function OnlineAdjustScreen() {
       router.replace('/');
     }
   }, [params.roomId, params.roundId, reset, role, router, setRoomState]);
+
+  useReliablePhaseSync({
+    roomId: params.roomId,
+    roundId: params.roundId,
+    screen: 'adjusting',
+    fallbackRole: role,
+  });
 
   useEffect(() => {
     let cancelled = false;

@@ -26,6 +26,11 @@ const playerPod = read('src/components/PlayerPod.tsx');
 const reducedMotion = read('src/hooks/useReducedMotion.ts');
 const profileOptions = read('src/features/profile/options.ts');
 const reveal = read('app/online/reveal.tsx');
+const prompt = read('app/online/prompt.tsx');
+const draw = read('app/online/draw.tsx');
+const adjust = read('app/online/adjust.tsx');
+const phaseSync = read('src/hooks/useReliablePhaseSync.ts');
+const realtime = read('src/features/multiplayer/realtime.ts');
 
 assert(
   play.includes("router.push('/online')"),
@@ -165,4 +170,30 @@ assert(
   'World canvas framing must preserve the iOS/WebKit artwork interaction lock.',
 );
 
-console.log('Crocat 1.7.0 World and interaction contracts passed');
+assert(
+  phaseSync.includes('loadRoomPhaseSnapshot')
+    && phaseSync.includes("window.addEventListener('focus'")
+    && phaseSync.includes("window.addEventListener('online'")
+    && phaseSync.includes("'visibilitychange'")
+    && phaseSync.includes("AppState.addEventListener('change'")
+    && phaseSync.includes('setInterval(')
+    && phaseSync.includes('inFlightRef'),
+  'Reliable phase sync must reconcile from server state on interval, foreground, browser focus, visibility and restored connectivity.',
+);
+
+assert(
+  room.includes('useReliablePhaseSync')
+    && prompt.includes('useReliablePhaseSync')
+    && draw.includes('useReliablePhaseSync')
+    && adjust.includes('useReliablePhaseSync')
+    && reveal.includes('useReliablePhaseSync'),
+  'Every online phase boundary must use the shared reliable server-state fallback.',
+);
+
+assert(
+  realtime.includes("if (status === 'SUBSCRIBED') {\n        onChange();")
+    && phaseSync.includes('transient network loss'),
+  'Adjustment reconnect must reconcile immediately while safety sync remains non-fatal.',
+);
+
+console.log('Crocat 1.7.1 reliable phase-sync and UI contracts passed');

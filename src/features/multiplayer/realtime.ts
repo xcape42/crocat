@@ -180,6 +180,7 @@ export async function subscribeToAdjustment(
   await new Promise<void>((resolve, reject) => {
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
+        onChange();
         resolve();
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         reject(new Error(`Adjustment channel failed: ${status}`));
