@@ -109,15 +109,6 @@ export default function OnlineEntryScreen() {
         />
       </View>
 
-      {!!profile && (
-        <CrocatCard variant="accent" style={styles.identityCard}>
-          <Text style={[styles.worldLabel, { color: world.colors.muted }]}>ENTERING AS</Text>
-          <Text style={[styles.worldName, { color: world.colors.text }]}>
-            {profile.display_name} · {world.label}
-          </Text>
-        </CrocatCard>
-      )}
-
       {!hasSupabaseConfig && (
         <CrocatCard variant="accent" style={styles.warning}>
           <Text style={[styles.warningTitle, { color: world.colors.text }]}>Backend connection missing</Text>
