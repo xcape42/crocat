@@ -43,6 +43,7 @@ export default function DrawScreen() {
       contentStyle={[styles.screen, compact && styles.screenCompact]}
       backLabel="LEAVE"
       onBack={() => setLeaveConfirmOpen(true)}
+      decorations="none"
     >
       <View style={styles.top}>
         <View>
