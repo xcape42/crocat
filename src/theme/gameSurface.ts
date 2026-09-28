@@ -1,7 +1,9 @@
+import { ARTWORK_HEIGHT, ARTWORK_WIDTH, DRAWING_HEIGHT, DRAWING_WIDTH } from '@/src/features/artworks/geometry';
+
 export type GameSurfaceKind = 'drawing' | 'preview';
 
-export const DRAWING_SURFACE_ASPECT = 360 / 380;
-export const PREVIEW_SURFACE_ASPECT = 360 / 760;
+export const DRAWING_SURFACE_ASPECT = DRAWING_WIDTH / DRAWING_HEIGHT;
+export const PREVIEW_SURFACE_ASPECT = ARTWORK_WIDTH / ARTWORK_HEIGHT;
 
 export function preferredGameSurfaceHeight(
   kind: GameSurfaceKind,

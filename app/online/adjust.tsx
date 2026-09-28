@@ -23,19 +23,12 @@ import {
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { clampArtworkTransform } from '@/src/features/artworks/geometry';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
 import { colors, radius } from '@/src/theme/tokens';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
 const ZERO: PartTransform = { x: 0, y: 0, scale: 1 };
-
-function clampTransform(transform: PartTransform): PartTransform {
-  return {
-    x: Math.max(-360, Math.min(360, transform.x)),
-    y: Math.max(-760, Math.min(760, transform.y)),
-    scale: Math.max(0.75, Math.min(1.3, transform.scale)),
-  };
-}
 
 export default function OnlineAdjustScreen() {
   const router = useRouter();
@@ -73,7 +66,7 @@ export default function OnlineAdjustScreen() {
   const advanceRef = useRef(false);
 
   const setTransformForRole = useCallback((targetRole: GameRole, transform: PartTransform) => {
-    const safe = clampTransform(transform);
+    const safe = clampArtworkTransform(transform);
     if (targetRole === 'HEAD') setHeadTransform(safe);
     else setBodyTransform(safe);
   }, []);
@@ -224,7 +217,7 @@ export default function OnlineAdjustScreen() {
   }, [role]);
 
   const updateOwn = useCallback((transform: PartTransform) => {
-    const safe = clampTransform(transform);
+    const safe = clampArtworkTransform(transform);
     ownTransformRef.current = safe;
     setTransformForRole(role, safe);
     broadcastOwn(safe);

@@ -1,4 +1,5 @@
 export type GameRole = 'HEAD' | 'BODY';
+export type ConnectionGuideMode = 'hard' | 'soft' | 'none';
 export type GamePhase = 'HOME' | 'LOBBY' | 'DRAWING' | 'HANDOFF' | 'REVEAL' | 'FINALIZE' | 'RESULT';
 
 export type Point = {

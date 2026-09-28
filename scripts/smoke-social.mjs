@@ -385,12 +385,14 @@ async function main() {
 
   const artworkSave = await alpha.rpc('save_artwork', {
     p_round_id: round.id,
+    p_geometry_version: 2,
   });
   if (artworkSave.error) throw artworkSave.error;
   const artwork = first(artworkSave.data);
 
   const duplicateSave = await alpha.rpc('save_artwork', {
     p_round_id: round.id,
+    p_geometry_version: 2,
   });
   if (duplicateSave.error) throw duplicateSave.error;
   if (first(duplicateSave.data).id !== artwork.id) {
@@ -401,6 +403,7 @@ async function main() {
     artwork.partner_user_id !== betaGuest.user.id
     || !artwork.title
     || artwork.favorite !== true
+    || artwork.geometry_version !== 2
   ) {
     throw new Error('Saved artwork metadata is incomplete');
   }
@@ -428,6 +431,7 @@ async function main() {
   if (
     betaSaved.id === artwork.id
     || betaSaved.partner_user_id !== alphaGuest.user.id
+    || betaSaved.geometry_version !== 1
   ) {
     throw new Error('Second participant did not get an independent private artwork');
   }
@@ -577,7 +581,7 @@ async function main() {
     throw new Error('Profile visibility remained after friendship removal');
   }
 
-  console.log('Crocat 1.6.3 social + gallery smoke passed');
+  console.log('Crocat 1.8.0 social + gallery smoke passed');
 }
 
 main().catch((error) => {

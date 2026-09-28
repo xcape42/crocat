@@ -7,21 +7,20 @@ import {
   Text,
   View,
 } from 'react-native';
-import Svg, { G, Path } from 'react-native-svg';
+import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
-import { PREVIEW_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { webArtworkGestureLock } from '@/src/theme/interaction';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 import {
-  ARTWORK_BODY_CONNECTION_Y,
-  ARTWORK_HEAD_CONNECTION_Y,
-  ARTWORK_HEIGHT,
-  ARTWORK_WIDTH,
+  CURRENT_ARTWORK_GEOMETRY_VERSION,
+  artworkClipRect,
+  artworkGeometryForVersion,
   artworkPartTransform,
   drawingPath,
 } from '@/src/features/artworks/geometry';
+import type { ArtworkGeometry } from '@/src/features/artworks/geometry';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
 type Props = {
@@ -29,6 +28,7 @@ type Props = {
   body: CrocatDrawing | null;
   headTransform?: PartTransform;
   bodyTransform?: PartTransform;
+  geometryVersion?: number;
   interactive?: boolean;
   interactiveRole?: GameRole;
   onMovePart?: (role: GameRole, dx: number, dy: number) => void;
@@ -38,27 +38,33 @@ function Part({
   drawing,
   transform,
   connectionY,
+  geometry,
+  clipId,
 }: {
   drawing: CrocatDrawing | null;
   transform: PartTransform;
   connectionY: number;
+  geometry: ArtworkGeometry;
+  clipId: string;
 }) {
   if (!drawing) return null;
 
   return (
-    <G transform={artworkPartTransform(transform, connectionY)}>
-      {drawing.strokes.map((stroke) => (
-        <Path
-          key={stroke.id}
-          d={drawingPath(stroke.points)}
-          fill="none"
-          stroke={stroke.color}
-          strokeWidth={stroke.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={stroke.opacity}
-        />
-      ))}
+    <G clipPath={`url(#${clipId})`}>
+      <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+        {drawing.strokes.map((stroke) => (
+          <Path
+            key={stroke.id}
+            d={drawingPath(stroke.points)}
+            fill="none"
+            stroke={stroke.color}
+            strokeWidth={stroke.width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={stroke.opacity}
+          />
+        ))}
+      </G>
     </G>
   );
 }
@@ -68,13 +74,17 @@ export function DrawingPreview({
   body,
   headTransform = { x: 0, y: 0, scale: 1 },
   bodyTransform = { x: 0, y: 0, scale: 1 },
+  geometryVersion = CURRENT_ARTWORK_GEOMETRY_VERSION,
   interactive = false,
   interactiveRole,
   onMovePart,
 }: Props) {
   const themeKey = useUiThemeStore((state) => state.themeKey);
   const world = crocatWorld(themeKey);
-  const layoutRef = useRef({ width: ARTWORK_WIDTH, height: ARTWORK_HEIGHT });
+  const geometry = artworkGeometryForVersion(geometryVersion);
+  const headClip = artworkClipRect('HEAD', geometry);
+  const bodyClip = artworkClipRect('BODY', geometry);
+  const layoutRef = useRef({ width: geometry.width, height: geometry.height });
   const roleRef = useRef<GameRole | null>(null);
   const lastGestureRef = useRef({ x: 0, y: 0 });
   const [activeRole, setActiveRole] = useState<GameRole | null>(null);
@@ -111,8 +121,8 @@ export function DrawingPreview({
       const deltaScreenY = gestureState.dy - lastGestureRef.current.y;
       lastGestureRef.current = { x: gestureState.dx, y: gestureState.dy };
 
-      const dx = (deltaScreenX / layoutRef.current.width) * ARTWORK_WIDTH;
-      const dy = (deltaScreenY / layoutRef.current.height) * ARTWORK_HEIGHT;
+      const dx = (deltaScreenX / layoutRef.current.width) * geometry.width;
+      const dy = (deltaScreenY / layoutRef.current.height) * geometry.height;
       onMovePart(role, dx, dy);
     },
     onPanResponderRelease: () => {
@@ -126,7 +136,7 @@ export function DrawingPreview({
       setActiveRole(null);
     },
     onPanResponderTerminationRequest: () => false,
-  }), [interactive, interactiveRole, onMovePart]);
+  }), [geometry.height, geometry.width, interactive, interactiveRole, onMovePart]);
 
   const onFrameLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -134,7 +144,11 @@ export function DrawingPreview({
   };
 
   return (
-    <GameSurfaceSlot kind="preview" aspectRatio={PREVIEW_SURFACE_ASPECT} maxWidth={360}>
+    <GameSurfaceSlot
+      kind="preview"
+      aspectRatio={geometry.width / geometry.height}
+      maxWidth={360}
+    >
       {({ width, height }) => (
         <View
           style={[
@@ -156,11 +170,32 @@ export function DrawingPreview({
             style={webArtworkGestureLock}
             width="100%"
             height="100%"
-            viewBox={`0 0 ${ARTWORK_WIDTH} ${ARTWORK_HEIGHT}`}
+            viewBox={`0 0 ${geometry.width} ${geometry.height}`}
             preserveAspectRatio="none"
           >
-            <Part drawing={head} transform={headTransform} connectionY={ARTWORK_HEAD_CONNECTION_Y} />
-            <Part drawing={body} transform={bodyTransform} connectionY={ARTWORK_BODY_CONNECTION_Y} />
+            <Defs>
+              <ClipPath id="body-artwork-clip">
+                <Rect {...bodyClip} />
+              </ClipPath>
+              <ClipPath id="head-artwork-clip">
+                <Rect {...headClip} />
+              </ClipPath>
+            </Defs>
+
+            <Part
+              drawing={body}
+              transform={bodyTransform}
+              connectionY={geometry.bodyConnectionY}
+              geometry={geometry}
+              clipId="body-artwork-clip"
+            />
+            <Part
+              drawing={head}
+              transform={headTransform}
+              connectionY={geometry.headConnectionY}
+              geometry={geometry}
+              clipId="head-artwork-clip"
+            />
           </Svg>
 
           {interactive && (

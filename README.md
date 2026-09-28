@@ -2,7 +2,7 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.7.2
+## Stable version: 1.8.0
 
 Public app: https://xcape42.github.io/crocat/
 
@@ -34,6 +34,14 @@ During Adjustment each player can drag and zoom only their own part. Each player
 
 Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Prompt Select, Drawing and Adjustment ask for confirmation before the round is abandoned; Final Reveal exits directly. In the waiting lobby, either of the two equal room members can remove the other player through the small × action after confirming the removal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
+
+### Compact 3:4 artwork composition
+
+Crocat 1.8.0 keeps each player's drawing space at **360 × 380** while changing the final composition to **360 × 480 (3:4)**. HEAD connects at source y=240 and BODY at source y=140, both meeting around final y=240. The final renderer clips the two source drawings into a controlled 20px overlap instead of stacking both full 380px halves into one frame. No stroke coordinates are rescaled or distorted.
+
+Connection guidance is now prompt metadata with three curated modes: **hard** uses the familiar dashed line for clear physical joins, **soft** uses only small side markers for loose top/bottom relationships, and **none** leaves the canvas visually open while retaining the same internal connection anchors. The current 60-prompt catalog is curated across all three modes.
+
+Saved artwork geometry is versioned. Existing gallery items remain **v1 / 360 × 760** and continue to render/export with the legacy composition. New Crocat 1.8.0 saves are **v2 / 360 × 480**. Gallery thumbnails, detail views and SVG exports resolve geometry from the saved version, so older work is not silently recomposed.
 
 ### Flash-free World bootstrap
 
@@ -97,7 +105,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.7.2 release validation includes:
+The 1.8.0 release validation includes:
 
 - dependency install
 - online-entry/social UX contract: Play has no friend strip, room-code regeneration is absent from current clients, room friends stay behind ALL FRIENDS, and personal symbols stay out of shared avatars
@@ -107,7 +115,8 @@ The 1.7.2 release validation includes:
 - automated server-synchronized timer smoke coverage with artificial +120s / -90s client clock skew
 - automated social profile and gallery smoke coverage for profile persistence, RLS, lobby add-friend, friendship levels, presence, open-lobby discovery, side-effect-free existing-room invites, atomic friend-lobby switching, realtime invites, auto-created invite rooms and private artwork CRUD
 - automated Supabase multiplayer smoke coverage for equal-player settings, 2/2 lobby Ready, start permissions, leave/replacement behavior, direct-link create/join/rejoin/full/started-room behavior, prompt flow, immediate two-submit handoff, Adjustment Ready and heartbeat
-- database catalog verification for 60 unique prompts, five balanced themes, semantic split labels and three-theme option generation
+- database catalog verification for 60 unique prompts, five balanced themes, semantic split labels, curated hard/soft/none connection guides and three-theme option generation
+- compact-artwork geometry contracts for 360×380 drawing space, 360×480 final space, 20px overlap, clipping, shared transform bounds and geometry-versioned gallery/export compatibility
 - exact phase-deadline validation for Adjustment and Final Reveal
 - room-code clipboard interaction with global browser text-selection protection
 - GitHub Pages deployment

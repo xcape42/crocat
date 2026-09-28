@@ -62,7 +62,7 @@ export default function DrawScreen() {
       </View>
 
       <View style={styles.canvasArea}>
-        <DrawingCanvas role={currentRole} drawing={drawing} onChange={setDrawing} color={color} />
+        <DrawingCanvas role={currentRole} guideMode="hard" drawing={drawing} onChange={setDrawing} color={color} />
       </View>
 
       <View style={styles.toolbar}>

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { clampArtworkTransform } from '@/src/features/artworks/geometry';
 import type { CrocatDrawing, GamePhase, GameRole, PartTransform } from '@/src/types/game';
 
 const emptyDrawing = (): CrocatDrawing => ({
@@ -60,14 +61,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   nudgePart: (role, dx, dy) => set((state) => {
     const key = role === 'HEAD' ? 'headTransform' : 'bodyTransform';
-    const next = { ...state[key], x: state[key].x + dx, y: state[key].y + dy };
+    const next = clampArtworkTransform({
+      ...state[key],
+      x: state[key].x + dx,
+      y: state[key].y + dy,
+    });
     return { [key]: next } as Partial<GameState>;
   }),
 
   scalePart: (role, delta) => set((state) => {
     const key = role === 'HEAD' ? 'headTransform' : 'bodyTransform';
-    const nextScale = Math.max(0.75, Math.min(1.3, state[key].scale + delta));
-    return { [key]: { ...state[key], scale: nextScale } } as Partial<GameState>;
+    const next = clampArtworkTransform({
+      ...state[key],
+      scale: state[key].scale + delta,
+    });
+    return { [key]: next } as Partial<GameState>;
   }),
 
   resetRound: () => set({

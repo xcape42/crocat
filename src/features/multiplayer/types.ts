@@ -1,11 +1,12 @@
 import type { PlayerProfile } from '@/src/features/profile/types';
-import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
+import type { ConnectionGuideMode, CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
 export type PromptOption = {
   theme: string;
   term: string;
   headLabel?: string;
   bodyLabel?: string;
+  guideMode?: ConnectionGuideMode;
 };
 
 export type OnlineRoomStatus =
@@ -83,4 +84,13 @@ export function getPromptPartLabel(
   return role === 'HEAD'
     ? (option?.headLabel ?? 'HEAD')
     : (option?.bodyLabel ?? 'BODY');
+}
+
+
+export function getPromptGuideMode(
+  round: OnlineRound | null | undefined,
+): ConnectionGuideMode {
+  const option = round?.prompt_options.find((item) => item.term === round.prompt_term);
+  const mode = option?.guideMode;
+  return mode === 'soft' || mode === 'none' ? mode : 'hard';
 }

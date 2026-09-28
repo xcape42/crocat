@@ -328,6 +328,10 @@ async function main() {
   if (round.prompt_options.some((option) => !option.headLabel || !option.bodyLabel)) {
     throw new Error('Prompt selection is missing semantic split labels');
   }
+  const allowedGuideModes = new Set(['hard', 'soft', 'none']);
+  if (round.prompt_options.some((option) => !allowedGuideModes.has(option.guideMode))) {
+    throw new Error('Prompt selection is missing a valid connection guide mode');
+  }
 
   const head = round.head_player_id === domiGuest.user.id ? domi : sarah;
   const body = round.body_player_id === domiGuest.user.id ? domi : sarah;
@@ -363,6 +367,9 @@ async function main() {
   }
   if (rerolledRound.prompt_options.some((option) => !option.headLabel || !option.bodyLabel)) {
     throw new Error('Rerolled prompts are missing semantic split labels');
+  }
+  if (rerolledRound.prompt_options.some((option) => !allowedGuideModes.has(option.guideMode))) {
+    throw new Error('Rerolled prompts are missing a valid connection guide mode');
   }
   if (rerolledRound.prompt_options.some((option) => originalTerms.has(option.term))) {
     throw new Error('Reroll repeated an old prompt term');
@@ -412,6 +419,9 @@ async function main() {
   );
   if (!selectedPrompt?.headLabel || !selectedPrompt?.bodyLabel) {
     throw new Error('Selected prompt lost its semantic split labels');
+  }
+  if (!allowedGuideModes.has(selectedPrompt.guideMode)) {
+    throw new Error('Selected prompt lost its connection guide mode');
   }
 
   for (let attempt = 0; attempt < 100 && !promptRealtimeSeen; attempt += 1) {

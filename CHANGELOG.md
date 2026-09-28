@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.8.0 — Compact 3:4 Crocat composition
+
+- Keep the individual Drawing Canvas unchanged at 360 × 380
+- Change the current final composition from 360 × 760 to 360 × 480 for an exact 3:4 artwork ratio
+- Move the HEAD connection anchor to y=240 and BODY connection anchor to y=140
+- Clip the final composition to a controlled 20px overlap around final y=240 instead of overlapping both full drawings
+- Preserve original stroke coordinates and avoid any vertical or horizontal distortion
+- Render BODY first and HEAD above it deterministically inside the overlap zone
+- Recalculate preview drag mapping for the 360 × 480 virtual final space
+- Share bounded transform clamping between Local and Online Adjustment
+- Move the drawing guide 140px inward from each connection edge
+- Add subtle connection-zone treatment without blocking drawing interaction
+- Add curated hard, soft and none Connection Guide modes to the 60-prompt catalog
+- Use dashed guides for clear physical joins, subtle side markers for loose joins and no visual guide for prompts such as Sushi, Macaron and Donut
+- Keep Local Split on the clear HEAD/BODY hard guide
+- Version saved-artwork geometry so existing v1 360 × 760 gallery items remain unchanged
+- Save new Crocat 1.8.0 artwork as geometry v2 and render/export it at 360 × 480
+- Keep the legacy one-argument save_artwork RPC compatible through a default geometry version
+- Make Gallery thumbnails, detail views and SVG export resolve the stored geometry version
+- Preserve canvas PanResponder behavior, iOS/WebKit artwork locks, Worlds, Reliable Phase Sync, Presence, Ready and timers
+- No Live Drawing / stroke streaming added
+- Align package, Expo and visible app versions to 1.8.0
+
+
 ## 1.7.2 — Flash-free World bootstrap
 
 - Fix the visible default/Moss flash before a user's persisted Crocat World is applied

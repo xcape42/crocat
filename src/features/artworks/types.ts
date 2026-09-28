@@ -16,6 +16,7 @@ export type SavedArtwork = {
   head_profile: ProfileSnapshot;
   body_profile: ProfileSnapshot;
   favorite: boolean;
+  geometry_version: number;
   created_at: string;
   updated_at: string;
 };

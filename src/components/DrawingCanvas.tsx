@@ -2,23 +2,33 @@ import { useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, PanResponder, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
+import {
+  ARTWORK_BODY_CONNECTION_Y,
+  ARTWORK_HEAD_CONNECTION_Y,
+  DRAWING_HEIGHT,
+  DRAWING_WIDTH,
+} from '@/src/features/artworks/geometry';
 import { DRAWING_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { webArtworkGestureLock } from '@/src/theme/interaction';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
-import type { CrocatDrawing, GameRole, Point, Stroke } from '@/src/types/game';
+import type {
+  ConnectionGuideMode,
+  CrocatDrawing,
+  GameRole,
+  Point,
+  Stroke,
+} from '@/src/types/game';
 
 type Props = {
   drawing: CrocatDrawing;
   onChange: (drawing: CrocatDrawing) => void;
   role?: GameRole;
+  guideMode?: ConnectionGuideMode;
   color?: string;
   brushWidth?: number;
 };
-
-const VIRTUAL_WIDTH = 360;
-const VIRTUAL_HEIGHT = 380;
 
 const pathFor = (points: Point[]) => points.length
   ? points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
@@ -28,6 +38,7 @@ export function DrawingCanvas({
   drawing,
   onChange,
   role,
+  guideMode = 'hard',
   color = colors.ink,
   brushWidth = 6,
 }: Props) {
@@ -35,11 +46,11 @@ export function DrawingCanvas({
   const world = crocatWorld(themeKey);
   const [activePoints, setActivePoints] = useState<Point[]>([]);
   const activeRef = useRef<Point[]>([]);
-  const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
+  const layoutRef = useRef({ width: DRAWING_WIDTH, height: DRAWING_HEIGHT });
 
   const toVirtualPoint = (x: number, y: number): Point => ({
-    x: Math.max(0, Math.min(VIRTUAL_WIDTH, (x / layoutRef.current.width) * VIRTUAL_WIDTH)),
-    y: Math.max(0, Math.min(VIRTUAL_HEIGHT, (y / layoutRef.current.height) * VIRTUAL_HEIGHT)),
+    x: Math.max(0, Math.min(DRAWING_WIDTH, (x / layoutRef.current.width) * DRAWING_WIDTH)),
+    y: Math.max(0, Math.min(DRAWING_HEIGHT, (y / layoutRef.current.height) * DRAWING_HEIGHT)),
   });
 
   const responder = useMemo(() => PanResponder.create({
@@ -88,65 +99,93 @@ export function DrawingCanvas({
 
   return (
     <GameSurfaceSlot kind="drawing" aspectRatio={DRAWING_SURFACE_ASPECT} maxWidth={520}>
-      {({ width, height }) => (
-        <View
-          style={[
-            styles.canvas,
-            {
-              width,
-              height,
-              backgroundColor: world.colors.canvas,
-              borderColor: world.colors.text,
-              borderRadius: world.shapes.canvasRadius,
-            },
-            webArtworkGestureLock,
-          ]}
-          onLayout={onCanvasLayout}
-          {...responder.panHandlers}
-        >
-          <Svg
-            pointerEvents="none"
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${VIRTUAL_WIDTH} ${VIRTUAL_HEIGHT}`}
-            preserveAspectRatio="none"
-            style={[StyleSheet.absoluteFill, webArtworkGestureLock]}
+      {({ width, height }) => {
+        const guideY = role === 'BODY'
+          ? ARTWORK_BODY_CONNECTION_Y
+          : ARTWORK_HEAD_CONNECTION_Y;
+        const guideTop = (guideY / DRAWING_HEIGHT) * height;
+        const zoneStyle = role === 'BODY'
+          ? { top: 0, height: guideTop }
+          : { top: guideTop, height: height - guideTop };
+
+        return (
+          <View
+            style={[
+              styles.canvas,
+              {
+                width,
+                height,
+                backgroundColor: world.colors.canvas,
+                borderColor: world.colors.text,
+                borderRadius: world.shapes.canvasRadius,
+              },
+              webArtworkGestureLock,
+            ]}
+            onLayout={onCanvasLayout}
+            {...responder.panHandlers}
           >
-            {drawing.strokes.map((stroke) => (
-              <Path
-                key={stroke.id}
-                d={pathFor(stroke.points)}
-                fill="none"
-                stroke={stroke.color}
-                strokeWidth={stroke.width}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={stroke.opacity}
-              />
-            ))}
-            {activePoints.length > 1 && (
-              <Path
-                d={pathFor(activePoints)}
-                fill="none"
-                stroke={color}
-                strokeWidth={brushWidth}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {role && guideMode !== 'none' && (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.connectionZone,
+                  zoneStyle,
+                  { backgroundColor: world.colors.secondary },
+                ]}
               />
             )}
-          </Svg>
 
-          {role && (
-            <View
+            <Svg
               pointerEvents="none"
-              style={[
-                styles.connectionGuide,
-                role === 'BODY' ? styles.connectionGuideTop : styles.connectionGuideBottom,
-              ]}
-            />
-          )}
-        </View>
-      )}
+              width="100%"
+              height="100%"
+              viewBox={`0 0 ${DRAWING_WIDTH} ${DRAWING_HEIGHT}`}
+              preserveAspectRatio="none"
+              style={[StyleSheet.absoluteFill, webArtworkGestureLock]}
+            >
+              {drawing.strokes.map((stroke) => (
+                <Path
+                  key={stroke.id}
+                  d={pathFor(stroke.points)}
+                  fill="none"
+                  stroke={stroke.color}
+                  strokeWidth={stroke.width}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={stroke.opacity}
+                />
+              ))}
+              {activePoints.length > 1 && (
+                <Path
+                  d={pathFor(activePoints)}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={brushWidth}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </Svg>
+
+            {role && guideMode === 'hard' && (
+              <View
+                pointerEvents="none"
+                style={[styles.connectionGuide, { top: guideTop }]}
+              />
+            )}
+
+            {role && guideMode === 'soft' && (
+              <View
+                pointerEvents="none"
+                style={[styles.softGuide, { top: guideTop - 3 }]}
+              >
+                <View style={styles.softDot} />
+                <View style={styles.softDot} />
+              </View>
+            )}
+          </View>
+        );
+      }}
     </GameSurfaceSlot>
   );
 }
@@ -158,6 +197,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     overflow: 'hidden',
   },
+  connectionZone: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    opacity: 0.08,
+  },
   connectionGuide: {
     position: 'absolute',
     left: 18,
@@ -167,6 +212,18 @@ const styles = StyleSheet.create({
     borderColor: colors.muted,
     opacity: 0.55,
   },
-  connectionGuideTop: { top: 20 },
-  connectionGuideBottom: { bottom: 20 },
+  softGuide: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  softDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.muted,
+    opacity: 0.5,
+  },
 });

@@ -34,6 +34,13 @@ const realtime = read('src/features/multiplayer/realtime.ts');
 const rootLayout = read('app/_layout.tsx');
 const uiThemeStore = read('src/store/uiThemeStore.ts');
 const themeCache = read('src/features/profile/themeCache.ts');
+const artworkGeometry = read('src/features/artworks/geometry.ts');
+const artworkThumbnail = read('src/components/ArtworkThumbnail.tsx');
+const artworkExport = read('src/features/artworks/export.ts');
+const artworkApi = read('src/features/artworks/api.ts');
+const localGameStore = read('src/store/gameStore.ts');
+const localDraw = read('app/draw.tsx');
+const compactGeometryMigration = read('supabase/migrations/20260928213239_compact_artwork_geometry_1_8_0.sql');
 
 assert(
   play.includes("router.push('/online')"),
@@ -227,4 +234,52 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.7.2 theme-bootstrap, reliable phase-sync and UI contracts passed');
+assert(
+  artworkGeometry.includes('export const DRAWING_WIDTH = 360')
+    && artworkGeometry.includes('export const DRAWING_HEIGHT = 380')
+    && artworkGeometry.includes('width: 360')
+    && artworkGeometry.includes('height: 480')
+    && artworkGeometry.includes('headConnectionY: 240')
+    && artworkGeometry.includes('bodyConnectionY: 140')
+    && artworkGeometry.includes('overlap: 20'),
+  'Current drawing space must stay 360x380 while the current final composition is 360x480 with 20px overlap.',
+);
+
+assert(
+  drawingCanvas.includes("guideMode = 'hard'")
+    && drawingCanvas.includes("guideMode === 'soft'")
+    && drawingCanvas.includes("guideMode === 'none'")
+    && drawingCanvas.includes('ARTWORK_HEAD_CONNECTION_Y')
+    && drawingCanvas.includes('ARTWORK_BODY_CONNECTION_Y')
+    && localDraw.includes('guideMode="hard"'),
+  'Drawing guides must share central connection anchors and support hard, soft and none without changing Local Split head/body guidance.',
+);
+
+assert(
+  drawingPreview.includes('artworkClipRect')
+    && drawingPreview.includes('body-artwork-clip')
+    && drawingPreview.includes('head-artwork-clip')
+    && drawingPreview.indexOf('drawing={body}') < drawingPreview.indexOf('drawing={head}')
+    && localGameStore.includes('clampArtworkTransform')
+    && adjust.includes('clampArtworkTransform'),
+  'Current previews must clip to the compact connection zone, render BODY before HEAD and share bounded Adjustment transforms in Local and Online.',
+);
+
+assert(
+  artworkThumbnail.includes('artwork.geometry_version')
+    && artworkExport.includes('artwork.geometry_version')
+    && artworkApi.includes('p_geometry_version: CURRENT_ARTWORK_GEOMETRY_VERSION'),
+  'Gallery thumbnails, SVG export and new saved artworks must use explicit geometry versions.',
+);
+
+assert(
+  compactGeometryMigration.includes('guide_mode')
+    && compactGeometryMigration.includes("'Fee'")
+    && compactGeometryMigration.includes("'Bonsai'")
+    && compactGeometryMigration.includes("array['Sushi','Macaron','Donut']")
+    && compactGeometryMigration.includes('geometry_version')
+    && compactGeometryMigration.includes('p_geometry_version smallint default 1'),
+  'The 1.8.0 migration must curate guide modes and preserve legacy artwork/save-RPC compatibility.',
+);
+
+console.log('Crocat 1.8.0 compact 3:4 artwork, theme-bootstrap, phase-sync and UI contracts passed');

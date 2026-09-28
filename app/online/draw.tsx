@@ -20,7 +20,7 @@ import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { colors, radius } from '@/src/theme/tokens';
-import { getPromptPartLabel } from '@/src/features/multiplayer/types';
+import { getPromptGuideMode, getPromptPartLabel } from '@/src/features/multiplayer/types';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
 const palette = [colors.ink, '#DB5C46', '#477A91', '#6A8E3A'];
@@ -221,6 +221,7 @@ export default function OnlineDrawScreen() {
     players.find((player) => player.user_id !== userId)?.display_name ?? 'OTHER PLAYER';
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
   const partLabel = getPromptPartLabel(round, role);
+  const guideMode = getPromptGuideMode(round);
 
   const leaveModal = (
     <ConfirmActionModal
@@ -315,16 +316,20 @@ export default function OnlineDrawScreen() {
       <View style={styles.metaRow}>
         <View style={styles.hintWrap}>
           <Text style={styles.hint}>
-            {role === 'HEAD'
-              ? `Draw: ${partLabel}. Connection line: bottom.`
-              : `Draw: ${partLabel}. Connection line: top.`}
+            {guideMode === 'hard'
+              ? (role === 'HEAD'
+                ? `Draw: ${partLabel}. Connect along the lower guide.`
+                : `Draw: ${partLabel}. Connect along the upper guide.`)
+              : guideMode === 'soft'
+                ? `Draw: ${partLabel}. The side marks show the loose meeting area.`
+                : `Draw: ${partLabel}. No fixed connection line for this prompt.`}
           </Text>
         </View>
         {status}
       </View>
 
       <View style={styles.canvasArea}>
-        <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
+        <DrawingCanvas role={role} guideMode={guideMode} drawing={drawing} onChange={setDrawing} color={color} />
       </View>
 
       <View style={styles.toolbar}>

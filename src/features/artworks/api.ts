@@ -1,3 +1,4 @@
+import { CURRENT_ARTWORK_GEOMETRY_VERSION } from './geometry';
 import { requireSupabase } from '@/src/lib/supabase';
 import type { SavedArtwork } from './types';
 
@@ -45,6 +46,7 @@ export async function findSavedArtworkForRound(
 export async function saveArtwork(roundId: string): Promise<SavedArtwork> {
   const { data, error } = await requireSupabase().rpc('save_artwork', {
     p_round_id: roundId,
+    p_geometry_version: CURRENT_ARTWORK_GEOMETRY_VERSION,
   });
 
   if (error) throw error;

@@ -2,15 +2,14 @@ import { Platform } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { colors } from '@/src/theme/tokens';
-import type { Stroke } from '@/src/types/game';
+import type { GameRole, Stroke } from '@/src/types/game';
 import {
-  ARTWORK_BODY_CONNECTION_Y,
-  ARTWORK_HEAD_CONNECTION_Y,
-  ARTWORK_HEIGHT,
-  ARTWORK_WIDTH,
+  artworkClipRect,
+  artworkGeometryForVersion,
   artworkPartTransform,
   drawingPath,
 } from './geometry';
+import type { ArtworkGeometry } from './geometry';
 import type { SavedArtwork } from './types';
 
 function escapeXml(value: string) {
@@ -29,34 +28,58 @@ function strokeSvg(stroke: Stroke) {
     stroke.opacity + '"/>';
 }
 
+function clipSvg(role: GameRole, geometry: ArtworkGeometry) {
+  const clip = artworkClipRect(role, geometry);
+  const id = role === 'HEAD' ? 'head-clip' : 'body-clip';
+  return '<clipPath id="' + id + '">' +
+    '<rect x="' + clip.x + '" y="' + clip.y +
+    '" width="' + clip.width + '" height="' + clip.height + '"/>' +
+    '</clipPath>';
+}
+
 function partSvg(
+  role: GameRole,
   strokes: Stroke[],
   transform: SavedArtwork['head_transform'],
-  connectionY: number,
+  geometry: ArtworkGeometry,
 ) {
-  return '<g transform="' +
-    escapeXml(artworkPartTransform(transform, connectionY)) +
+  const connectionY = role === 'HEAD'
+    ? geometry.headConnectionY
+    : geometry.bodyConnectionY;
+  const clipId = role === 'HEAD' ? 'head-clip' : 'body-clip';
+
+  return '<g clip-path="url(#' + clipId + ')">' +
+    '<g transform="' +
+    escapeXml(artworkPartTransform(transform, connectionY, geometry)) +
     '">' +
     strokes.map(strokeSvg).join('') +
-    '</g>';
+    '</g></g>';
 }
 
 export function renderArtworkSvg(artwork: SavedArtwork) {
+  const geometry = artworkGeometryForVersion(artwork.geometry_version);
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<svg xmlns="http://www.w3.org/2000/svg" width="' + ARTWORK_WIDTH +
-      '" height="' + ARTWORK_HEIGHT +
-      '" viewBox="0 0 ' + ARTWORK_WIDTH + ' ' + ARTWORK_HEIGHT + '">',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + geometry.width +
+      '" height="' + geometry.height +
+      '" viewBox="0 0 ' + geometry.width + ' ' + geometry.height + '">',
+    '<defs>',
+    clipSvg('BODY', geometry),
+    clipSvg('HEAD', geometry),
+    '</defs>',
     '<rect width="100%" height="100%" fill="' + colors.card + '"/>',
     partSvg(
-      artwork.head_drawing.strokes,
-      artwork.head_transform,
-      ARTWORK_HEAD_CONNECTION_Y,
-    ),
-    partSvg(
+      'BODY',
       artwork.body_drawing.strokes,
       artwork.body_transform,
-      ARTWORK_BODY_CONNECTION_Y,
+      geometry,
+    ),
+    partSvg(
+      'HEAD',
+      artwork.head_drawing.strokes,
+      artwork.head_transform,
+      geometry,
     ),
     '</svg>',
   ].join('');
@@ -101,6 +124,6 @@ export async function exportArtwork(artwork: SavedArtwork) {
   await Sharing.shareAsync(file.uri, {
     mimeType: 'image/svg+xml',
     UTI: 'public.svg-image',
-    dialogTitle: artwork.title,
+    dialogTitle: 'Save Crocat artwork',
   });
 }
