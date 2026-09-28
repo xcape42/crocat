@@ -1,12 +1,35 @@
 import { create } from 'zustand';
-import type { ProfileThemeKey } from '@/src/features/profile/types';
+import { rememberWorldKey } from '@/src/features/profile/themeCache';
+import type { CrocatWorldKey, ProfileThemeKey } from '@/src/features/profile/types';
+import { normalizeWorldKey } from '@/src/theme/worlds';
+
+type SetThemeOptions = {
+  persist?: boolean;
+};
 
 type UiThemeState = {
-  themeKey: ProfileThemeKey;
-  setThemeKey: (themeKey: ProfileThemeKey) => void;
+  themeKey: CrocatWorldKey;
+  themeReady: boolean;
+  themeRevision: number;
+  setThemeKey: (themeKey: ProfileThemeKey, options?: SetThemeOptions) => void;
 };
 
 export const useUiThemeStore = create<UiThemeState>((set) => ({
-  themeKey: 'paper',
-  setThemeKey: (themeKey) => set({ themeKey }),
+  // This value is deliberately not considered render-ready until bootstrap resolves.
+  themeKey: 'moss',
+  themeReady: false,
+  themeRevision: 0,
+  setThemeKey: (themeKey, options) => {
+    const worldKey = normalizeWorldKey(themeKey);
+
+    set((state) => ({
+      themeKey: worldKey,
+      themeReady: true,
+      themeRevision: state.themeRevision + 1,
+    }));
+
+    if (options?.persist !== false) {
+      void rememberWorldKey(worldKey);
+    }
+  },
 }));

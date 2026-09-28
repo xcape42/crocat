@@ -31,6 +31,9 @@ const draw = read('app/online/draw.tsx');
 const adjust = read('app/online/adjust.tsx');
 const phaseSync = read('src/hooks/useReliablePhaseSync.ts');
 const realtime = read('src/features/multiplayer/realtime.ts');
+const rootLayout = read('app/_layout.tsx');
+const uiThemeStore = read('src/store/uiThemeStore.ts');
+const themeCache = read('src/features/profile/themeCache.ts');
 
 assert(
   play.includes("router.push('/online')"),
@@ -196,4 +199,32 @@ assert(
   'Adjustment reconnect must reconcile immediately while safety sync remains non-fatal.',
 );
 
-console.log('Crocat 1.7.1 reliable phase-sync and UI contracts passed');
+assert(
+  uiThemeStore.includes('themeReady: false')
+    && uiThemeStore.includes('themeRevision')
+    && uiThemeStore.includes('rememberWorldKey')
+    && rootLayout.includes('loadCachedWorldKey')
+    && rootLayout.includes('Promise.race')
+    && rootLayout.includes('if (!themeReady)')
+    && rootLayout.includes('applyBootstrapTheme')
+    && rootLayout.includes('expectedRevision'),
+  'World bootstrap must distinguish unresolved default state, use cache/server racing and protect newer theme changes from stale bootstrap writes.',
+);
+
+assert(
+  themeCache.includes("'crocat:world-theme:v1'")
+    && themeCache.includes('normalizeWorldKey')
+    && rootLayout.includes("source: 'server'")
+    && rootLayout.includes("persist: false"),
+  'The last confirmed World must be a bootstrap cache while the server profile remains authoritative.',
+);
+
+assert(
+  !rootLayout.includes('setTimeout(')
+    && !entry.includes('setThemeKey(')
+    && entry.includes('const world = crocatWorld(themeKey)')
+    && profile.includes("setUiThemeKey(nextWorld, { persist: false })"),
+  'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
+);
+
+console.log('Crocat 1.7.2 theme-bootstrap, reliable phase-sync and UI contracts passed');

@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.7.2 — Flash-free World bootstrap
+
+- Fix the visible default/Moss flash before a user's persisted Crocat World is applied
+- Add an explicit themeReady bootstrap state so the internal fallback theme is never treated as visible resolved identity
+- Race the local last-confirmed World cache against the authoritative profile request at app root
+- Show a neutral non-World Crocat bootstrap surface when no cached World exists yet
+- Keep the server profile authoritative and use AsyncStorage only as a first-frame bootstrap cache
+- Normalize legacy Paper/Ink cache values before any World UI is rendered
+- Add a theme revision guard so a late bootstrap response cannot overwrite a newer Profile-screen choice
+- Let Profile World previews update the current UI immediately without persisting an unsaved preview into the bootstrap cache
+- Stop Online Entry from independently deriving or setting the app World during mount
+- Separate one-time theme bootstrap from room/profile presence heartbeat behavior
+- Preserve Deep Links, Reduced Motion, Canvas sizing/touch behavior and the Reliable Phase Sync layer
+- Add architecture-contract coverage for readiness gating, cache/server bootstrap priority and screen-level theme ownership
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.7.2
+
+
 ## 1.7.1 — Reliable online phase synchronization
 
 - Keep Supabase Realtime as the primary low-latency multiplayer path

@@ -19,7 +19,7 @@ export default function HomeScreen() {
   return (
     <Screen decorations="full">
       <View style={styles.topRow}>
-        <Text style={[styles.version, { color: world.colors.muted }]}>CROCAT 1.7.1</Text>
+        <Text style={[styles.version, { color: world.colors.muted }]}>CROCAT 1.7.2</Text>
         <Text style={[styles.dot, { color: world.colors.accent }]}>●</Text>
       </View>
 

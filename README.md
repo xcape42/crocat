@@ -2,7 +2,7 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.7.1
+## Stable version: 1.7.2
 
 Public app: https://xcape42.github.io/crocat/
 
@@ -34,6 +34,12 @@ During Adjustment each player can drag and zoom only their own part. Each player
 
 Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Prompt Select, Drawing and Adjustment ask for confirmation before the round is abandoned; Final Reveal exits directly. In the waiting lobby, either of the two equal room members can remove the other player through the small × action after confirming the removal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
+
+### Flash-free World bootstrap
+
+Crocat 1.7.2 resolves the selected World before the routed UI becomes visible. The UI theme store now has an explicit readiness state, so its internal Moss fallback cannot be mistaken for a resolved profile theme. The root layout races a tiny AsyncStorage cache of the last server-confirmed World against the authoritative profile request: a cached World can render immediately, while a first-time user without a cache sees only a neutral Crocat bootstrap surface until the profile resolves. Legacy Paper/Ink cache values normalize to Moss/Moon before rendering.
+
+The cache is only a bootstrap accelerator. Server profile data remains authoritative and refreshes the cache when confirmed. Unsaved Profile-screen previews can still change the live UI immediately but deliberately do not overwrite the confirmed bootstrap cache. A small theme revision guard prevents a late root bootstrap request from overwriting a newer user choice. Online Entry and other screens consume the already-resolved app World instead of determining it again on mount.
 
 ### Reliable phase synchronization
 
@@ -91,7 +97,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.7.0 release validation includes:
+The 1.7.2 release validation includes:
 
 - dependency install
 - online-entry/social UX contract: Play has no friend strip, room-code regeneration is absent from current clients, room friends stay behind ALL FRIENDS, and personal symbols stay out of shared avatars

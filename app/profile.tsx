@@ -36,11 +36,12 @@ import { normalizeWorldKey } from '@/src/theme/worlds';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const uiThemeKey = useUiThemeStore((state) => state.themeKey);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [name, setName] = useState('');
   const [colorKey, setColorKey] = useState<ProfileColorKey>('moss');
   const [avatarKey, setAvatarKey] = useState<ProfileAvatarKey>('round');
-  const [themeKey, setThemeKey] = useState<CrocatWorldKey>('moss');
+  const [themeKey, setThemeKey] = useState<CrocatWorldKey>(uiThemeKey);
   const [symbolKey, setSymbolKey] = useState<ProfileSymbolKey>('star');
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState('');
@@ -199,7 +200,7 @@ export default function ProfileScreen() {
               onPress={() => {
                 const nextWorld = normalizeWorldKey(item.key);
                 setThemeKey(nextWorld);
-                setUiThemeKey(nextWorld);
+                setUiThemeKey(nextWorld, { persist: false });
               }}
               style={[
                 styles.themeOption,

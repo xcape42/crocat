@@ -13,17 +13,17 @@ import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { radius, spacing } from '@/src/theme/tokens';
-import { crocatWorld, normalizeWorldKey } from '@/src/theme/worlds';
+import { crocatWorld } from '@/src/theme/worlds';
 
 export default function OnlineEntryScreen() {
   const router = useRouter();
   const { setDisplayName, setIdentity } = useOnlineGameStore();
-  const setThemeKey = useUiThemeStore((state) => state.setThemeKey);
+  const themeKey = useUiThemeStore((state) => state.themeKey);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
-  const world = crocatWorld(profile?.theme_key);
+  const world = crocatWorld(themeKey);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,20 +35,18 @@ export default function OnlineEntryScreen() {
       if (cancelled) return;
       if (savedCode) setCode((current) => current || savedCode);
       setProfile(identity.profile);
-      setThemeKey(normalizeWorldKey(identity.profile.theme_key));
     }).catch(() => undefined);
 
     return () => {
       cancelled = true;
     };
-  }, [setThemeKey]);
+  }, []);
 
   const prepare = async () => {
     if (!hasSupabaseConfig) throw new Error('Supabase is not configured yet.');
     const identity = await ensureCurrentProfile();
     setProfile(identity.profile);
     setDisplayName(identity.profile.display_name);
-    setThemeKey(normalizeWorldKey(identity.profile.theme_key));
     return identity;
   };
 
@@ -98,14 +96,14 @@ export default function OnlineEntryScreen() {
     <Screen backLabel="PLAY" decorations="full">
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT ONLINE · 1.7.1</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT ONLINE · 1.7.2</Text>
           <Text style={[styles.title, { color: world.colors.text }]}>Bring your little world.</Text>
           <Text style={[styles.copy, { color: world.colors.muted }]}>
             Create a room or enter a code. When another player arrives, both worlds meet in the lobby.
           </Text>
         </View>
         <Mascot
-          themeKey={profile?.theme_key}
+          themeKey={themeKey}
           state={busy ? 'happy' : 'idle'}
           size={88}
         />
