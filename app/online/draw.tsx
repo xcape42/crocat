@@ -221,6 +221,9 @@ export default function OnlineDrawScreen() {
     players.find((player) => player.user_id !== userId)?.display_name ?? 'OTHER PLAYER';
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
   const partLabel = getPromptPartLabel(round, role);
+  const displayPartLabel = role === 'HEAD'
+    ? `Oberer Teil: ${partLabel}`
+    : `Unterer Teil: ${partLabel}`;
   const guideMode = getPromptGuideMode(round);
 
   const leaveModal = (
@@ -249,7 +252,7 @@ export default function OnlineDrawScreen() {
       <Screen scroll={false} contentStyle={styles.waitingScreen} backLabel="LEAVE" onBack={requestLeave} decorations="quiet">
         <View style={styles.waitingTop}>
           <View>
-            <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
+            <Text style={styles.kicker}>{playerName.toUpperCase()} · {displayPartLabel.toUpperCase()} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
           <View style={styles.headerActions}>
@@ -289,7 +292,7 @@ export default function OnlineDrawScreen() {
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{displayPartLabel}</Text>
         </View>
         <View style={styles.headerActions}>
           {!!me?.profile && (
@@ -314,22 +317,20 @@ export default function OnlineDrawScreen() {
       )}
 
       <View style={styles.metaRow}>
-        <View style={styles.hintWrap}>
-          <Text style={styles.hint}>
-            {guideMode === 'hard'
-              ? (role === 'HEAD'
-                ? `Draw: ${partLabel}. Connect along the lower guide.`
-                : `Draw: ${partLabel}. Connect along the upper guide.`)
-              : guideMode === 'soft'
-                ? `Draw: ${partLabel}. The side marks show the loose meeting area.`
-                : `Draw: ${partLabel}. No fixed connection line for this prompt.`}
-          </Text>
-        </View>
+        {guideMode !== 'none' && (
+          <View style={styles.hintWrap}>
+            <Text style={styles.hint}>
+              {guideMode === 'hard'
+                ? 'Nutze die Linie als Verbindung zum anderen Teil.'
+                : 'Die Markierungen zeigen ungefähr den Übergangsbereich.'}
+            </Text>
+          </View>
+        )}
         {status}
       </View>
 
       <View style={styles.canvasArea}>
-        <DrawingCanvas role={role} guideMode={guideMode} drawing={drawing} onChange={setDrawing} color={color} />
+        <DrawingCanvas role={role} guideMode={guideMode} otherSubmitted={otherSubmitted} drawing={drawing} onChange={setDrawing} color={color} />
       </View>
 
       <View style={styles.toolbar}>

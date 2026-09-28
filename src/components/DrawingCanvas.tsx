@@ -26,6 +26,7 @@ type Props = {
   onChange: (drawing: CrocatDrawing) => void;
   role?: GameRole;
   guideMode?: ConnectionGuideMode;
+  otherSubmitted?: boolean;
   color?: string;
   brushWidth?: number;
 };
@@ -39,6 +40,7 @@ export function DrawingCanvas({
   onChange,
   role,
   guideMode = 'hard',
+  otherSubmitted = false,
   color = colors.ink,
   brushWidth = 6,
 }: Props) {
@@ -107,6 +109,12 @@ export function DrawingCanvas({
         const zoneStyle = role === 'BODY'
           ? { top: 0, height: guideTop }
           : { top: guideTop, height: height - guideTop };
+        const zoneOpacity = guideMode === 'none'
+          ? (otherSubmitted ? 0.065 : 0.035)
+          : (otherSubmitted ? 0.12 : 0.075);
+        const zoneColor = otherSubmitted
+          ? world.colors.primary
+          : world.colors.secondary;
 
         return (
           <View
@@ -124,13 +132,16 @@ export function DrawingCanvas({
             onLayout={onCanvasLayout}
             {...responder.panHandlers}
           >
-            {role && guideMode !== 'none' && (
+            {role && (
               <View
                 pointerEvents="none"
                 style={[
                   styles.connectionZone,
                   zoneStyle,
-                  { backgroundColor: world.colors.secondary },
+                  {
+                    backgroundColor: zoneColor,
+                    opacity: zoneOpacity,
+                  },
                 ]}
               />
             )}
@@ -201,7 +212,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    opacity: 0.08,
   },
   connectionGuide: {
     position: 'absolute',

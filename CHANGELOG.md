@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.8.1 — Connection-zone drawing feedback
+
+- Keep all Crocat 1.8.0 geometry unchanged: 360 × 380 Drawing, 360 × 480 final, existing anchors, 20px overlap and geometry v1/v2
+- Keep the player's primary drawing area visually light and subtly tint the connection/bleed side of the Drawing Canvas
+- Derive the connection-zone position from the existing HEAD/BODY anchors instead of adding geometry magic numbers
+- Render a very faint connection-zone tint even for no-guide prompts without reintroducing a visible guide
+- Reuse World secondary colors for the neutral zone and World primary colors when the other online player has already submitted
+- Let Moss read greener, Moon more lavender and Candy more peach through existing World tokens only
+- Reuse the existing otherSubmitted state; no new Realtime events, polling or multiplayer architecture
+- Keep the connection overlay pointer-inert and behind strokes so drawing, PanResponder and iOS/WebKit interaction protections remain unchanged
+- Show HEAD as “Oberer Teil: {Teilbegriff}” and BODY as “Unterer Teil: {Teilbegriff}”
+- Simplify hard/soft drawing hints and remove redundant technical copy for no-guide prompts
+- Keep Local Split on the neutral connection-zone state
+- Avoid optional animation so Reduced Motion behavior remains unchanged by this release
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.8.1
+
+
 ## 1.8.0 — Compact 3:4 Crocat composition
 
 - Keep the individual Drawing Canvas unchanged at 360 × 380

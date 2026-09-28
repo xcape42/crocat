@@ -36,6 +36,9 @@ export default function DrawScreen() {
 
   const undo = () => setDrawing((current) => ({ ...current, strokes: current.strokes.slice(0, -1) }));
   const clear = () => setDrawing((current) => ({ ...current, strokes: [] }));
+  const displayPartLabel = currentRole === 'HEAD'
+    ? 'Oberer Teil: Kopf'
+    : 'Unterer Teil: Körper';
 
   return (
     <Screen
@@ -48,16 +51,14 @@ export default function DrawScreen() {
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{currentRole === 'HEAD' ? 'DOMI · YOUR PART' : 'SARAH · YOUR PART'}</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{currentRole}</Text>
+          <Text style={[styles.role, compact && styles.roleCompact]}>{displayPartLabel}</Text>
         </View>
         <Timer seconds={roundSeconds} onComplete={finish} />
       </View>
 
       <View style={styles.hintWrap}>
         <Text style={styles.hint}>
-          {currentRole === 'HEAD'
-            ? 'Draw the head. Connection line: bottom.'
-            : 'Draw the body. Connection line: top.'}
+          Nutze die Linie als Verbindung zum anderen Teil.
         </Text>
       </View>
 

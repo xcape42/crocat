@@ -2,7 +2,7 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.8.0
+## Stable version: 1.8.1
 
 Public app: https://xcape42.github.io/crocat/
 
@@ -34,6 +34,14 @@ During Adjustment each player can drag and zoom only their own part. Each player
 
 Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Prompt Select, Drawing and Adjustment ask for confirmation before the round is abandoned; Final Reveal exits directly. In the waiting lobby, either of the two equal room members can remove the other player through the small × action after confirming the removal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
+
+### Connection-zone drawing feedback
+
+Crocat 1.8.1 keeps the 1.8.0 drawing/final geometry unchanged and improves only Drawing-screen semantics. The bleed/connection side of each 360 × 380 Drawing Canvas is now always subtly distinguished from the player's primary drawing area. Neutral zones use the current World's secondary color; when the other online player has already submitted, the same zone switches to the World's primary color at a slightly stronger but still restrained opacity. Moss therefore reads greener, Moon more lavender and Candy more peach without theme-name conditionals.
+
+Hard prompts keep the dashed guide, soft prompts keep side markers, and none prompts keep no guide while retaining a much fainter connection-zone tint. The overlay is pointer-inert and sits behind strokes, so PanResponder, iOS/WebKit protections and the full drawing area remain unchanged. Online Drawing reuses the existing otherSubmitted state; no new Realtime, polling or multiplayer behavior is introduced.
+
+Drawing labels now describe the semantic position directly: **Oberer Teil: {Teilbegriff}** for HEAD and **Unterer Teil: {Teilbegriff}** for BODY. Technical hint copy is reduced, and no-guide prompts avoid a redundant connection instruction.
 
 ### Compact 3:4 artwork composition
 
@@ -105,7 +113,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.8.0 release validation includes:
+The 1.8.1 release validation includes:
 
 - dependency install
 - online-entry/social UX contract: Play has no friend strip, room-code regeneration is absent from current clients, room friends stay behind ALL FRIENDS, and personal symbols stay out of shared avatars

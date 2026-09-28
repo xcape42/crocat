@@ -290,4 +290,34 @@ assert(
   'The 1.8.0 migration must curate guide modes and preserve legacy artwork/save-RPC compatibility.',
 );
 
-console.log('Crocat 1.8.0 compact 3:4 artwork, theme-bootstrap, phase-sync and UI contracts passed');
+assert(
+  drawingCanvas.includes('otherSubmitted?: boolean')
+    && drawingCanvas.includes('otherSubmitted = false')
+    && drawingCanvas.includes('world.colors.primary')
+    && drawingCanvas.includes('world.colors.secondary')
+    && drawingCanvas.includes("guideMode === 'none'")
+    && drawingCanvas.includes('pointerEvents="none"')
+    && drawingCanvas.includes('ARTWORK_HEAD_CONNECTION_Y')
+    && drawingCanvas.includes('ARTWORK_BODY_CONNECTION_Y'),
+  'Drawing connection zones must stay anchored to the 1.8.0 geometry, remain non-interactive and use World tokens for neutral/partner-ready states.',
+);
+
+assert(
+  draw.includes('otherSubmitted={otherSubmitted}')
+    && !drawingCanvas.includes('subscribeToRound')
+    && !drawingCanvas.includes('postgres_changes'),
+  'Partner-ready canvas feedback must consume the existing online submission state without adding Realtime or polling behavior.',
+);
+
+assert(
+  draw.includes('`Oberer Teil: ${partLabel}`')
+    && draw.includes('`Unterer Teil: ${partLabel}`')
+    && draw.includes('Nutze die Linie als Verbindung zum anderen Teil.')
+    && draw.includes('Die Markierungen zeigen ungefähr den Übergangsbereich.')
+    && draw.includes("guideMode !== 'none'")
+    && localDraw.includes("'Oberer Teil: Kopf'")
+    && localDraw.includes("'Unterer Teil: Körper'"),
+  'Drawing screens must use semantic Oberer/Unterer Teil labels and avoid redundant technical hint copy for no-guide prompts.',
+);
+
+console.log('Crocat 1.8.1 connection-zone status, compact artwork, theme-bootstrap, phase-sync and UI contracts passed');
