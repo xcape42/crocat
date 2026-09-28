@@ -331,7 +331,7 @@ assert(
     && room.includes('style={[styles.playerSlot, styles.waiting]}')
     && !room.includes('flexShrink: unset')
     && playerPod.includes('style?: StyleProp<ViewStyle>')
-    && playerPod.includes('style,')
+    && playerPod.includes('style,'),
   'Online lobby player cards and empty slots must share a shrinkable, wrapping two-slot layout without invalid flexShrink values.',
 );
 
