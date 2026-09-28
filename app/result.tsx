@@ -2,8 +2,10 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useGameStore } from '@/src/store/gameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
 
 export default function ResultScreen() {
@@ -11,6 +13,7 @@ export default function ResultScreen() {
   const { height } = useWindowDimensions();
   const compact = height < 720;
   const { head, body, headTransform, bodyTransform, resetRound, setPhase } = useGameStore();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
 
   const replay = () => {
     resetRound();
@@ -23,10 +26,13 @@ export default function ResultScreen() {
   };
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={home}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={home} decorations="full" celebrate>
       <View style={styles.header}>
-        <Text style={styles.kicker}>CROCAT COMPLETE</Text>
-        <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
+        <View>
+          <Text style={styles.kicker}>CROCAT COMPLETE</Text>
+          <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
+        </View>
+        <Mascot themeKey={themeKey} state="celebrate" size={compact ? 54 : 66} />
       </View>
 
       <View style={styles.previewArea}>
@@ -52,7 +58,7 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
   screen: { gap: 10 },
   screenCompact: { gap: 7 },
-  header: { flexShrink: 0 },
+  header: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.5, fontSize: 11 },
   title: { fontSize: 36, lineHeight: 40, fontWeight: '900', letterSpacing: -1.2, color: colors.ink },
   titleCompact: { fontSize: 30, lineHeight: 33 },

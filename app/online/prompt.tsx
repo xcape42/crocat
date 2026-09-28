@@ -5,6 +5,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
@@ -141,6 +142,7 @@ export default function OnlinePromptScreen() {
     { clock: 'server' },
   );
 
+  const me = players.find((player) => player.user_id === userId);
   const isHead = Boolean(userId && round?.head_player_id === userId);
   const headName =
     players.find((player) => player.user_id === round?.head_player_id)?.display_name ?? 'HEAD player';
@@ -186,7 +188,7 @@ export default function OnlinePromptScreen() {
   }
 
   return (
-    <Screen scroll={false} contentStyle={styles.screen} backLabel="LEAVE" onBack={requestLeave}>
+    <Screen scroll={false} contentStyle={styles.screen} backLabel="LEAVE" onBack={requestLeave} decorations="quiet">
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.kicker}>ROOM {room.code} · PROMPT PICK</Text>
@@ -198,6 +200,13 @@ export default function OnlinePromptScreen() {
           </Text>
         </View>
         <View style={styles.headerActions}>
+          {!!me?.profile && (
+            <Mascot
+              themeKey={me.profile.theme_key}
+              state={isHead ? 'drawing' : 'waiting'}
+              size={44}
+            />
+          )}
           <CountdownBadge remaining={remaining} label="PICK" />
           <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
             <Text style={styles.leave}>LEAVE ROUND</Text>

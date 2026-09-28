@@ -64,6 +64,7 @@ export default function FinalizeScreen() {
       contentStyle={[styles.screen, compact && styles.screenCompact]}
       backLabel="LEAVE"
       onBack={() => setLeaveConfirmOpen(true)}
+      decorations="none"
     >
       <View style={styles.header}>
         <Text style={styles.kicker}>REVEAL</Text>

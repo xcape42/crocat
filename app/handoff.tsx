@@ -3,13 +3,16 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useGameStore } from '@/src/store/gameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, spacing } from '@/src/theme/tokens';
 
 export default function HandoffScreen() {
   const router = useRouter();
   const setPhase = useGameStore((state) => state.setPhase);
+  const themeKey = useUiThemeStore((state) => state.themeKey);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
   const leave = () => {
@@ -18,10 +21,10 @@ export default function HandoffScreen() {
   };
 
   return (
-    <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)}>
+    <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)} decorations="full">
       <View style={styles.center}>
         <Text style={styles.kicker}>DON'T PEEK.</Text>
-        <Text style={styles.icon}>↝</Text>
+        <View style={styles.mascot}><Mascot themeKey={themeKey} state="waiting" size={104} /></View>
         <Text style={styles.title}>Pass it to Sarah.</Text>
         <Text style={styles.copy}>Domi's head is safely hidden. Sarah gets the BODY and a fresh canvas with the connection line at the top.</Text>
       </View>
@@ -42,7 +45,7 @@ export default function HandoffScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 2, fontSize: 12 },
-  icon: { fontSize: 84, lineHeight: 100, color: colors.ink },
+  mascot: { marginVertical: 14 },
   title: { fontSize: 44, lineHeight: 48, fontWeight: '900', letterSpacing: -1.8, color: colors.ink, textAlign: 'center' },
   copy: { marginTop: 12, maxWidth: 420, textAlign: 'center', fontSize: 17, lineHeight: 24, color: colors.muted },
 });

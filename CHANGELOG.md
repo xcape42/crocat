@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.7.0 — Crocat Worlds
+
+- Establish a central Crocat World model instead of adding screen-specific theme variants
+- Add three distinct Worlds: Moss Garden, Moon Milk and Candy Blob
+- Keep legacy Paper/Ink profiles compatible by mapping them to Moss/Moon
+- Make Screen, CrocatButton, CrocatCard, Canvas frames, dialogs, timers and room controls World-aware
+- Add a reusable Mascot with idle, happy, waiting, drawing, nervous, celebrate and sleeping states
+- Add reusable MascotSlot, DecorationLayer and centralized motion tokens
+- Respect the platform Reduced Motion preference and keep functional state understandable without animation
+- Replace the temporary Home image asset with the reusable World mascot system
+- Make Home, Play, Profile, Friends, Gallery and Online Entry visibly reflect the selected World
+- Add PlayerPod as the reusable player-identity presentation for avatar, World mascot, Ready, Presence and role
+- Rework Lobby presentation around the player collection rather than bespoke Host/Guest cards while preserving the current two-player backend rules
+- Show both player Worlds and mascots together in the online lobby and Final Reveal
+- Keep Prompt animation restrained, Drawing nearly decoration-free and Adjustment interaction-focused
+- Preserve canvas dimensions, coordinate system, drag/zoom behavior and the iOS/WebKit selection lock
+- Extend profile theme validation to moss/moon/candy while keeping paper/ink accepted for older clients
+- Avoid a separate mascot database field; mascot identity is derived deterministically from the persisted World
+- Add CI contract coverage for World switching, reusable player pods, mascots, decorations, Reduced Motion and iOS canvas protection
+- Align package, Expo and visible app versions to 1.7.0
+
+
 ## 1.6.6 — Home mascot image asset
 
 - Replace the ASCII Home mascot with a real React Native `Image`

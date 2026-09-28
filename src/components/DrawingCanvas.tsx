@@ -4,7 +4,9 @@ import Svg, { Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { DRAWING_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { webArtworkGestureLock } from '@/src/theme/interaction';
-import { colors, radius } from '@/src/theme/tokens';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { colors } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import type { CrocatDrawing, GameRole, Point, Stroke } from '@/src/types/game';
 
 type Props = {
@@ -29,6 +31,8 @@ export function DrawingCanvas({
   color = colors.ink,
   brushWidth = 6,
 }: Props) {
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const [activePoints, setActivePoints] = useState<Point[]>([]);
   const activeRef = useRef<Point[]>([]);
   const layoutRef = useRef({ width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT });
@@ -88,7 +92,13 @@ export function DrawingCanvas({
         <View
           style={[
             styles.canvas,
-            { width, height },
+            {
+              width,
+              height,
+              backgroundColor: world.colors.canvas,
+              borderColor: world.colors.text,
+              borderRadius: world.shapes.canvasRadius,
+            },
             webArtworkGestureLock,
           ]}
           onLayout={onCanvasLayout}
@@ -145,10 +155,7 @@ const styles = StyleSheet.create({
   canvas: {
     flexGrow: 0,
     flexShrink: 0,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.ink,
     overflow: 'hidden',
   },
   connectionGuide: {

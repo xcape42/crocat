@@ -11,7 +11,9 @@ import Svg, { G, Path } from 'react-native-svg';
 import { GameSurfaceSlot } from '@/src/components/GameSurfaceSlot';
 import { PREVIEW_SURFACE_ASPECT } from '@/src/theme/gameSurface';
 import { webArtworkGestureLock } from '@/src/theme/interaction';
-import { colors, radius } from '@/src/theme/tokens';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { colors } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import {
   ARTWORK_BODY_CONNECTION_Y,
   ARTWORK_HEAD_CONNECTION_Y,
@@ -70,6 +72,8 @@ export function DrawingPreview({
   interactiveRole,
   onMovePart,
 }: Props) {
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const layoutRef = useRef({ width: ARTWORK_WIDTH, height: ARTWORK_HEIGHT });
   const roleRef = useRef<GameRole | null>(null);
   const lastGestureRef = useRef({ x: 0, y: 0 });
@@ -135,7 +139,13 @@ export function DrawingPreview({
         <View
           style={[
             styles.frame,
-            { width, height },
+            {
+              width,
+              height,
+              backgroundColor: world.colors.canvas,
+              borderColor: world.colors.text,
+              borderRadius: world.shapes.canvasRadius,
+            },
             webArtworkGestureLock,
           ]}
           onLayout={onFrameLayout}
@@ -182,10 +192,7 @@ const styles = StyleSheet.create({
   frame: {
     flexGrow: 0,
     flexShrink: 0,
-    backgroundColor: colors.card,
-    borderColor: colors.ink,
     borderWidth: 2,
-    borderRadius: radius.lg,
     overflow: 'hidden',
   },
   splitGuide: {

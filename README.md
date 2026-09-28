@@ -2,7 +2,7 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.6.6
+## Stable version: 1.7.0
 
 Public app: https://xcape42.github.io/crocat/
 
@@ -34,9 +34,18 @@ During Adjustment each player can drag and zoom only their own part. Each player
 
 Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Prompt Select, Drawing and Adjustment ask for confirmation before the round is abandoned; Final Reveal exits directly. In the waiting lobby, either of the two equal room members can remove the other player through the small × action after confirming the removal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
+
+### Crocat Worlds
+
+Crocat's presentation is split into three layers: stable **Function** (navigation, game state, timer, canvas and Ready), exchangeable **Theme** (surfaces, shapes, borders and canvas framing), and expressive **World** details (mascots, fragments and motion). The shared Screen, Button, Card, PlayerPod, Mascot and DecorationLayer components carry this language consistently instead of creating theme-specific copies.
+
+Home and Lobby are intentionally the most expressive surfaces. Prompt Pick stays focused, Drawing and Adjustment reduce decoration around the interaction-critical canvas, and Final Reveal brings both player mascots back for the celebration. Decorative fragments ignore touch input and Reduced Motion disables ambient or reaction motion without hiding game state.
+
+The online lobby renders players as a collection of reusable PlayerPods. The current backend still requires two participants and HEAD/BODY, but the presentation is no longer modeled as a hard-coded Host/Guest pair, so future multi-player modes can grow the player collection without replacing the visual identity system.
+
 ### Profiles, Friends and Gallery
 
-Every anonymous Crocat session now owns a persistent profile with a free 2–18 character name, one of seven colors, three avatar shapes, two avatar themes and five personal symbols. The symbol remains an owner-only profile detail for now and is not shown in shared small avatars. Profiles expose a stable eight-character Friend Code so editable or duplicate display names never become identity keys. The same profile component is reused in rooms, friend cards, invitations and artwork history. The two theme choices are application themes rather than character skins: **Paper** keeps the warm handmade Crocat surface, while **Ink** uses a cooler graphic palette, different accents and subtle background marks. This intentionally stays separate from the future customizable-character system.
+Every anonymous Crocat session owns a persistent profile with a free 2–18 character name, one of seven colors, three avatar shapes, one selected Crocat World and five personal symbols. The symbol remains an owner-only profile detail for now and is not shown in shared small avatars. Profiles expose a stable eight-character Friend Code so editable or duplicate display names never become identity keys. The same profile component is reused in rooms, friend cards, invitations and artwork history. The selected Crocat World is persistent profile identity. **Moss Garden**, **Moon Milk** and **Candy Blob** each provide their own palette, form language, decorative fragments, canvas frame and mascot. Old **Paper** and **Ink** values remain accepted for compatibility and normalize to Moss and Moon. Mascots are derived from the World rather than stored as a second mutable profile field.
 
 Friends are mutual server-side relationships. Accepted friends show profile details, online/last-seen state derived from the same heartbeat used by multiplayer, a small friendship level derived from completed rounds together, and an open waiting-room code when one is joinable. Friends are reached from **Home → Friends** or from inside a solo online lobby. Inside a solo online lobby, the friend strip stays hidden; **ALL FRIENDS** is the single entry point for browsing, joining or inviting friends. When opened from an existing lobby, pressing **INVITE** only creates the invitation for that exact room and leaves the current room untouched. Outside a room, **INVITE** still creates or reuses a waiting lobby, navigates the inviter there, and sends the invitation. The Friends screen separates Online and Offline friends into distinct groups. Switching to a friend's open lobby atomically dissolves the caller's old solo lobby, while a lobby that already contains another player is never silently abandoned. Players in the same lobby can send or accept a friend request directly on the player card. Lobby invitations are delivered through Supabase Realtime and surfaced globally whenever the recipient is not already inside another room.
 
@@ -78,7 +87,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.6.3 release validation includes:
+The 1.7.0 release validation includes:
 
 - dependency install
 - online-entry/social UX contract: Play has no friend strip, room-code regeneration is absent from current clients, room friends stay behind ALL FRIENDS, and personal symbols stay out of shared avatars

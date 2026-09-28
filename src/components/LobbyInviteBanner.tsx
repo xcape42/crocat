@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Mascot } from '@/src/components/Mascot';
 import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
 import {
@@ -15,7 +16,7 @@ import {
 import type { LobbyInviteSummary } from '@/src/features/social/types';
 import { socialProfileVisual } from '@/src/features/social/types';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { colors, radius } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 export function LobbyInviteBanner() {
   const router = useRouter();
@@ -53,6 +54,8 @@ export function LobbyInviteBanner() {
 
   if (!invite || room) return null;
 
+  const world = crocatWorld(invite.theme_key);
+
   const accept = async () => {
     try {
       setBusy(true);
@@ -75,27 +78,57 @@ export function LobbyInviteBanner() {
   };
 
   return (
-    <View style={[styles.shell, { top: insets.top + 8 }]}>
-      <ProfileAvatar profile={socialProfileVisual(invite)} size={44} />
+    <View
+      style={[
+        styles.shell,
+        {
+          top: insets.top + 8,
+          borderColor: world.colors.text,
+          backgroundColor: world.colors.surface,
+          borderRadius: world.shapes.cardRadius,
+        },
+      ]}
+    >
+      <View style={styles.identity}>
+        <ProfileAvatar profile={socialProfileVisual(invite)} size={40} />
+        <Mascot themeKey={invite.theme_key} state="happy" size={36} />
+      </View>
+
       <View style={styles.copy}>
-        <Text style={styles.kicker}>LOBBY INVITE</Text>
-        <Text numberOfLines={1} style={styles.name}>
+        <Text style={[styles.kicker, { color: world.colors.accent }]}>LOBBY INVITE</Text>
+        <Text numberOfLines={1} style={[styles.name, { color: world.colors.text }]}>
           {invite.display_name} · {invite.room_code}
         </Text>
+        <Text style={[styles.world, { color: world.colors.muted }]}>{world.label}</Text>
       </View>
+
       <Pressable
         disabled={busy}
         onPress={() => void accept()}
-        style={styles.join}
+        style={[
+          styles.action,
+          {
+            borderColor: world.colors.text,
+            backgroundColor: world.colors.primary,
+            borderRadius: world.shapes.buttonRadius,
+          },
+        ]}
       >
-        <Text style={styles.actionText}>JOIN</Text>
+        <Text style={[styles.actionText, { color: world.colors.text }]}>JOIN</Text>
       </Pressable>
       <Pressable
         disabled={busy}
         onPress={() => void decline()}
-        style={styles.no}
+        style={[
+          styles.action,
+          {
+            borderColor: world.colors.line,
+            backgroundColor: world.colors.card,
+            borderRadius: world.shapes.buttonRadius,
+          },
+        ]}
       >
-        <Text style={styles.actionText}>NO</Text>
+        <Text style={[styles.actionText, { color: world.colors.text }]}>NO</Text>
       </Pressable>
     </View>
   );
@@ -107,36 +140,23 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     left: 12,
     right: 12,
-    minHeight: 66,
+    minHeight: 70,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
     padding: 10,
-    borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.ink,
-    backgroundColor: colors.card,
   },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   copy: { flex: 1, minWidth: 0 },
-  kicker: { color: colors.coral, fontSize: 8, fontWeight: '900', letterSpacing: 1 },
-  name: { marginTop: 2, color: colors.ink, fontSize: 13, fontWeight: '900' },
-  join: {
+  kicker: { fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+  name: { marginTop: 2, fontSize: 13, fontWeight: '900' },
+  world: { marginTop: 1, fontSize: 7, fontWeight: '900', letterSpacing: 0.9 },
+  action: {
     minHeight: 36,
-    paddingHorizontal: 12,
+    paddingHorizontal: 11,
     justifyContent: 'center',
-    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.ink,
-    backgroundColor: colors.lime,
   },
-  no: {
-    minHeight: 36,
-    paddingHorizontal: 10,
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.ink,
-    backgroundColor: colors.paper,
-  },
-  actionText: { color: colors.ink, fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
+  actionText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
 });

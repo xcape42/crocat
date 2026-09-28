@@ -9,12 +9,15 @@ import {
 import { useRouter } from 'expo-router';
 import { ArtworkThumbnail } from '@/src/components/ArtworkThumbnail';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { CrocatCard } from '@/src/components/CrocatCard';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import {
   listSavedArtworks,
   setArtworkFavorite,
 } from '@/src/features/artworks/api';
 import type { SavedArtwork } from '@/src/features/artworks/types';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 function partnerName(artwork: SavedArtwork) {
@@ -33,6 +36,7 @@ export default function GalleryScreen() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
+  const themeKey = useUiThemeStore((state) => state.themeKey);
 
   const refresh = useCallback(async () => {
     try {
@@ -64,7 +68,7 @@ export default function GalleryScreen() {
   };
 
   return (
-    <Screen backLabel="HOME">
+    <Screen backLabel="HOME" decorations="full">
 
       <View style={styles.header}>
         <Text style={styles.kicker}>YOUR COLLECTION</Text>
@@ -77,14 +81,14 @@ export default function GalleryScreen() {
       {loading ? (
         <ActivityIndicator style={{ marginTop: 70 }} color={colors.ink} />
       ) : !artworks.length ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyFace}>☆</Text>
+        <CrocatCard variant="surface" style={styles.empty}>
+          <Mascot themeKey={themeKey} state="waiting" size={82} />
           <Text style={styles.emptyTitle}>No weirdos saved yet.</Text>
           <Text style={styles.emptyCopy}>
             Star an online final reveal and it will appear here.
           </Text>
           <CrocatButton onPress={() => router.push('/play')}>MAKE ONE</CrocatButton>
-        </View>
+        </CrocatCard>
       ) : (
         <View style={styles.grid}>
           {artworks.map((artwork) => (
@@ -95,10 +99,11 @@ export default function GalleryScreen() {
                 params: { id: artwork.id },
               })}
               style={({ pressed }) => [
-                styles.card,
+                styles.cardPressable,
                 pressed && styles.cardPressed,
               ]}
             >
+              <CrocatCard style={styles.card}>
               <ArtworkThumbnail artwork={artwork} width={112} />
 
               <View style={styles.cardBody}>
@@ -131,6 +136,7 @@ export default function GalleryScreen() {
                   {new Date(artwork.created_at).toLocaleDateString()}
                 </Text>
               </View>
+              </CrocatCard>
             </Pressable>
           ))}
         </View>
@@ -148,16 +154,12 @@ const styles = StyleSheet.create({
   title: { marginTop: 4, color: colors.ink, fontSize: 46, fontWeight: '900', letterSpacing: -1.8 },
   copy: { marginTop: 5, color: colors.muted, fontSize: 14 },
   grid: { gap: 12 },
+  cardPressable: { width: '100%' },
   card: {
     minHeight: 176,
     flexDirection: 'row',
     gap: 14,
     padding: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.lg,
-    backgroundColor: colors.card,
-    overflow: 'hidden',
   },
   cardPressed: { transform: [{ scale: 0.99 }], opacity: 0.9 },
   cardBody: { flex: 1, minWidth: 0, paddingVertical: 4 },
@@ -178,7 +180,6 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radius.lg,
   },
-  emptyFace: { color: colors.coral, fontSize: 58 },
   emptyTitle: { color: colors.ink, fontSize: 22, fontWeight: '900' },
   emptyCopy: { color: colors.muted, textAlign: 'center', fontSize: 13, marginBottom: 8 },
   error: { marginTop: 14, color: '#A74343', fontWeight: '700', textAlign: 'center' },

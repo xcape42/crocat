@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { DecorationLayer } from '@/src/components/DecorationLayer';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
-import { crocatUiTheme } from '@/src/theme/profileTheme';
-import { colors, spacing } from '@/src/theme/tokens';
+import { spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 type Props = PropsWithChildren<{
   contentStyle?: StyleProp<ViewStyle>;
@@ -21,6 +22,8 @@ type Props = PropsWithChildren<{
   backLabel?: string;
   onBack?: () => void;
   showBack?: boolean;
+  decorations?: 'none' | 'quiet' | 'full';
+  celebrate?: boolean;
 }>;
 
 export function Screen({
@@ -30,13 +33,15 @@ export function Screen({
   backLabel = 'BACK',
   onBack,
   showBack,
+  decorations = 'quiet',
+  celebrate = false,
 }: Props) {
   const { height, width } = useWindowDimensions();
   const compact = width < 480 || height < 720;
   const pathname = usePathname();
   const router = useRouter();
   const themeKey = useUiThemeStore((state) => state.themeKey);
-  const theme = crocatUiTheme(themeKey);
+  const world = crocatWorld(themeKey);
   const horizontalPadding = compact ? 14 : spacing.lg;
   const paddingStyle = compact
     ? { paddingHorizontal: 14, paddingVertical: 12 }
@@ -61,21 +66,13 @@ export function Screen({
     <SafeAreaView
       style={[
         styles.safe,
-        { backgroundColor: theme.background },
+        { backgroundColor: world.colors.background },
         Platform.OS === 'web' && ({ userSelect: 'none' } as ViewStyle),
       ]}
     >
-      <View pointerEvents="none" style={styles.pattern}>
-        <Text style={[styles.patternOne, { color: theme.pattern }]}>
-          {theme.patternGlyph} {theme.patternAlt} {theme.patternGlyph}
-        </Text>
-        <Text style={[styles.patternTwo, { color: theme.pattern }]}>
-          {theme.patternAlt} {theme.patternGlyph}
-        </Text>
-        <Text style={[styles.patternThree, { color: theme.pattern }]}>
-          {theme.patternGlyph} {theme.patternGlyph} {theme.patternAlt}
-        </Text>
-      </View>
+      {decorations !== 'none' && (
+        <DecorationLayer intensity={decorations} celebrate={celebrate} />
+      )}
 
       {shouldShowBack && (
         <View style={[styles.backBar, { paddingHorizontal: horizontalPadding }]}>
@@ -86,7 +83,7 @@ export function Screen({
             onPress={handleBack}
             style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}
           >
-            <Text style={[styles.backText, { color: colors.muted }]}>← {backLabel}</Text>
+            <Text style={[styles.backText, { color: world.colors.muted }]}>← {backLabel}</Text>
           </Pressable>
         </View>
       )}
@@ -117,41 +114,6 @@ export function Screen({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, overflow: 'hidden' },
-  pattern: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    opacity: 0.18,
-  },
-  patternOne: {
-    position: 'absolute',
-    right: 20,
-    top: 24,
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: 7,
-    transform: [{ rotate: '-7deg' }],
-  },
-  patternTwo: {
-    position: 'absolute',
-    left: 18,
-    top: '47%',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 8,
-    transform: [{ rotate: '9deg' }],
-  },
-  patternThree: {
-    position: 'absolute',
-    right: 24,
-    bottom: 28,
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: 6,
-    transform: [{ rotate: '5deg' }],
-  },
   backBar: {
     width: '100%',
     maxWidth: 900,

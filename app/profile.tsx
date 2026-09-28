@@ -10,6 +10,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { Mascot } from '@/src/components/Mascot';
 import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { Screen } from '@/src/components/Screen';
 import {
@@ -27,10 +28,11 @@ import type {
   ProfileAvatarKey,
   ProfileColorKey,
   ProfileSymbolKey,
-  ProfileThemeKey,
+  CrocatWorldKey,
 } from '@/src/features/profile/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { normalizeWorldKey } from '@/src/theme/worlds';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function ProfileScreen() {
   const [name, setName] = useState('');
   const [colorKey, setColorKey] = useState<ProfileColorKey>('moss');
   const [avatarKey, setAvatarKey] = useState<ProfileAvatarKey>('round');
-  const [themeKey, setThemeKey] = useState<ProfileThemeKey>('paper');
+  const [themeKey, setThemeKey] = useState<CrocatWorldKey>('moss');
   const [symbolKey, setSymbolKey] = useState<ProfileSymbolKey>('star');
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState('');
@@ -50,9 +52,10 @@ export default function ProfileScreen() {
     setName(next.display_name);
     setColorKey(next.color_key);
     setAvatarKey(next.avatar_key);
-    setThemeKey(next.theme_key);
+    const normalizedWorld = normalizeWorldKey(next.theme_key);
+    setThemeKey(normalizedWorld);
     setSymbolKey(next.symbol_key);
-    setUiThemeKey(next.theme_key);
+    setUiThemeKey(normalizedWorld);
   };
 
   useEffect(() => {
@@ -124,7 +127,10 @@ export default function ProfileScreen() {
     <Screen backLabel="HOME">
 
       <View style={styles.hero}>
-        <ProfileAvatar profile={preview} size={108} showSymbol />
+        <View style={styles.heroIdentity}>
+          <ProfileAvatar profile={preview} size={92} showSymbol />
+          <Mascot themeKey={themeKey} state="happy" size={76} />
+        </View>
         <View style={styles.heroText}>
           <Text style={styles.kicker}>YOUR CROCAT</Text>
           <Text style={styles.title}>{name || 'Profile'}</Text>
@@ -184,13 +190,17 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>APP THEME · 1 OF 2</Text>
+        <Text style={styles.label}>YOUR WORLD · 1 OF 3</Text>
         <Text style={styles.themeHint}>Changes Crocat’s surfaces, accents and little background details.</Text>
         <View style={styles.options}>
           {PROFILE_THEMES.map((item) => (
             <Pressable
               key={item.key}
-              onPress={() => setThemeKey(item.key)}
+              onPress={() => {
+                const nextWorld = normalizeWorldKey(item.key);
+                setThemeKey(nextWorld);
+                setUiThemeKey(nextWorld);
+              }}
               style={[
                 styles.themeOption,
                 { backgroundColor: item.background },
@@ -198,6 +208,7 @@ export default function ProfileScreen() {
               ]}
             >
               <View style={styles.themePreviewTop}>
+                <Mascot themeKey={item.key} size={48} animated={false} />
                 <Text style={styles.themeName}>{item.label}</Text>
                 <View style={[styles.themeAccent, { backgroundColor: item.accent }]} />
               </View>
@@ -247,6 +258,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.card,
   },
+  heroIdentity: { alignItems: 'center', justifyContent: 'center', gap: 4 },
   heroText: { flex: 1, minWidth: 0 },
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 4, fontSize: 34, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
@@ -293,8 +305,8 @@ const styles = StyleSheet.create({
   themePreviewTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
+    justifyContent: 'flex-start',
+    gap: 9,
   },
   themeName: { color: colors.ink, fontSize: 11, fontWeight: '900', letterSpacing: 1 },
   themeAccent: {

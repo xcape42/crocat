@@ -1,4 +1,5 @@
 import { colors } from '@/src/theme/tokens';
+import { WORLD_OPTIONS } from '@/src/theme/worlds';
 import type {
   ProfileAvatarKey,
   ProfileColorKey,
@@ -29,24 +30,14 @@ export const PROFILE_THEMES: Array<{
   background: string;
   accent: string;
   pattern: string;
-}> = [
-  {
-    key: 'paper',
-    label: 'PAPER',
-    description: 'Warm, soft and handmade',
-    background: colors.paper,
-    accent: colors.coral,
-    pattern: '· — ·',
-  },
-  {
-    key: 'ink',
-    label: 'INK',
-    description: 'Cool, graphic and playful',
-    background: '#E8EFEC',
-    accent: colors.blue,
-    pattern: '✦ ╱ ✦',
-  },
-];
+}> = WORLD_OPTIONS.map((world) => ({
+  key: world.key,
+  label: world.label,
+  description: world.description,
+  background: world.colors.background,
+  accent: world.colors.accent,
+  pattern: world.background.glyphs.join('  '),
+}));
 
 export const PROFILE_SYMBOLS: Array<{ key: ProfileSymbolKey; label: string; glyph: string }> = [
   { key: 'star', label: 'STAR', glyph: '★' },
