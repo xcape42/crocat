@@ -90,11 +90,6 @@ export function PlayerPod({
           <Text style={[styles.status, { color: online ? world.colors.text : world.colors.muted }]}>
             {online ? '● ONLINE' : '○ AWAY'}
           </Text>
-          {!!role && (
-            <Text style={[styles.role, { color: world.colors.muted }]}>
-              {role}
-            </Text>
-          )}
           <Text style={[styles.ready, { color: ready ? world.colors.accent : world.colors.muted }]}>
             {ready ? 'READY ✓' : 'NOT READY'}
           </Text>
