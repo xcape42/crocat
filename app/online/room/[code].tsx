@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
@@ -44,6 +44,7 @@ import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const { code } = useLocalSearchParams<{ code: string }>();
   const {
     userId,
@@ -241,6 +242,7 @@ export default function OnlineRoomScreen() {
   );
   const requiredPlayers = 2;
   const emptyPlayerSlots = Math.max(0, requiredPlayers - players.length);
+  const compactPlayerPods = width < 560;
   const readyCount = players.filter((player) => player.ready).length;
   const allReady = players.length === requiredPlayers && readyCount === requiredPlayers;
   const allPlayersActive =
@@ -401,18 +403,18 @@ export default function OnlineRoomScreen() {
 
           const relationship = player.user_id === userId ? null : (
             friend ? (
-              <Text style={styles.friendState}>
+              <Text numberOfLines={2} ellipsizeMode="tail" style={styles.friendState}>
                 FRIENDS · LV {friend.friend_level} · {friend.friendship_label}
               </Text>
             ) : request?.direction === 'outgoing' ? (
-              <Text style={styles.requestState}>FRIEND REQUEST SENT</Text>
+              <Text numberOfLines={2} ellipsizeMode="tail" style={styles.requestState}>FRIEND REQUEST SENT</Text>
             ) : (
               <Pressable
                 disabled={!!socialBusy}
                 onPress={() => void addOrAcceptFriend(player.user_id)}
                 style={styles.addFriend}
               >
-                <Text style={styles.addFriendText}>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.addFriendText}>
                   {request?.direction === 'incoming' ? '+ ACCEPT FRIEND' : '+ ADD FRIEND'}
                 </Text>
               </Pressable>
@@ -439,6 +441,7 @@ export default function OnlineRoomScreen() {
             <PlayerPod
               key={player.user_id}
               style={styles.playerSlot}
+              compact={compactPlayerPods}
               profile={visual}
               online={online}
               ready={player.ready}
@@ -453,9 +456,13 @@ export default function OnlineRoomScreen() {
         {Array.from({ length: emptyPlayerSlots }, (_, index) => (
           <View
             key={`empty-player-slot-${index}`}
-            style={[styles.playerSlot, styles.waiting]}
+            style={[
+              styles.playerSlot,
+              styles.waiting,
+              compactPlayerPods && styles.waitingCompact,
+            ]}
           >
-            <Text style={styles.waitingText}>
+            <Text numberOfLines={3} ellipsizeMode="tail" style={styles.waitingText}>
               {players.length === 0
                 ? 'A little world can join here…'
                 : 'A second little world can join here…'}
@@ -542,8 +549,8 @@ const styles = StyleSheet.create({
   codeRow: { marginTop: 6, alignItems: 'flex-start' },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
-  players: { gap: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' },
-  playerSlot: { flexGrow: 1, flexShrink: 1, flexBasis: 260, minWidth: 240 },
+  players: { gap: 12, flexDirection: 'row', alignItems: 'stretch' },
+  playerSlot: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
   player: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
   playerIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   playerCopy: { flex: 1, minWidth: 0 },
@@ -563,6 +570,7 @@ const styles = StyleSheet.create({
   },
   addFriend: {
     marginTop: 5,
+    maxWidth: '100%',
     alignSelf: 'flex-start',
     paddingVertical: 4,
     paddingHorizontal: 7,
@@ -595,7 +603,8 @@ const styles = StyleSheet.create({
   kickButtonText: { color: colors.muted, fontSize: 20, lineHeight: 21, fontWeight: '800' },
   online: { fontSize: 10, fontWeight: '900', color: colors.ink, opacity: 0.65 },
   ready: { marginTop: 5, fontSize: 11, fontWeight: '900', color: colors.ink },
-  waiting: { minHeight: 108, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  waiting: { minHeight: 108, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  waitingCompact: { minHeight: 86, padding: 10 },
   waitingText: { color: colors.muted, textAlign: 'center', fontWeight: '700' },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
   lobbyNote: { textAlign: 'center', color: colors.muted, fontSize: 12 },

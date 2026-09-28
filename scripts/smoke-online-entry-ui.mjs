@@ -321,18 +321,21 @@ assert(
 );
 
 assert(
-  room.includes("flexWrap: 'wrap'")
+  !room.includes("flexWrap: 'wrap'")
     && room.includes('flexShrink: 1')
-    && room.includes('flexBasis: 260')
-    && room.includes('minWidth: 240')
+    && room.includes('flexBasis: 0')
+    && room.includes('minWidth: 0')
+    && room.includes('compactPlayerPods = width < 560')
+    && room.includes('compact={compactPlayerPods}')
     && room.includes('emptyPlayerSlots = Math.max(0, requiredPlayers - players.length)')
     && room.includes('Array.from({ length: emptyPlayerSlots }')
-    && room.includes('style={styles.playerSlot}')
-    && room.includes('style={[styles.playerSlot, styles.waiting]}')
+    && room.includes('styles.waitingCompact')
+    && room.includes('numberOfLines={3}')
     && !room.includes('flexShrink: unset')
     && playerPod.includes('style?: StyleProp<ViewStyle>')
-    && playerPod.includes('style,'),
-  'Online lobby player cards and empty slots must share a shrinkable, wrapping two-slot layout without invalid flexShrink values.',
+    && playerPod.includes("overflow: 'hidden'")
+    && playerPod.includes('ellipsizeMode="tail"'),
+  'Online lobby must keep exactly two equal slots side by side, compact safely on narrow screens and contain overflowing player/placeholder content without wrapping the slot row.',
 );
 
-console.log('Crocat 1.8.2 responsive online-lobby slots, connection-zone status and UI contracts passed');
+console.log('Crocat 1.8.3 fixed-pair online lobby, connection-zone status and UI contracts passed');

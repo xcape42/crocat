@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.8.3 — Fixed-pair online lobby layout
+
+- Keep both online lobby player positions side by side at all supported widths instead of wrapping them onto separate rows
+- Give both real PlayerPods and empty placeholders the same equal-width slot contract with flex basis 0, grow 1, shrink 1 and min-width 0
+- Reuse the existing compact PlayerPod presentation on narrower viewports instead of changing the room structure
+- Keep player names and World labels contained with single-line ellipsis where appropriate
+- Keep friendship/request text readable with bounded multi-line overflow and keep friend actions inside their slot width
+- Give empty placeholders matching compact height/padding and bounded text overflow
+- Preserve the two-placeholder transient empty-lobby state and one-placeholder solo-lobby state
+- Keep PlayerPod overflow contained without changing Local Split sizing behavior
+- Preserve Ready, Presence, kick/friend actions, room settings, Reliable Phase Sync and all multiplayer behavior
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.8.3
+
+
 ## 1.8.2 — Responsive online lobby slots
 
 - Preserve the latest online-room presentation while fixing the player-card flex behavior

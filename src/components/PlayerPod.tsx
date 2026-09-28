@@ -83,10 +83,14 @@ export function PlayerPod({
       </View>
 
       <View style={styles.copy}>
-        <Text numberOfLines={1} style={[styles.name, { color: world.colors.text }]}>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.name, { color: world.colors.text }]}>
           {profile.displayName}{current ? ' · YOU' : ''}
         </Text>
-        <Text style={[styles.world, { color: world.colors.muted }]}>
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={[styles.world, { color: world.colors.muted }]}
+        >
           {world.label}
         </Text>
         <View style={styles.metaRow}>
@@ -108,9 +112,11 @@ export function PlayerPod({
 const styles = StyleSheet.create({
   pod: {
     flexGrow: 1,
+    flexShrink: 1,
     flexBasis: 220,
     minWidth: 0,
     minHeight: 108,
+    overflow: 'hidden',
     padding: 12,
     gap: 10,
     borderWidth: 2,
@@ -121,11 +127,13 @@ const styles = StyleSheet.create({
     padding: 9,
   },
   identity: {
+    minWidth: 0,
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  copy: { minWidth: 0 },
+  copy: { minWidth: 0, flexShrink: 1 },
   name: {
     fontSize: 15,
     fontWeight: '900',
@@ -145,7 +153,7 @@ const styles = StyleSheet.create({
   status: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   role: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   ready: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
-  footer: { marginTop: 2 },
+  footer: { marginTop: 2, minWidth: 0, overflow: 'hidden' },
   action: {
     position: 'absolute',
     right: 9,
