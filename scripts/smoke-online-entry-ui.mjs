@@ -320,4 +320,19 @@ assert(
   'Drawing screens must use semantic Oberer/Unterer Teil labels and avoid redundant technical hint copy for no-guide prompts.',
 );
 
-console.log('Crocat 1.8.1 connection-zone status, compact artwork, theme-bootstrap, phase-sync and UI contracts passed');
+assert(
+  room.includes("flexWrap: 'wrap'")
+    && room.includes('flexShrink: 1')
+    && room.includes('flexBasis: 260')
+    && room.includes('minWidth: 240')
+    && room.includes('emptyPlayerSlots = Math.max(0, requiredPlayers - players.length)')
+    && room.includes('Array.from({ length: emptyPlayerSlots }')
+    && room.includes('style={styles.playerSlot}')
+    && room.includes('style={[styles.playerSlot, styles.waiting]}')
+    && !room.includes('flexShrink: unset')
+    && playerPod.includes('style?: StyleProp<ViewStyle>')
+    && playerPod.includes('style,')
+  'Online lobby player cards and empty slots must share a shrinkable, wrapping two-slot layout without invalid flexShrink values.',
+);
+
+console.log('Crocat 1.8.2 responsive online-lobby slots, connection-zone status and UI contracts passed');

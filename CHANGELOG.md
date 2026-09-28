@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.8.2 — Responsive online lobby slots
+
+- Preserve the latest online-room presentation while fixing the player-card flex behavior
+- Let the two online player positions sit side by side whenever enough usable width is available
+- Add wrapping so player cards move onto separate rows before they become cramped or overflow
+- Give online PlayerPods explicit shared grow, shrink, flex-basis and minimum-width slot rules
+- Give empty lobby placeholders the exact same slot sizing rules as real players
+- Render the number of missing placeholders from the two-player requirement: two for an empty transient lobby, one for a solo lobby and none for a full room
+- Remove the invalid placeholder `flexShrink: unset` style
+- Add an optional outer layout style to PlayerPod so online layout rules do not alter Local Split or other PlayerPod surfaces
+- Keep room membership, Ready, Presence, kick/friend actions, settings and multiplayer behavior unchanged
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.8.2
+
+
 ## 1.8.1 — Connection-zone drawing feedback
 
 - Keep all Crocat 1.8.0 geometry unchanged: 360 × 380 Drawing, 360 × 480 final, existing anchors, 20px overlap and geometry v1/v2

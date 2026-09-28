@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Mascot } from '@/src/components/Mascot';
 import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import type { ProfileVisual } from '@/src/features/profile/types';
@@ -17,6 +17,7 @@ type Props = {
   action?: ReactNode;
   footer?: ReactNode;
   compact?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function PlayerPod({
@@ -28,6 +29,7 @@ export function PlayerPod({
   action,
   footer,
   compact = false,
+  style,
 }: Props) {
   const world = crocatWorld(profile.themeKey);
   const reducedMotion = useReducedMotion();
@@ -68,6 +70,7 @@ export function PlayerPod({
           backgroundColor: world.colors.surface,
           transform: [{ scale }],
         },
+        style,
       ]}
     >
       <View style={styles.identity}>

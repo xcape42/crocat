@@ -240,6 +240,7 @@ export default function OnlineRoomScreen() {
     [players, userId],
   );
   const requiredPlayers = 2;
+  const emptyPlayerSlots = Math.max(0, requiredPlayers - players.length);
   const readyCount = players.filter((player) => player.ready).length;
   const allReady = players.length === requiredPlayers && readyCount === requiredPlayers;
   const allPlayersActive =
@@ -437,6 +438,7 @@ export default function OnlineRoomScreen() {
           return (
             <PlayerPod
               key={player.user_id}
+              style={styles.playerSlot}
               profile={visual}
               online={online}
               ready={player.ready}
@@ -448,11 +450,18 @@ export default function OnlineRoomScreen() {
           );
         })}
 
-        {players.length < requiredPlayers && (
-          <View style={styles.waiting}>
-            <Text style={styles.waitingText}>A second little world can join here…</Text>
+        {Array.from({ length: emptyPlayerSlots }, (_, index) => (
+          <View
+            key={`empty-player-slot-${index}`}
+            style={[styles.playerSlot, styles.waiting]}
+          >
+            <Text style={styles.waitingText}>
+              {players.length === 0
+                ? 'A little world can join here…'
+                : 'A second little world can join here…'}
+            </Text>
           </View>
-        )}
+        ))}
       </View>
 
       {room && (
@@ -533,7 +542,8 @@ const styles = StyleSheet.create({
   codeRow: { marginTop: 6, alignItems: 'flex-start' },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
-  players: { gap: 12, flexDirection: 'row' },
+  players: { gap: 12, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' },
+  playerSlot: { flexGrow: 1, flexShrink: 1, flexBasis: 260, minWidth: 240 },
   player: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
   playerIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   playerCopy: { flex: 1, minWidth: 0 },
@@ -585,7 +595,7 @@ const styles = StyleSheet.create({
   kickButtonText: { color: colors.muted, fontSize: 20, lineHeight: 21, fontWeight: '800' },
   online: { fontSize: 10, fontWeight: '900', color: colors.ink, opacity: 0.65 },
   ready: { marginTop: 5, fontSize: 11, fontWeight: '900', color: colors.ink },
-  waiting: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md, flexShrink: unset },
+  waiting: { minHeight: 108, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   waitingText: { color: colors.muted, textAlign: 'center', fontWeight: '700' },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
   lobbyNote: { textAlign: 'center', color: colors.muted, fontSize: 12 },
