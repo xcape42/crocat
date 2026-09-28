@@ -272,6 +272,9 @@ assert(
 
 assert(
   artworkThumbnail.includes('artwork.geometry_version')
+    && artworkThumbnail.includes("const clipSuffix = artwork.id.replace")
+    && artworkThumbnail.includes("'thumbnail-head-' + clipSuffix")
+    && artworkThumbnail.includes("'thumbnail-body-' + clipSuffix")
     && artworkExport.includes('artwork.geometry_version')
     && artworkApi.includes('p_geometry_version: CURRENT_ARTWORK_GEOMETRY_VERSION'),
   'Gallery thumbnails, SVG export and new saved artworks must use explicit geometry versions.',

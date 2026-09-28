@@ -7,18 +7,61 @@ import {
   artworkPartTransform,
   drawingPath,
 } from '@/src/features/artworks/geometry';
+import type { ArtworkGeometry } from '@/src/features/artworks/geometry';
 import type { SavedArtwork } from '@/src/features/artworks/types';
+import type { GameRole } from '@/src/types/game';
 
 type Props = {
   artwork: SavedArtwork;
   width?: number;
 };
 
+function ArtworkPart({
+  artwork,
+  role,
+  geometry,
+  clipId,
+}: {
+  artwork: SavedArtwork;
+  role: GameRole;
+  geometry: ArtworkGeometry;
+  clipId: string;
+}) {
+  const drawing = role === 'HEAD' ? artwork.head_drawing : artwork.body_drawing;
+  const transform = role === 'HEAD' ? artwork.head_transform : artwork.body_transform;
+  const connectionY = role === 'HEAD'
+    ? geometry.headConnectionY
+    : geometry.bodyConnectionY;
+
+  return (
+    <G clipPath={`url(#${clipId})`}>
+      <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+        {drawing.strokes.map((stroke) => (
+          <Path
+            key={stroke.id}
+            d={drawingPath(stroke.points)}
+            fill="none"
+            stroke={stroke.color}
+            strokeWidth={stroke.width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={stroke.opacity}
+          />
+        ))}
+      </G>
+    </G>
+  );
+}
+
 export function ArtworkThumbnail({ artwork, width = 126 }: Props) {
   const geometry = artworkGeometryForVersion(artwork.geometry_version);
   const height = width * (geometry.height / geometry.width);
   const headClip = artworkClipRect('HEAD', geometry);
   const bodyClip = artworkClipRect('BODY', geometry);
+  const clipSuffix = artwork.id.replace(/[^a-zA-Z0-9_-]/g, '');
+  const headClipId = 'thumbnail-head-' + clipSuffix;
+  const bodyClipId = 'thumbnail-body-' + clipSuffix;
+  const legacy = geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION;
 
   return (
     <Svg
@@ -28,13 +71,14 @@ export function ArtworkThumbnail({ artwork, width = 126 }: Props) {
       style={{ borderRadius: radius.md }}
     >
       <Defs>
-        <ClipPath id="thumbnail-body-clip">
+        <ClipPath id={bodyClipId}>
           <Rect {...bodyClip} />
         </ClipPath>
-        <ClipPath id="thumbnail-head-clip">
+        <ClipPath id={headClipId}>
           <Rect {...headClip} />
         </ClipPath>
       </Defs>
+
       <Rect
         x={0}
         y={0}
@@ -43,91 +87,35 @@ export function ArtworkThumbnail({ artwork, width = 126 }: Props) {
         fill={colors.card}
       />
 
-      {geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION ? (
+      {legacy ? (
         <>
-          <G clipPath="url(#thumbnail-head-clip)">
-          <G transform={artworkPartTransform(
-          artwork.head_transform,
-          geometry.headConnectionY,
-          geometry,
-          )}>
-          {artwork.head_drawing.strokes.map((stroke) => (
-          <Path
-          key={stroke.id}
-          d={drawingPath(stroke.points)}
-          fill="none"
-          stroke={stroke.color}
-          strokeWidth={stroke.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={stroke.opacity}
+          <ArtworkPart
+            artwork={artwork}
+            role="HEAD"
+            geometry={geometry}
+            clipId={headClipId}
           />
-          ))}
-          </G>
-          </G>
-          <G clipPath="url(#thumbnail-body-clip)">
-          <G transform={artworkPartTransform(
-          artwork.body_transform,
-          geometry.bodyConnectionY,
-          geometry,
-          )}>
-          {artwork.body_drawing.strokes.map((stroke) => (
-          <Path
-          key={stroke.id}
-          d={drawingPath(stroke.points)}
-          fill="none"
-          stroke={stroke.color}
-          strokeWidth={stroke.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={stroke.opacity}
+          <ArtworkPart
+            artwork={artwork}
+            role="BODY"
+            geometry={geometry}
+            clipId={bodyClipId}
           />
-          ))}
-          </G>
-          </G>
         </>
       ) : (
         <>
-          <G clipPath="url(#thumbnail-body-clip)">
-          <G transform={artworkPartTransform(
-          artwork.body_transform,
-          geometry.bodyConnectionY,
-          geometry,
-          )}>
-          {artwork.body_drawing.strokes.map((stroke) => (
-          <Path
-          key={stroke.id}
-          d={drawingPath(stroke.points)}
-          fill="none"
-          stroke={stroke.color}
-          strokeWidth={stroke.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={stroke.opacity}
+          <ArtworkPart
+            artwork={artwork}
+            role="BODY"
+            geometry={geometry}
+            clipId={bodyClipId}
           />
-          ))}
-          </G>
-          </G>
-          <G clipPath="url(#thumbnail-head-clip)">
-          <G transform={artworkPartTransform(
-          artwork.head_transform,
-          geometry.headConnectionY,
-          geometry,
-          )}>
-          {artwork.head_drawing.strokes.map((stroke) => (
-          <Path
-          key={stroke.id}
-          d={drawingPath(stroke.points)}
-          fill="none"
-          stroke={stroke.color}
-          strokeWidth={stroke.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={stroke.opacity}
+          <ArtworkPart
+            artwork={artwork}
+            role="HEAD"
+            geometry={geometry}
+            clipId={headClipId}
           />
-          ))}
-          </G>
-          </G>
         </>
       )}
     </Svg>
