@@ -8,7 +8,8 @@ export type ProfileColorKey =
   | 'mint';
 
 export type ProfileAvatarKey = 'round' | 'ears' | 'spiky';
-export type ProfileThemeKey = 'paper' | 'ink';
+export type CrocatWorldKey = 'moss' | 'moon' | 'candy';
+export type ProfileThemeKey = CrocatWorldKey | 'paper' | 'ink';
 export type ProfileSymbolKey = 'star' | 'spark' | 'heart' | 'moon' | 'bolt';
 
 export type PlayerProfile = {

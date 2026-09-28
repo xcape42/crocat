@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/src/theme/tokens';
 import {
   profileColor,
   profileFace,
   profileSymbol,
 } from '@/src/features/profile/options';
 import type { ProfileVisual } from '@/src/features/profile/types';
+import { crocatWorld } from '@/src/theme/worlds';
 
 type Props = {
   profile: ProfileVisual;
@@ -18,7 +18,7 @@ export function ProfileAvatar({
   size = 64,
   showSymbol = false,
 }: Props) {
-  const dark = profile.themeKey === 'ink';
+  const world = crocatWorld(profile.themeKey);
   const faceSize = Math.max(11, Math.round(size * 0.21));
   const symbolSize = Math.max(10, Math.round(size * 0.22));
 
@@ -32,6 +32,7 @@ export function ProfileAvatar({
           height: size,
           borderRadius: profile.avatarKey === 'round' ? size / 2 : Math.round(size * 0.3),
           backgroundColor: profileColor(profile.colorKey),
+          borderColor: world.colors.text,
         },
       ]}
     >
@@ -42,7 +43,8 @@ export function ProfileAvatar({
             width: size * 0.72,
             height: size * 0.72,
             borderRadius: profile.avatarKey === 'round' ? size : Math.round(size * 0.22),
-            backgroundColor: dark ? colors.ink : colors.card,
+            backgroundColor: world.colors.card,
+            borderColor: world.colors.text,
           },
         ]}
       >
@@ -50,7 +52,7 @@ export function ProfileAvatar({
           style={[
             styles.face,
             {
-              color: dark ? colors.paper : colors.ink,
+              color: world.colors.text,
               fontSize: faceSize,
             },
           ]}
@@ -69,10 +71,17 @@ export function ProfileAvatar({
               borderRadius: size,
               right: -size * 0.03,
               bottom: -size * 0.03,
+              backgroundColor: world.colors.surface,
+              borderColor: world.colors.text,
             },
           ]}
         >
-          <Text style={[styles.symbolText, { fontSize: symbolSize }]}>
+          <Text
+            style={[
+              styles.symbolText,
+              { color: world.colors.text, fontSize: symbolSize },
+            ]}
+          >
             {profileSymbol(profile.symbolKey)}
           </Text>
         </View>
@@ -86,13 +95,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.ink,
   },
   inner: {
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.ink,
   },
   face: {
     fontWeight: '900',
@@ -101,12 +108,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.paper,
     borderWidth: 2,
-    borderColor: colors.ink,
   },
   symbolText: {
-    color: colors.ink,
     fontWeight: '900',
   },
 });
