@@ -10,6 +10,7 @@ import { syncServerClock } from '@/src/features/time/serverClock';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { crocatUiTheme } from '@/src/theme/profileTheme';
+import { normalizeWorldKey } from '@/src/theme/worlds';
 
 export default function RootLayout() {
   const roomId = useOnlineGameStore((state) => state.room?.id ?? null);
@@ -38,7 +39,7 @@ export default function RootLayout() {
     void ensureCurrentProfile()
       .then(({ profile }) => {
         if (stopped) return;
-        setThemeKey(profile.theme_key);
+        setThemeKey(normalizeWorldKey(profile.theme_key));
         void syncServerClock();
         void touch();
         interval = setInterval(() => void touch(), 20_000);

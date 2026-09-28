@@ -10,6 +10,8 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { CrocatCard } from '@/src/components/CrocatCard';
+import { Mascot } from '@/src/components/Mascot';
 import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { Screen } from '@/src/components/Screen';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
@@ -35,6 +37,7 @@ import type {
 } from '@/src/features/social/types';
 import { socialProfileVisual } from '@/src/features/social/types';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 function MiniButton({
   label,
@@ -223,50 +226,65 @@ export default function FriendsScreen() {
         - new Date(left.last_seen_at).getTime(),
     );
 
-  const renderFriend = (friend: FriendSummary) => (
-    <View key={friend.friend_user_id} style={styles.friendCard}>
-      <ProfileAvatar profile={socialProfileVisual(friend)} size={58} />
-      <View style={styles.friendMain}>
-        <View style={styles.friendTop}>
-          <Text style={styles.name}>{friend.display_name}</Text>
-          <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
-            {lastSeenText(friend)}
+  const renderFriend = (friend: FriendSummary) => {
+    const friendWorld = crocatWorld(friend.theme_key);
+
+    return (
+      <CrocatCard key={friend.friend_user_id} style={styles.friendCard}>
+        <View style={styles.friendIdentity}>
+          <ProfileAvatar profile={socialProfileVisual(friend)} size={52} />
+          <Mascot
+            themeKey={friend.theme_key}
+            state={friend.online ? 'idle' : 'sleeping'}
+            size={42}
+            animated={false}
+          />
+        </View>
+
+        <View style={styles.friendMain}>
+          <View style={styles.friendTop}>
+            <Text style={styles.name}>{friend.display_name}</Text>
+            <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
+              {lastSeenText(friend)}
+            </Text>
+          </View>
+
+          <Text style={[styles.worldMeta, { color: friendWorld.colors.muted }]}>
+            {friendWorld.label}
           </Text>
-        </View>
+          <Text style={styles.meta}>
+            LV {friend.friend_level} · {friend.friendship_label}
+            {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
+          </Text>
 
-        <Text style={styles.meta}>
-          LV {friend.friend_level} · {friend.friendship_label}
-          {' · '}{friend.theme_key.toUpperCase()}
-          {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
-        </Text>
-
-        <View style={styles.friendActions}>
-          {!!friend.open_room_code && !inviteRoomId && (
-            <MiniButton
-              strong
-              label="JOIN"
-              disabled={!!busyKey}
-              onPress={() => void joinOpenLobby(friend)}
-            />
-          )}
-          <MiniButton
-            strong={!friend.open_room_code || !!inviteRoomId}
-            label="INVITE"
-            disabled={!!busyKey}
-            onPress={() => void invite(friend)}
-          />
-          <MiniButton
-            label="REMOVE"
-            disabled={!!busyKey}
-            onPress={() => void run(
-              'remove:' + friend.friend_user_id,
-              () => removeFriend(friend.friend_user_id),
+          <View style={styles.friendActions}>
+            {!!friend.open_room_code && !inviteRoomId && (
+              <MiniButton
+                strong
+                label="JOIN"
+                disabled={!!busyKey}
+                onPress={() => void joinOpenLobby(friend)}
+              />
             )}
-          />
+            <MiniButton
+              strong={!friend.open_room_code || !!inviteRoomId}
+              label="INVITE"
+              disabled={!!busyKey}
+              onPress={() => void invite(friend)}
+            />
+            <MiniButton
+              label="REMOVE"
+              disabled={!!busyKey}
+              onPress={() => void run(
+                'remove:' + friend.friend_user_id,
+                () => removeFriend(friend.friend_user_id),
+              )}
+            />
+          </View>
         </View>
-      </View>
-    </View>
-  );
+      </CrocatCard>
+    );
+  };
 
   if (loading) {
     return (
@@ -277,7 +295,7 @@ export default function FriendsScreen() {
   }
 
   return (
-    <Screen backLabel={inviteRoomId ? 'ROOM' : 'HOME'}>
+    <Screen backLabel={inviteRoomId ? 'ROOM' : 'HOME'} decorations="full">
 
       <View style={styles.header}>
         <View>
@@ -548,6 +566,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   cardText: { flex: 1, minWidth: 0 },
+  friendIdentity: { alignItems: 'center', justifyContent: 'center', gap: 2 },
   friendMain: { flex: 1, minWidth: 0 },
   friendTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   name: { color: colors.ink, fontSize: 17, fontWeight: '900' },

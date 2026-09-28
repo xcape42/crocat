@@ -5,6 +5,7 @@ import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import {
   advanceDrawing,
@@ -206,8 +207,8 @@ export default function OnlineDrawScreen() {
     strokes: current.strokes.slice(0, -1),
   }));
 
-  const playerName =
-    players.find((player) => player.user_id === userId)?.display_name ?? 'YOU';
+  const me = players.find((player) => player.user_id === userId);
+  const playerName = me?.display_name ?? 'YOU';
   const otherName =
     players.find((player) => player.user_id !== userId)?.display_name ?? 'OTHER PLAYER';
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
@@ -236,13 +237,16 @@ export default function OnlineDrawScreen() {
 
   if (waiting) {
     return (
-      <Screen scroll={false} contentStyle={styles.waitingScreen} backLabel="LEAVE" onBack={requestLeave}>
+      <Screen scroll={false} contentStyle={styles.waitingScreen} backLabel="LEAVE" onBack={requestLeave} decorations="quiet">
         <View style={styles.waitingTop}>
           <View>
             <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
           <View style={styles.headerActions}>
+            {!!me?.profile && (
+              <Mascot themeKey={me.profile.theme_key} state="happy" size={42} />
+            )}
             <CountdownBadge remaining={remaining} />
             <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
               <Text style={styles.leave}>LEAVE ROUND</Text>
@@ -272,13 +276,20 @@ export default function OnlineDrawScreen() {
   }
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave} decorations="none">
       <View style={styles.top}>
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
           <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
         </View>
         <View style={styles.headerActions}>
+          {!!me?.profile && (
+            <Mascot
+              themeKey={me.profile.theme_key}
+              state={remaining <= 10 ? 'nervous' : 'drawing'}
+              size={42}
+            />
+          )}
           <CountdownBadge remaining={remaining} />
           <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
             <Text style={styles.leave}>LEAVE ROUND</Text>

@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
-import { ProfileAvatar } from '@/src/components/ProfileAvatar';
+import { PlayerPod } from '@/src/components/PlayerPod';
 import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
 import { Screen } from '@/src/components/Screen';
 import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
@@ -232,37 +232,36 @@ export default function OnlineRoomScreen() {
     () => players.find((player) => player.user_id === userId),
     [players, userId],
   );
+  const requiredPlayers = 2;
   const readyCount = players.filter((player) => player.ready).length;
-  const bothReady = players.length === 2 && readyCount === 2;
+  const allReady = players.length === requiredPlayers && readyCount === requiredPlayers;
   const allPlayersActive =
-    players.length === 2
+    players.length === requiredPlayers
     && players.every((player) => onlineUserIds.includes(player.user_id));
   const missingPlayer = players.find((player) => !onlineUserIds.includes(player.user_id));
-  const otherPlayer = players.find((player) => player.user_id !== userId);
-  const otherFriend = otherPlayer
-    ? friends.find((friend) => friend.friend_user_id === otherPlayer.user_id)
-    : undefined;
-  const otherRequest = otherPlayer
-    ? friendRequests.find((request) => request.other_user_id === otherPlayer.user_id)
-    : undefined;
   const kickTarget = kickTargetId
     ? players.find((player) => player.user_id === kickTargetId)
     : undefined;
 
-  const addOrAcceptFriend = async () => {
-    if (!otherPlayer || socialBusy) return;
+  const addOrAcceptFriend = async (targetUserId: string) => {
+    if (socialBusy) return;
+
+    const target = players.find((player) => player.user_id === targetUserId);
+    if (!target || target.user_id === userId) return;
+
+    const request = friendRequests.find((item) => item.other_user_id === target.user_id);
 
     try {
-      setSocialBusy('relationship');
+      setSocialBusy('relationship:' + target.user_id);
       setError('');
 
-      if (otherRequest?.direction === 'incoming') {
-        await respondFriendRequest(otherRequest.friendship_id, true);
+      if (request?.direction === 'incoming') {
+        await respondFriendRequest(request.friendship_id, true);
         setJoinNotice('Friend added ✓');
       } else {
-        await sendFriendRequestToUser(otherPlayer.user_id);
+        await sendFriendRequestToUser(target.user_id);
         setJoinNotice(
-          otherRequest?.direction === 'outgoing'
+          request?.direction === 'outgoing'
             ? 'Friend request already sent'
             : 'Friend request sent ✓',
         );
@@ -361,7 +360,7 @@ export default function OnlineRoomScreen() {
   }
 
   return (
-    <Screen backLabel="LEAVE" onBack={requestLeave}>
+    <Screen backLabel="LEAVE" onBack={requestLeave} decorations="full">
       <View style={styles.header}>
         <Text style={styles.kicker}>ONLINE LOBBY</Text>
         <View style={styles.codeRow}>
@@ -374,76 +373,77 @@ export default function OnlineRoomScreen() {
       <View style={styles.players}>
         {players.map((player) => {
           const online = onlineUserIds.includes(player.user_id);
-          return (
-            <View key={player.user_id} style={styles.player}>
-              <View style={styles.playerIdentity}>
-                {player.profile ? (
-                  <ProfileAvatar
-                    profile={{
-                      displayName: player.profile.display_name,
-                      colorKey: player.profile.color_key,
-                      avatarKey: player.profile.avatar_key,
-                      themeKey: player.profile.theme_key,
-                      symbolKey: player.profile.symbol_key,
-                    }}
-                    size={48}
-                  />
-                ) : null}
-                <View style={styles.playerCopy}>
-                  <Text style={styles.name}>{player.display_name}</Text>
-                  <Text style={styles.role}>
-                    {player.user_id === userId ? 'YOU' : 'OTHER CAT'}
-                  </Text>
-                  {player.user_id !== userId && (
-                    otherFriend ? (
-                      <Text style={styles.friendState}>
-                        FRIENDS · LV {otherFriend.friend_level} · {otherFriend.friendship_label}
-                      </Text>
-                    ) : otherRequest?.direction === 'outgoing' ? (
-                      <Text style={styles.requestState}>FRIEND REQUEST SENT</Text>
-                    ) : (
-                      <Pressable
-                        disabled={!!socialBusy}
-                        onPress={() => void addOrAcceptFriend()}
-                        style={styles.addFriend}
-                      >
-                        <Text style={styles.addFriendText}>
-                          {otherRequest?.direction === 'incoming'
-                            ? '+ ACCEPT FRIEND'
-                            : '+ ADD FRIEND'}
-                        </Text>
-                      </Pressable>
-                    )
-                  )}
-                </View>
-              </View>
-              <View style={styles.state}>
-                {player.user_id !== userId && room?.status === 'waiting' && (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${player.display_name} from room`}
-                    disabled={busy}
-                    hitSlop={8}
-                    onPress={() => setKickTargetId(player.user_id)}
-                    style={({ pressed }) => [
-                      styles.kickButton,
-                      pressed && !busy && styles.kickButtonPressed,
-                    ]}
-                  >
-                    <Text style={styles.kickButtonText}>×</Text>
-                  </Pressable>
-                )}
-                <Text style={styles.online}>{online ? '● ONLINE' : '○ CONNECTING'}</Text>
-                <Text style={styles.ready}>
-                  {player.ready ? 'READY ✓' : 'NOT READY'}
+          const friend = friends.find((item) => item.friend_user_id === player.user_id);
+          const request = friendRequests.find((item) => item.other_user_id === player.user_id);
+          const visual = player.profile
+            ? {
+                displayName: player.profile.display_name,
+                colorKey: player.profile.color_key,
+                avatarKey: player.profile.avatar_key,
+                themeKey: player.profile.theme_key,
+                symbolKey: player.profile.symbol_key,
+              }
+            : {
+                displayName: player.display_name,
+                colorKey: 'moss' as const,
+                avatarKey: 'round' as const,
+                themeKey: 'moss' as const,
+                symbolKey: 'star' as const,
+              };
+
+          const relationship = player.user_id === userId ? null : (
+            friend ? (
+              <Text style={styles.friendState}>
+                FRIENDS · LV {friend.friend_level} · {friend.friendship_label}
+              </Text>
+            ) : request?.direction === 'outgoing' ? (
+              <Text style={styles.requestState}>FRIEND REQUEST SENT</Text>
+            ) : (
+              <Pressable
+                disabled={!!socialBusy}
+                onPress={() => void addOrAcceptFriend(player.user_id)}
+                style={styles.addFriend}
+              >
+                <Text style={styles.addFriendText}>
+                  {request?.direction === 'incoming' ? '+ ACCEPT FRIEND' : '+ ADD FRIEND'}
                 </Text>
-              </View>
-            </View>
+              </Pressable>
+            )
+          );
+
+          const removeAction = player.user_id !== userId && room?.status === 'waiting' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${player.display_name} from room`}
+              disabled={busy}
+              hitSlop={8}
+              onPress={() => setKickTargetId(player.user_id)}
+              style={({ pressed }) => [
+                styles.kickButton,
+                pressed && !busy && styles.kickButtonPressed,
+              ]}
+            >
+              <Text style={styles.kickButtonText}>×</Text>
+            </Pressable>
+          ) : null;
+
+          return (
+            <PlayerPod
+              key={player.user_id}
+              profile={visual}
+              online={online}
+              ready={player.ready}
+              role={player.role}
+              current={player.user_id === userId}
+              action={removeAction}
+              footer={relationship}
+            />
           );
         })}
-        {players.length < 2 && (
+
+        {players.length < requiredPlayers && (
           <View style={styles.waiting}>
-            <Text style={styles.waitingText}>Waiting for the second player…</Text>
+            <Text style={styles.waitingText}>A second little world can join here…</Text>
           </View>
         )}
       </View>
@@ -477,7 +477,7 @@ export default function OnlineRoomScreen() {
         </CrocatButton>
         <CrocatButton
           variant="coral"
-          disabled={busy || !bothReady || !allPlayersActive || room?.status !== 'waiting'}
+          disabled={busy || !allReady || !allPlayersActive || room?.status !== 'waiting'}
           onPress={start}
         >
           START ROUND
@@ -487,9 +487,9 @@ export default function OnlineRoomScreen() {
             ? 'Waiting for the second player…'
             : (!allPlayersActive
               ? `Waiting for ${missingPlayer?.display_name ?? 'the other player'} to be active…`
-              : (bothReady
+              : (allReady
                 ? 'Both players are ready. Either player can start.'
-                : `${readyCount}/2 ready. Both players must be ready to start.`))}
+                : `${readyCount}/${requiredPlayers} ready. Both players must be ready to start.`))}
         </Text>
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>

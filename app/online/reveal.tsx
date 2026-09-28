@@ -11,6 +11,7 @@ import {
 import type { SavedArtwork } from '@/src/features/artworks/types';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
@@ -304,13 +305,25 @@ export default function OnlineRevealScreen() {
   }
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={() => void leave()}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={() => void leave()} decorations="full" celebrate>
       <View style={styles.header}>
         <View>
           <Text style={styles.kicker}>ROOM {room.code} · FINAL REVEAL</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>This is your Crocat.</Text>
         </View>
-        <CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />
+        <View style={styles.revealSide}>
+          <View style={styles.mascotRow}>
+            {players.map((player) => player.profile ? (
+              <Mascot
+                key={player.user_id}
+                themeKey={player.profile.theme_key}
+                state="celebrate"
+                size={36}
+              />
+            ) : null)}
+          </View>
+          <CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />
+        </View>
       </View>
 
       {!!round?.prompt_term && (
@@ -348,7 +361,7 @@ export default function OnlineRevealScreen() {
       </CrocatButton>
 
       <View style={styles.readyRow}>
-        <Text style={styles.readyStatus}>{readyCount}/2 READY</Text>
+        <Text style={styles.readyStatus}>{readyCount}/{Math.max(1, players.length)} READY</Text>
         <CrocatButton
           variant={me?.ready ? 'secondary' : 'coral'}
           disabled={readyBusy || !me}
@@ -377,6 +390,8 @@ const styles = StyleSheet.create({
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.3, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
+  revealSide: { alignItems: 'flex-end', gap: 4 },
+  mascotRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   promptReveal: { flexShrink: 0, alignItems: 'center' },
   promptTheme: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   promptTerm: { marginTop: 2, color: colors.ink, fontSize: 18, fontWeight: '900' },

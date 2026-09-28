@@ -5,6 +5,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import {
   advancePhase,
@@ -334,13 +335,20 @@ export default function OnlineAdjustScreen() {
   }
 
   return (
-    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave}>
+    <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave} decorations="none">
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
         </View>
         <View style={styles.headerActions}>
+          {!!me?.profile && (
+            <Mascot
+              themeKey={me.profile.theme_key}
+              state={secondsLeft <= 5 ? 'nervous' : (me.ready ? 'happy' : 'idle')}
+              size={40}
+            />
+          )}
           <CountdownBadge remaining={secondsLeft} label="ADJUST" />
           <Pressable accessibilityRole="button" disabled={readyBusy} onPress={requestLeave}>
             <Text style={styles.leave}>LEAVE ROUND</Text>
@@ -378,7 +386,7 @@ export default function OnlineAdjustScreen() {
         </View>
 
         <View style={styles.readyGroup}>
-          <Text style={styles.readyCount}>{readyCount}/2 READY</Text>
+          <Text style={styles.readyCount}>{readyCount}/{Math.max(1, players.length)} READY</Text>
           <Pressable
             accessibilityRole="button"
             disabled={readyBusy || !me}

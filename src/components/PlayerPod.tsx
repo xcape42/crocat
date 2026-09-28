@@ -15,6 +15,7 @@ type Props = {
   role?: string | null;
   current?: boolean;
   action?: ReactNode;
+  footer?: ReactNode;
   compact?: boolean;
 };
 
@@ -25,6 +26,7 @@ export function PlayerPod({
   role,
   current = false,
   action,
+  footer,
   compact = false,
 }: Props) {
   const world = crocatWorld(profile.themeKey);
@@ -99,6 +101,7 @@ export function PlayerPod({
         </View>
       </View>
 
+      {!!footer && <View style={styles.footer}>{footer}</View>}
       {!!action && <View style={styles.action}>{action}</View>}
     </Animated.View>
   );
@@ -106,7 +109,8 @@ export function PlayerPod({
 
 const styles = StyleSheet.create({
   pod: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 220,
     minWidth: 0,
     minHeight: 108,
     padding: 12,
@@ -143,6 +147,7 @@ const styles = StyleSheet.create({
   status: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   role: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   ready: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
+  footer: { marginTop: 2 },
   action: {
     position: 'absolute',
     right: 9,

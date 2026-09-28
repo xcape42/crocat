@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
-import { colors, radius } from '@/src/theme/tokens';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { crocatWorld } from '@/src/theme/worlds';
 
 type Props = {
   code: string;
@@ -25,6 +26,8 @@ function getRoomLink(code: string) {
 }
 
 export function RoomCodeDisplay({ code }: Props) {
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const normalized = code.trim().toUpperCase();
   const [copied, setCopied] = useState<CopiedValue>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,28 +59,34 @@ export function RoomCodeDisplay({ code }: Props) {
         selectable
         style={[
           styles.code,
+          { color: world.colors.text },
           Platform.OS === 'web' && ({ userSelect: 'text' } as never),
         ]}
       >
         {normalized}
       </Text>
       <View style={styles.actions}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Copy room code"
-          onPress={copyCode}
-          style={({ pressed }) => [styles.copyButton, pressed && styles.copyButtonPressed]}
-        >
-          <Text style={styles.copyText}>{copied === 'code' ? 'COPIED ✓' : 'COPY CODE'}</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Copy room link"
-          onPress={copyLink}
-          style={({ pressed }) => [styles.copyButton, pressed && styles.copyButtonPressed]}
-        >
-          <Text style={styles.copyText}>{copied === 'link' ? 'COPIED ✓' : 'COPY LINK'}</Text>
-        </Pressable>
+        {([
+          ['code', copied === 'code' ? 'COPIED ✓' : 'COPY CODE', copyCode],
+          ['link', copied === 'link' ? 'COPIED ✓' : 'COPY LINK', copyLink],
+        ] as const).map(([key, label, action]) => (
+          <Pressable
+            key={key}
+            accessibilityRole="button"
+            accessibilityLabel={key === 'code' ? 'Copy room code' : 'Copy room link'}
+            onPress={action}
+            style={({ pressed }) => [
+              styles.copyButton,
+              {
+                borderColor: world.colors.text,
+                backgroundColor: pressed ? world.colors.primary : world.colors.surface,
+                borderRadius: world.shapes.buttonRadius,
+              },
+            ]}
+          >
+            <Text style={[styles.copyText, { color: world.colors.text }]}>{label}</Text>
+          </Pressable>
+        ))}
       </View>
     </View>
   );
@@ -95,30 +104,13 @@ const styles = StyleSheet.create({
     fontSize: 54,
     fontWeight: '900',
     letterSpacing: 5,
-    color: colors.ink,
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
+  actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   copyButton: {
     minHeight: 34,
     justifyContent: 'center',
     paddingHorizontal: 12,
-    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.ink,
-    backgroundColor: colors.card,
   },
-  copyButtonPressed: {
-    transform: [{ scale: 0.98 }],
-    backgroundColor: colors.lime,
-  },
-  copyText: {
-    color: colors.ink,
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
+  copyText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
 });

@@ -1,42 +1,69 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { CrocatCard } from '@/src/components/CrocatCard';
+import { PlayerPod } from '@/src/components/PlayerPod';
 import { Screen } from '@/src/components/Screen';
 import { RoomSettingsPanel } from '@/src/components/game/RoomSettingsPanel';
 import { useGameStore } from '@/src/store/gameStore';
-import { colors, radius, spacing } from '@/src/theme/tokens';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 export default function LobbyScreen() {
   const router = useRouter();
   const { roomCode, roundSeconds, startRound, setRoundSeconds } = useGameStore();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
 
   const begin = () => {
     startRound();
     router.replace('/draw');
   };
 
+  const localPlayers = [
+    {
+      displayName: 'Domi',
+      colorKey: 'moss' as const,
+      avatarKey: 'round' as const,
+      themeKey,
+      symbolKey: 'star' as const,
+      role: 'HEAD',
+    },
+    {
+      displayName: 'Sarah',
+      colorKey: 'blue' as const,
+      avatarKey: 'ears' as const,
+      themeKey: 'moon' as const,
+      symbolKey: 'moon' as const,
+      role: 'BODY',
+    },
+  ];
+
   return (
-    <Screen backLabel="MODES">
+    <Screen backLabel="MODES" decorations="full">
       <View style={styles.header}>
-        <Text style={styles.kicker}>LOCAL ROOM · {roomCode}</Text>
-        <Text style={styles.title}>Ready to make a creature?</Text>
+        <Text style={[styles.kicker, { color: world.colors.accent }]}>LOCAL ROOM · {roomCode}</Text>
+        <Text style={[styles.title, { color: world.colors.text }]}>Ready to make a creature?</Text>
       </View>
 
       <View style={styles.players}>
-        <View style={[styles.player, { backgroundColor: colors.moss }]}>
-          <Text style={styles.avatar}>◉ᴗ◉</Text>
-          <View style={styles.playerText}><Text style={styles.name}>Domi</Text><Text style={styles.role}>HEAD · READY</Text></View>
-        </View>
-        <View style={[styles.player, { backgroundColor: colors.blue }]}>
-          <Text style={styles.avatar}>•ᴗ•</Text>
-          <View style={styles.playerText}><Text style={styles.name}>Sarah</Text><Text style={styles.role}>BODY · READY</Text></View>
-        </View>
+        {localPlayers.map((player) => (
+          <PlayerPod
+            key={player.displayName}
+            profile={player}
+            role={player.role}
+            ready
+          />
+        ))}
       </View>
 
-      <View style={styles.note}>
-        <Text style={styles.noteTitle}>Local Split</Text>
-        <Text style={styles.noteCopy}>Domi draws the HEAD first. Then pass the device to Sarah for the BODY. No names need to be entered before the game.</Text>
-      </View>
+      <CrocatCard variant="surface" style={styles.note}>
+        <Text style={[styles.noteTitle, { color: world.colors.text }]}>Local Split</Text>
+        <Text style={[styles.noteCopy, { color: world.colors.muted }]}>
+          Domi draws the HEAD first. Then pass the device to Sarah for the BODY. The player layout already scales as a collection, so future local modes can grow beyond two slots.
+        </Text>
+      </CrocatCard>
 
       <RoomSettingsPanel
         roundSeconds={roundSeconds}
@@ -44,25 +71,20 @@ export default function LobbyScreen() {
         onChange={setRoundSeconds}
       />
 
-      <View style={styles.bottom}><CrocatButton onPress={begin}>START ROUND</CrocatButton></View>
+      <View style={styles.bottom}>
+        <CrocatButton onPress={begin}>START ROUND</CrocatButton>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  back: { color: colors.muted, fontWeight: '800', letterSpacing: 1 },
-  header: { marginTop: spacing.xl, marginBottom: spacing.xl },
-  kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.4, fontSize: 12 },
-  title: { marginTop: 8, fontSize: 44, lineHeight: 48, fontWeight: '900', letterSpacing: -1.8, color: colors.ink },
-  players: { gap: 12 },
-  player: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.card, borderWidth: 2, borderColor: colors.ink, textAlign: 'center', textAlignVertical: 'center', paddingTop: 18, fontWeight: '900' },
-  playerText: { marginLeft: 14 },
-  name: { fontWeight: '900', fontSize: 18, color: colors.ink },
-  role: { marginTop: 4, fontWeight: '800', color: colors.ink, opacity: 0.6, fontSize: 12, letterSpacing: 1 },
-  note: { marginTop: 18, padding: 18, borderRadius: radius.md, backgroundColor: colors.card },
-  noteTitle: { fontWeight: '900', color: colors.ink },
-  noteCopy: { marginTop: 6, color: colors.muted, lineHeight: 21 },
-  noteMeta: { marginTop: 14, fontSize: 11, color: colors.muted, fontWeight: '900', letterSpacing: 1.2 },
+  header: { marginTop: spacing.lg, marginBottom: spacing.lg },
+  kicker: { fontWeight: '900', letterSpacing: 1.4, fontSize: 11 },
+  title: { marginTop: 7, fontSize: 40, lineHeight: 44, fontWeight: '900', letterSpacing: -1.7 },
+  players: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  note: { marginTop: 16, padding: 16 },
+  noteTitle: { fontWeight: '900' },
+  noteCopy: { marginTop: 6, lineHeight: 20 },
   bottom: { marginTop: 'auto', paddingTop: 18 },
 });
