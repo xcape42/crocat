@@ -222,8 +222,8 @@ export default function OnlineDrawScreen() {
   const promptTerm = round?.id === params.roundId ? round.prompt_term : null;
   const partLabel = getPromptPartLabel(round, role);
   const displayPartLabel = role === 'HEAD'
-    ? `Oberer Teil: ${partLabel}`
-    : `Unterer Teil: ${partLabel}`;
+    ? (partLabel === 'Oberer Teil' ? 'Oberer Teil' : `Oberer Teil: ${partLabel}`)
+    : (partLabel === 'Unterer Teil' ? 'Unterer Teil' : `Unterer Teil: ${partLabel}`);
   const guideMode = getPromptGuideMode(round);
 
   const leaveModal = (
