@@ -18,7 +18,7 @@ import {
 } from '@/src/features/artworks/api';
 import type { SavedArtwork } from '@/src/features/artworks/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
-import { colors, spacing } from '@/src/theme/tokens';
+import { colors, radius, spacing } from '@/src/theme/tokens';
 
 function partnerName(artwork: SavedArtwork) {
   if (artwork.partner_user_id === artwork.head_profile.userId) {
