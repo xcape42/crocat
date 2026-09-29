@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.5 — Mobile-stable Adjustment dragging
+
+- Restore the stable PanResponder lifecycle from Crocat's original mobile touch-drag implementation
+- Stop rebuilding the Adjustment PanResponder whenever HEAD or BODY transform state changes during a drag
+- Keep current geometry and transforms in refs so Local transformed-part hit testing remains accurate without destabilizing the active gesture
+- Remove synthetic-event preventDefault calls from PanResponder grant/move callbacks
+- Continue blocking browser gesture takeover through the existing touchAction/WebKit artwork gesture lock
+- Keep Online Adjustment bound to the player's own interactiveRole across the entire 360 × 480 canvas
+- Preserve Crocat 1.8.4 source-space clipping, ±160 cross-seam movement, 20px default overlap and 3:4 final composition
+- Preserve Local Finalize transformed-part selection, zoom, Realtime transform sync, Ready, timers, Gallery and SVG export
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.8.5
+
+
 ## 1.8.4 — Cross-boundary Adjustment
 
 - Fix Adjustment clipping so BODY can move into the upper half and HEAD can move into the lower half of the 3:4 artwork

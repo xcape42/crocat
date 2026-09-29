@@ -2,7 +2,6 @@ import { useMemo, useRef, useState } from 'react';
 import {
   LayoutChangeEvent,
   PanResponder,
-  Platform,
   StyleSheet,
   Text,
   View,
@@ -98,6 +97,13 @@ export function DrawingPreview({
   const headClip = artworkClipRect('HEAD', geometry);
   const bodyClip = artworkClipRect('BODY', geometry);
   const layoutRef = useRef({ width: geometry.width, height: geometry.height });
+  const geometryRef = useRef(geometry);
+  const headTransformRef = useRef(headTransform);
+  const bodyTransformRef = useRef(bodyTransform);
+  geometryRef.current = geometry;
+  headTransformRef.current = headTransform;
+  bodyTransformRef.current = bodyTransform;
+
   const roleRef = useRef<GameRole | null>(null);
   const lastGestureRef = useRef({ x: 0, y: 0 });
   const [activeRole, setActiveRole] = useState<GameRole | null>(null);
@@ -109,26 +115,34 @@ export function DrawingPreview({
     onMoveShouldSetPanResponderCapture: () => interactive,
     onPanResponderGrant: (event) => {
       if (!interactive) return;
-      if (Platform.OS === 'web') event.preventDefault();
 
       let role: GameRole;
 
       if (interactiveRole) {
         role = interactiveRole;
       } else {
+        const activeGeometry = geometryRef.current;
         const virtualX =
-          (event.nativeEvent.locationX / layoutRef.current.width) * geometry.width;
+          (event.nativeEvent.locationX / layoutRef.current.width) * activeGeometry.width;
         const virtualY =
-          (event.nativeEvent.locationY / layoutRef.current.height) * geometry.height;
-        const headBounds = artworkPartBounds('HEAD', headTransform, geometry);
-        const bodyBounds = artworkPartBounds('BODY', bodyTransform, geometry);
+          (event.nativeEvent.locationY / layoutRef.current.height) * activeGeometry.height;
+        const headBounds = artworkPartBounds(
+          'HEAD',
+          headTransformRef.current,
+          activeGeometry,
+        );
+        const bodyBounds = artworkPartBounds(
+          'BODY',
+          bodyTransformRef.current,
+          activeGeometry,
+        );
 
         if (pointInside(virtualX, virtualY, headBounds)) {
           role = 'HEAD';
         } else if (pointInside(virtualX, virtualY, bodyBounds)) {
           role = 'BODY';
         } else {
-          role = virtualY < geometry.splitY ? 'HEAD' : 'BODY';
+          role = virtualY < activeGeometry.splitY ? 'HEAD' : 'BODY';
         }
       }
 
@@ -136,8 +150,7 @@ export function DrawingPreview({
       lastGestureRef.current = { x: 0, y: 0 };
       setActiveRole(role);
     },
-    onPanResponderMove: (event, gestureState) => {
-      if (Platform.OS === 'web') event.preventDefault();
+    onPanResponderMove: (_, gestureState) => {
       const role = roleRef.current;
       if (!interactive || !role || !onMovePart) return;
 
@@ -145,8 +158,9 @@ export function DrawingPreview({
       const deltaScreenY = gestureState.dy - lastGestureRef.current.y;
       lastGestureRef.current = { x: gestureState.dx, y: gestureState.dy };
 
-      const dx = (deltaScreenX / layoutRef.current.width) * geometry.width;
-      const dy = (deltaScreenY / layoutRef.current.height) * geometry.height;
+      const activeGeometry = geometryRef.current;
+      const dx = (deltaScreenX / layoutRef.current.width) * activeGeometry.width;
+      const dy = (deltaScreenY / layoutRef.current.height) * activeGeometry.height;
       onMovePart(role, dx, dy);
     },
     onPanResponderRelease: () => {
@@ -160,14 +174,7 @@ export function DrawingPreview({
       setActiveRole(null);
     },
     onPanResponderTerminationRequest: () => false,
-  }), [
-    bodyTransform,
-    geometry,
-    headTransform,
-    interactive,
-    interactiveRole,
-    onMovePart,
-  ]);
+  }), [interactive, interactiveRole, onMovePart]);
 
   const onFrameLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;

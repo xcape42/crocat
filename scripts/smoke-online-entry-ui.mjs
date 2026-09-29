@@ -264,6 +264,13 @@ assert(
     && drawingPreview.includes('<G clipPath={`url(#${clipId})`}>')
     && drawingPreview.includes('if (interactiveRole)')
     && drawingPreview.includes('role = interactiveRole')
+    && drawingPreview.includes('const geometryRef = useRef(geometry)')
+    && drawingPreview.includes('const headTransformRef = useRef(headTransform)')
+    && drawingPreview.includes('const bodyTransformRef = useRef(bodyTransform)')
+    && drawingPreview.includes('}), [interactive, interactiveRole, onMovePart]);')
+    && drawingPreview.includes('onPanResponderMove: (_, gestureState) =>')
+    && !drawingPreview.includes('event.preventDefault()')
+    && !drawingPreview.includes('Platform.OS')
     && drawingPreview.includes("pointInside(virtualX, virtualY, headBounds)")
     && drawingPreview.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
     && drawingPreview.includes('geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION')
@@ -355,4 +362,4 @@ assert(
   'Online lobby must keep exactly two equal slots side by side, compact safely on narrow screens and contain overflowing player/placeholder content without wrapping the slot row.',
 );
 
-console.log('Crocat 1.8.4 cross-boundary adjustment, fixed-pair lobby and UI contracts passed');
+console.log('Crocat 1.8.5 iOS-stable Adjustment, cross-boundary composition and UI contracts passed');
