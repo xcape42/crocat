@@ -174,6 +174,15 @@ assert(
 );
 
 assert(
+  drawingCanvas.includes("connectionGuideTop: { top: 40 }")
+    && drawingCanvas.includes("connectionGuideBottom: { bottom: 40 }")
+    && drawingCanvas.includes("role === 'BODY' ? styles.connectionZoneTop : styles.connectionZoneBottom")
+    && drawingCanvas.includes("? world.colors.primary")
+    && drawingCanvas.includes(": world.colors.secondary"),
+  'HEAD and BODY drawing connection zones must stay symmetric, subtle and World-aware.',
+);
+
+assert(
   phaseSync.includes('loadRoomPhaseSnapshot')
     && phaseSync.includes("window.addEventListener('focus'")
     && phaseSync.includes("window.addEventListener('online'")
@@ -227,4 +236,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.7.2 theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.7.3 drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
