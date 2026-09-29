@@ -456,6 +456,7 @@ export default function OnlineRoomScreen() {
               current={player.user_id === userId}
               action={removeAction}
               footer={relationship}
+              compact
             />
           );
         })}
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   codeRow: { marginTop: 6, alignItems: 'flex-start' },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
   joinNotice: { marginTop: 12, color: colors.ink, fontWeight: '900' },
-  players: { gap: 12 },
+  players: { flexDirection: 'row', gap: 10 },
   player: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 16, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink },
   playerIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   playerCopy: { flex: 1, minWidth: 0 },
@@ -599,7 +600,18 @@ const styles = StyleSheet.create({
   kickButtonText: { color: colors.muted, fontSize: 20, lineHeight: 21, fontWeight: '800' },
   online: { fontSize: 10, fontWeight: '900', color: colors.ink, opacity: 0.65 },
   ready: { marginTop: 5, fontSize: 11, fontWeight: '900', color: colors.ink },
-  waiting: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md },
+  waiting: {
+    flexGrow: 1,
+    flexBasis: 0,
+    minWidth: 0,
+    minHeight: 86,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.line,
+    padding: 12,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+  },
   waitingText: { color: colors.muted, textAlign: 'center', fontWeight: '700' },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
   lobbyNote: { textAlign: 'center', color: colors.muted, fontSize: 12 },
