@@ -60,6 +60,7 @@ export default function OnlineDrawScreen() {
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const hydratedRef = useRef(false);
   const deadlineBusyRef = useRef(false);
+  const lastClearedRef = useRef<CrocatDrawing | null>(null);
 
   const checkRoomState = useCallback(async () => {
     if (!params.roomId || !params.roundId) return;
@@ -210,10 +211,24 @@ export default function OnlineDrawScreen() {
     if (!busy) setLeaveConfirmOpen(true);
   };
 
-  const undo = () => setDrawing((current) => ({
-    ...current,
-    strokes: current.strokes.slice(0, -1),
-  }));
+  const undo = () => setDrawing((current) => {
+    if (current.strokes.length === 0 && lastClearedRef.current) {
+      const restored = lastClearedRef.current;
+      lastClearedRef.current = null;
+      return restored;
+    }
+
+    return {
+      ...current,
+      strokes: current.strokes.slice(0, -1),
+    };
+  });
+
+  const clear = () => setDrawing((current) => {
+    if (current.strokes.length === 0) return current;
+    lastClearedRef.current = current;
+    return { ...current, strokes: [] };
+  });
 
   const me = players.find((player) => player.user_id === userId);
   const playerName = me?.display_name ?? 'YOU';
@@ -332,7 +347,7 @@ export default function OnlineDrawScreen() {
           ))}
         </View>
         <Pressable onPress={undo}><Text style={styles.tool}>UNDO</Text></Pressable>
-        <Pressable onPress={() => setDrawing(blankDrawing())}><Text style={styles.tool}>CLEAR</Text></Pressable>
+        <Pressable onPress={clear}><Text style={styles.tool}>CLEAR</Text></Pressable>
       </View>
 
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
