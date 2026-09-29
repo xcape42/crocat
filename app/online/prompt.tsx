@@ -143,11 +143,19 @@ export default function OnlinePromptScreen() {
     if (!busy) setLeaveConfirmOpen(true);
   };
 
-  const remaining = useDeadlineCountdown(
-    round?.id === roundId ? round.prompt_selection_ends_at : null,
+  const timerWaiting =
+    round?.id === roundId
+    && round.phase_timer_started_at === null;
+  const promptDeadline =
+    round?.id === roundId && !timerWaiting
+      ? round.prompt_selection_ends_at
+      : null;
+  const countdownRemaining = useDeadlineCountdown(
+    promptDeadline,
     autoChoose,
     { clock: 'server' },
   );
+  const remaining = timerWaiting ? 15 : countdownRemaining;
 
   const me = players.find((player) => player.user_id === userId);
   const isHead = Boolean(userId && round?.head_player_id === userId);
