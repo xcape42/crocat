@@ -28,6 +28,7 @@ const profileOptions = read('src/features/profile/options.ts');
 const reveal = read('app/online/reveal.tsx');
 const prompt = read('app/online/prompt.tsx');
 const draw = read('app/online/draw.tsx');
+const localDraw = read('app/draw.tsx');
 const adjust = read('app/online/adjust.tsx');
 const phaseSync = read('src/hooks/useReliablePhaseSync.ts');
 const realtime = read('src/features/multiplayer/realtime.ts');
@@ -180,6 +181,17 @@ assert(
     && drawingCanvas.includes("? world.colors.primary")
     && drawingCanvas.includes(": world.colors.secondary"),
   'HEAD and BODY drawing connection zones must stay symmetric, subtle and World-aware.',
+);
+
+assert(
+  localDraw.includes('lastClearedRef')
+    && localDraw.includes('if (current.strokes.length === 0 && lastClearedRef.current)')
+    && localDraw.includes('lastClearedRef.current = current')
+    && draw.includes('lastClearedRef')
+    && draw.includes('if (current.strokes.length === 0 && lastClearedRef.current)')
+    && draw.includes('lastClearedRef.current = current')
+    && draw.includes('<Pressable onPress={clear}><Text style={styles.tool}>CLEAR</Text></Pressable>'),
+  'Local and online drawing CLEAR actions must be reversible through the existing UNDO control.',
 );
 
 assert(
