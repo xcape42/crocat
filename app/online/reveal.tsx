@@ -378,8 +378,7 @@ export default function OnlineRevealScreen() {
           {me?.ready ? 'NOT READY' : 'READY NEXT ROUND'}
         </CrocatButton>
       </View>
-
-      <CrocatButton variant="ghost" onPress={leave}>HOME / LEAVE ROOM</CrocatButton>
+      
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
   );
