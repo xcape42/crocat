@@ -203,6 +203,26 @@ assert(
 );
 
 assert(
+  !prompt.includes('LEAVE ROUND')
+    && !draw.includes('LEAVE ROUND')
+    && !adjust.includes('LEAVE ROUND')
+    && !reveal.includes('HOME / LEAVE ROOM'),
+  'Active online phases must use the shared top navigation as the single leave surface.',
+);
+
+assert(
+  prompt.indexOf('<CountdownBadge remaining={remaining} label="PICK" />')
+      < prompt.indexOf('<Mascot', prompt.indexOf('styles.headerActions'))
+    && draw.indexOf('<CountdownBadge remaining={remaining} />')
+      < draw.indexOf('<Mascot', draw.indexOf('styles.headerActions'))
+    && adjust.indexOf('<CountdownBadge remaining={secondsLeft} label="ADJUST" />')
+      < adjust.indexOf('<Mascot', adjust.indexOf('styles.headerActions'))
+    && reveal.indexOf('<CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />')
+      < reveal.indexOf('<View style={styles.mascotRow}>'),
+  'Online phase headers must place the countdown before the mascot presentation.',
+);
+
+assert(
   realtime.includes("if (status === 'SUBSCRIBED') {\n        onChange();")
     && phaseSync.includes('transient network loss'),
   'Adjustment reconnect must reconcile immediately while safety sync remains non-fatal.',
