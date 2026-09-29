@@ -218,6 +218,15 @@ export default function OnlinePromptScreen() {
         </View>
       </View>
 
+      {!isHead && (
+        <View style={styles.watchOnly}>
+          <Text style={styles.watchOnlyLabel}>WATCH ONLY</Text>
+          <Text style={styles.watchOnlyText}>
+            {headName} is choosing the prompt. You can follow the choice live, but only HEAD can interact.
+          </Text>
+        </View>
+      )}
+
       <View style={styles.options}>
         {options.map((option) => (
           <Pressable
@@ -235,7 +244,7 @@ export default function OnlinePromptScreen() {
             <Text style={styles.parts}>
               {(option.headLabel ?? 'HEAD').toUpperCase()} · {(option.bodyLabel ?? 'BODY').toUpperCase()}
             </Text>
-            <Text style={styles.action}>{isHead ? 'CHOOSE' : 'HEAD CAN CHOOSE'}</Text>
+            <Text style={styles.action}>{isHead ? 'CHOOSE' : 'WATCHING · HEAD CHOOSES'}</Text>
           </Pressable>
         ))}
       </View>
@@ -277,9 +286,33 @@ const styles = StyleSheet.create({
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 5, color: colors.ink, fontSize: 30, lineHeight: 33, fontWeight: '900', letterSpacing: -1.1 },
   copy: { marginTop: 6, color: colors.muted, fontSize: 12, lineHeight: 17 },
+  watchOnly: {
+    flexShrink: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.moss,
+  },
+  watchOnlyLabel: {
+    color: colors.coral,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+  },
+  watchOnlyText: {
+    marginTop: 3,
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   options: { flex: 1, minHeight: 0, justifyContent: 'center', gap: 10 },
   option: { padding: 18, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card },
-  optionReadonly: { borderColor: colors.line },
+  optionReadonly: { borderColor: colors.line, opacity: 0.78 },
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
