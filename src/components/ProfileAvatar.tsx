@@ -19,7 +19,7 @@ export function ProfileAvatar({
   showSymbol = false,
 }: Props) {
   const world = crocatWorld(profile.themeKey);
-  const faceSize = Math.max(11, Math.round(size * 0.21));
+  const faceSize = Math.max(8, Math.round(size * 0.21));
   const symbolSize = Math.max(10, Math.round(size * 0.22));
 
   return (
@@ -49,6 +49,7 @@ export function ProfileAvatar({
         ]}
       >
         <Text
+          numberOfLines={1}
           style={[
             styles.face,
             {
@@ -92,6 +93,7 @@ export function ProfileAvatar({
 
 const styles = StyleSheet.create({
   avatar: {
+    flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
