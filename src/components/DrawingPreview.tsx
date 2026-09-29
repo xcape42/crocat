@@ -18,6 +18,7 @@ import {
   LEGACY_ARTWORK_GEOMETRY_VERSION,
   artworkClipRect,
   artworkGeometryForVersion,
+  artworkPartBounds,
   artworkPartTransform,
   drawingPath,
 } from '@/src/features/artworks/geometry';
@@ -35,6 +36,17 @@ type Props = {
   onMovePart?: (role: GameRole, dx: number, dy: number) => void;
 };
 
+function pointInside(
+  x: number,
+  y: number,
+  rect: { x: number; y: number; width: number; height: number },
+) {
+  return x >= rect.x
+    && x <= rect.x + rect.width
+    && y >= rect.y
+    && y <= rect.y + rect.height;
+}
+
 function Part({
   drawing,
   transform,
@@ -51,8 +63,8 @@ function Part({
   if (!drawing) return null;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
-      <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+    <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+      <G clipPath={`url(#${clipId})`}>
         {drawing.strokes.map((stroke) => (
           <Path
             key={stroke.id}
@@ -99,16 +111,27 @@ export function DrawingPreview({
       if (!interactive) return;
       if (Platform.OS === 'web') event.preventDefault();
 
-      const touchedRole: GameRole =
-        event.nativeEvent.locationY < layoutRef.current.height / 2 ? 'HEAD' : 'BODY';
+      let role: GameRole;
 
-      if (interactiveRole && touchedRole !== interactiveRole) {
-        roleRef.current = null;
-        setActiveRole(null);
-        return;
+      if (interactiveRole) {
+        role = interactiveRole;
+      } else {
+        const virtualX =
+          (event.nativeEvent.locationX / layoutRef.current.width) * geometry.width;
+        const virtualY =
+          (event.nativeEvent.locationY / layoutRef.current.height) * geometry.height;
+        const headBounds = artworkPartBounds('HEAD', headTransform, geometry);
+        const bodyBounds = artworkPartBounds('BODY', bodyTransform, geometry);
+
+        if (pointInside(virtualX, virtualY, headBounds)) {
+          role = 'HEAD';
+        } else if (pointInside(virtualX, virtualY, bodyBounds)) {
+          role = 'BODY';
+        } else {
+          role = virtualY < geometry.splitY ? 'HEAD' : 'BODY';
+        }
       }
 
-      const role = interactiveRole ?? touchedRole;
       roleRef.current = role;
       lastGestureRef.current = { x: 0, y: 0 };
       setActiveRole(role);
@@ -137,7 +160,14 @@ export function DrawingPreview({
       setActiveRole(null);
     },
     onPanResponderTerminationRequest: () => false,
-  }), [geometry.height, geometry.width, interactive, interactiveRole, onMovePart]);
+  }), [
+    bodyTransform,
+    geometry,
+    headTransform,
+    interactive,
+    interactiveRole,
+    onMovePart,
+  ]);
 
   const onFrameLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;

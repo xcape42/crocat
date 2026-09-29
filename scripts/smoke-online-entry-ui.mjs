@@ -257,17 +257,24 @@ assert(
 
 assert(
   drawingPreview.includes('artworkClipRect')
-    && drawingPreview.includes('body-artwork-clip')
-    && drawingPreview.includes('head-artwork-clip')
+    && drawingPreview.includes('artworkPartBounds')
+    && drawingPreview.includes('<G transform={artworkPartTransform(transform, connectionY, geometry)}>')
+    && drawingPreview.includes('<G clipPath={`url(#${clipId})`}>')
+    && drawingPreview.includes('if (interactiveRole)')
+    && drawingPreview.includes('role = interactiveRole')
+    && drawingPreview.includes("pointInside(virtualX, virtualY, headBounds)")
     && drawingPreview.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
     && drawingPreview.includes('geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION')
-    && artworkThumbnail.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
-    && artworkExport.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
+    && artworkGeometry.includes('ARTWORK_MAX_OFFSET_Y = Math.round(ARTWORK_HEIGHT / 3)')
+    && artworkGeometry.includes('height: geometry.headConnectionY + halfOverlap')
+    && artworkGeometry.includes('const y = geometry.bodyConnectionY - halfOverlap')
+    && artworkThumbnail.includes('<G transform={artworkPartTransform(transform, connectionY, geometry)}>')
+    && artworkExport.includes("'<g transform="' +")
     && artworkExport.includes('? [head, body]')
     && artworkExport.includes(': [body, head]')
     && localGameStore.includes('clampArtworkTransform')
     && adjust.includes('clampArtworkTransform'),
-  'Current previews must clip to the compact connection zone, preserve legacy HEAD/BODY layering, use BODY/HEAD layering for v2 and share bounded Adjustment transforms in Local and Online.',
+  'Adjustment must clip each source drawing before transforming it, allow cross-seam movement, keep fixed-role drags attached to their own part and preserve HEAD-over-BODY layering for current artwork geometry.',
 );
 
 assert(
@@ -338,4 +345,4 @@ assert(
   'Online lobby must keep exactly two equal slots side by side, compact safely on narrow screens and contain overflowing player/placeholder content without wrapping the slot row.',
 );
 
-console.log('Crocat 1.8.3 fixed-pair online lobby, connection-zone status and UI contracts passed');
+console.log('Crocat 1.8.4 cross-boundary adjustment, fixed-pair lobby and UI contracts passed');

@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.8.4 — Cross-boundary Adjustment
+
+- Fix Adjustment clipping so BODY can move into the upper half and HEAD can move into the lower half of the 3:4 artwork
+- Keep the 360 × 380 Drawing Canvas, 360 × 480 final frame, connection anchors and 20px source overlap unchanged
+- Clip each drawing in its original source coordinate space before applying the final artwork transform
+- Expand the client vertical Adjustment range from ±40 to ±160 virtual artwork pixels
+- Keep server-side transform validation unchanged because its existing bounds already safely contain the new client range
+- Make fixed-role Online Adjustment drags control the player's own part regardless of which half of the preview it currently occupies
+- Improve Local Finalize hit selection by testing transformed HEAD/BODY bounds instead of relying only on the static 50/50 split
+- Resolve local overlap selection in favor of HEAD, matching the visual layer order
+- Keep current v2 composition deterministic with BODY rendered first and HEAD above it
+- Apply identical source-space clipping to preview, final reveal, Gallery thumbnails and SVG export
+- Preserve legacy v1 artwork geometry and legacy HEAD/BODY layer order
+- Preserve zoom-around-connection-anchor behavior, Realtime transform broadcast/persistence, Ready, timers and Reliable Phase Sync
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.8.4
+
+
 ## 1.8.3 — Fixed-pair online lobby layout
 
 - Keep both online lobby player positions side by side at all supported widths instead of wrapping them onto separate rows

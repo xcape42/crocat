@@ -52,7 +52,7 @@ export const DRAWING_CONNECTION_ZONE = DRAWING_HEIGHT - ARTWORK_HEAD_CONNECTION_
 export const ARTWORK_MIN_SCALE = 0.75;
 export const ARTWORK_MAX_SCALE = 1.3;
 export const ARTWORK_MAX_OFFSET_X = Math.round(ARTWORK_WIDTH / 3);
-export const ARTWORK_MAX_OFFSET_Y = ARTWORK_OVERLAP * 2;
+export const ARTWORK_MAX_OFFSET_Y = Math.round(ARTWORK_HEIGHT / 3);
 
 export function artworkGeometryForVersion(version?: number | null): ArtworkGeometry {
   return version === LEGACY_ARTWORK_GEOMETRY_VERSION
@@ -60,12 +60,18 @@ export function artworkGeometryForVersion(version?: number | null): ArtworkGeome
     : CURRENT_ARTWORK_GEOMETRY;
 }
 
+/**
+ * Returns the source-space slice of one 360×380 drawing that belongs to the
+ * composed artwork. The clip travels with the part transform, so Adjustment can
+ * move HEAD below the seam or BODY above it without revealing the discarded
+ * bleed area.
+ */
 export function artworkClipRect(
   role: GameRole,
   geometry: ArtworkGeometry = CURRENT_ARTWORK_GEOMETRY,
 ) {
   if (geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION) {
-    return { x: 0, y: 0, width: geometry.width, height: geometry.height };
+    return { x: 0, y: 0, width: DRAWING_WIDTH, height: DRAWING_HEIGHT };
   }
 
   const halfOverlap = geometry.overlap / 2;
@@ -74,17 +80,37 @@ export function artworkClipRect(
     return {
       x: 0,
       y: 0,
-      width: geometry.width,
-      height: geometry.splitY + halfOverlap,
+      width: DRAWING_WIDTH,
+      height: geometry.headConnectionY + halfOverlap,
     };
   }
 
-  const y = geometry.splitY - halfOverlap;
+  const y = geometry.bodyConnectionY - halfOverlap;
   return {
     x: 0,
     y,
-    width: geometry.width,
-    height: geometry.height - y,
+    width: DRAWING_WIDTH,
+    height: DRAWING_HEIGHT - y,
+  };
+}
+
+export function artworkPartBounds(
+  role: GameRole,
+  transform: PartTransform,
+  geometry: ArtworkGeometry = CURRENT_ARTWORK_GEOMETRY,
+) {
+  const clip = artworkClipRect(role, geometry);
+  const connectionY = role === 'HEAD'
+    ? geometry.headConnectionY
+    : geometry.bodyConnectionY;
+  const targetX = geometry.splitX + transform.x;
+  const targetY = geometry.splitY + transform.y;
+
+  return {
+    x: targetX + transform.scale * (clip.x - geometry.splitX),
+    y: targetY + transform.scale * (clip.y - connectionY),
+    width: clip.width * transform.scale,
+    height: clip.height * transform.scale,
   };
 }
 

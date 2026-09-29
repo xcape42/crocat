@@ -34,8 +34,8 @@ function ArtworkPart({
     : geometry.bodyConnectionY;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
-      <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+    <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+      <G clipPath={`url(#${clipId})`}>
         {drawing.strokes.map((stroke) => (
           <Path
             key={stroke.id}

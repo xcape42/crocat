@@ -2,7 +2,7 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.8.3
+## Stable version: 1.8.4
 
 Public app: https://xcape42.github.io/crocat/
 
@@ -34,6 +34,14 @@ During Adjustment each player can drag and zoom only their own part. Each player
 
 Pressing **Play Online** opens the explicit online entry screen again, where the player chooses **Create Room** or enters a six-character room code. The six-character room code remains shareable through the same direct-link flow; A direct `/online/room/CODE` link still atomically creates that exact missing room, rejoins an existing member even after the round has started, or joins an available waiting room. Full rooms, invalid codes, already-started rooms for outsiders, or link-resolution failures return to Play instead of leaving a broken room screen. The GitHub Pages build uses Expo Router's single-page web output plus a `404.html` app fallback, so copied room URLs can be opened directly and reloaded. Players can leave the room from Prompt Select, Drawing, Adjustment and Final Reveal. Prompt Select, Drawing and Adjustment ask for confirmation before the round is abandoned; Final Reveal exits directly. In the waiting lobby, either of the two equal room members can remove the other player through the small × action after confirming the removal. Timers are deadline-based, use one centered countdown presentation, and backgrounding the browser/app does not pause the game clock. Online countdowns calibrate against the Supabase server clock, so different device clocks cannot make two players see different remaining times. Realtime Presence also marks a backgrounded player inactive for the next-round gate. Active room membership sends a lightweight heartbeat every 20 seconds; a database cleanup job runs every minute and removes rooms only when no player has been seen for at least one minute, so brief connection drops do not immediately destroy a room.
 
+
+### Cross-boundary Adjustment
+
+Crocat 1.8.4 fixes Adjustment so each transformed drawing part can actually cross the 3:4 composition seam. The source drawing slice is clipped **before** its transform instead of clipping the final destination half, so BODY may move into the upper half and HEAD may move into the lower half without disappearing at the center line. The underlying Drawing Canvas remains 360 × 380, the final artwork remains 360 × 480 and the curated 20px source overlap is unchanged.
+
+The client vertical transform range is expanded to ±160 virtual artwork pixels. This is enough for deliberate cross-seam composition while keeping both parts recoverable inside the frame. Online Adjustment now treats every drag as belonging to the player's fixed HEAD/BODY role regardless of where that part has moved. Local Finalize uses transformed part bounds for hit selection and prefers HEAD when both parts overlap, matching the visual stacking order.
+
+Current v2 artwork rendering remains deterministic: BODY is rendered first and HEAD above it. Preview, Final Reveal, Gallery thumbnails and SVG export all apply the same source-space clipping and layering. Legacy v1 artwork keeps its existing geometry and legacy layer order.
 
 ### Fixed-pair online lobby slots
 
@@ -121,7 +129,7 @@ Then enable Anonymous Sign-Ins and apply the migrations in `supabase/migrations/
 
 ## Validation
 
-The 1.8.2 release validation includes:
+The 1.8.4 release validation includes:
 
 - dependency install
 - online-entry/social UX contract: Play has no friend strip, room-code regeneration is absent from current clients, room friends stay behind ALL FRIENDS, and personal symbols stay out of shared avatars

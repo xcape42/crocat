@@ -49,10 +49,10 @@ function partSvg(
     : geometry.bodyConnectionY;
   const clipId = role === 'HEAD' ? 'head-clip' : 'body-clip';
 
-  return '<g clip-path="url(#' + clipId + ')">' +
-    '<g transform="' +
+  return '<g transform="' +
     escapeXml(artworkPartTransform(transform, connectionY, geometry)) +
     '">' +
+    '<g clip-path="url(#' + clipId + ')">' +
     strokes.map(strokeSvg).join('') +
     '</g></g>';
 }
