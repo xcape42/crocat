@@ -104,14 +104,17 @@ export function DrawingCanvas({
           onLayout={onCanvasLayout}
           {...responder.panHandlers}
         >
-          {role === 'HEAD' && (
+          {role && (
             <View
               pointerEvents="none"
               style={[
                 styles.connectionZone,
+                role === 'BODY' ? styles.connectionZoneTop : styles.connectionZoneBottom,
                 {
                   height: (40 / VIRTUAL_HEIGHT) * height,
-                  backgroundColor: world.colors.secondary,
+                  backgroundColor: role === 'BODY'
+                    ? world.colors.primary
+                    : world.colors.secondary,
                 },
               ]}
             />
@@ -175,9 +178,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
     opacity: 0.08,
   },
+  connectionZoneTop: { top: 0 },
+  connectionZoneBottom: { bottom: 0 },
   connectionGuide: {
     position: 'absolute',
     left: 18,
@@ -187,6 +191,6 @@ const styles = StyleSheet.create({
     borderColor: colors.muted,
     opacity: 0.55,
   },
-  connectionGuideTop: { top: 20 },
+  connectionGuideTop: { top: 40 },
   connectionGuideBottom: { bottom: 40 },
 });
