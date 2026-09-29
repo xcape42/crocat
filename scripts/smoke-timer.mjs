@@ -92,8 +92,10 @@ async function assertSyncedCountdown(
   minSeconds,
   maxSeconds,
 ) {
-  const leftNow = await calibratedNow(leftClient, 120_000);
-  const rightNow = await calibratedNow(rightClient, -90_000);
+  const [leftNow, rightNow] = await Promise.all([
+    calibratedNow(leftClient, 120_000),
+    calibratedNow(rightClient, -90_000),
+  ]);
   const left = remainingSeconds(deadline, leftNow);
   const right = remainingSeconds(deadline, rightNow);
 
