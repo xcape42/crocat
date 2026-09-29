@@ -207,6 +207,7 @@ export default function OnlinePromptScreen() {
           </Text>
         </View>
         <View style={styles.headerActions}>
+          <CountdownBadge remaining={remaining} label="PICK" />
           {!!me?.profile && (
             <Mascot
               themeKey={me.profile.theme_key}
@@ -214,10 +215,6 @@ export default function OnlinePromptScreen() {
               size={44}
             />
           )}
-          <CountdownBadge remaining={remaining} label="PICK" />
-          <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
         </View>
       </View>
 
@@ -277,7 +274,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
   headerText: { flex: 1 },
   headerActions: { alignItems: 'center', gap: 6, flexShrink: 0 },
-  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 5, color: colors.ink, fontSize: 30, lineHeight: 33, fontWeight: '900', letterSpacing: -1.1 },
   copy: { marginTop: 6, color: colors.muted, fontSize: 12, lineHeight: 17 },
