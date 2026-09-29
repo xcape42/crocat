@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   podCompact: {
+    flexBasis: 0,
     minHeight: 86,
     padding: 9,
   },
