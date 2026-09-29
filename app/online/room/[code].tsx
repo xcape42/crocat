@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   kickButtonText: { color: colors.muted, fontSize: 20, lineHeight: 21, fontWeight: '800' },
   online: { fontSize: 10, fontWeight: '900', color: colors.ink, opacity: 0.65 },
   ready: { marginTop: 5, fontSize: 11, fontWeight: '900', color: colors.ink },
-  waiting: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md, flexShrink: unset },
+  waiting: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line, padding: 18, borderRadius: radius.md },
   waitingText: { color: colors.muted, textAlign: 'center', fontWeight: '700' },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
   lobbyNote: { textAlign: 'center', color: colors.muted, fontSize: 12 },
