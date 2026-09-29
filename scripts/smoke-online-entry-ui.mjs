@@ -41,6 +41,8 @@ const artworkApi = read('src/features/artworks/api.ts');
 const localGameStore = read('src/store/gameStore.ts');
 const localDraw = read('app/draw.tsx');
 const compactGeometryMigration = read('supabase/migrations/20260928213239_compact_artwork_geometry_1_8_0.sql');
+const onlineSmoke = read('scripts/smoke-online.mjs');
+const socialSmoke = read('scripts/smoke-social.mjs');
 
 assert(
   play.includes("router.push('/online')"),
@@ -273,8 +275,16 @@ assert(
     && artworkExport.includes('? [head, body]')
     && artworkExport.includes(': [body, head]')
     && localGameStore.includes('clampArtworkTransform')
-    && adjust.includes('clampArtworkTransform'),
-  'Adjustment must clip each source drawing before transforming it, allow cross-seam movement, keep fixed-role drags attached to their own part and preserve HEAD-over-BODY layering for current artwork geometry.',
+    && adjust.includes('clampArtworkTransform')
+    && realtime.includes("event: 'part_transform'")
+    && realtime.includes('onTransform(role, transform as PartTransform)')
+    && onlineSmoke.includes('y: 120')
+    && onlineSmoke.includes('y: -120')
+    && onlineSmoke.includes('Cross-seam Adjustment transforms were not persisted exactly')
+    && onlineSmoke.includes('Final Reveal did not preserve cross-seam Adjustment transforms')
+    && socialSmoke.includes('galleryHeadTransform')
+    && socialSmoke.includes('galleryBodyTransform'),
+  'Adjustment must clip each source drawing before transforming it, allow cross-seam movement, keep fixed-role Realtime drags attached to their own part and prove large transforms survive persistence, Reveal and Gallery saves.',
 );
 
 assert(

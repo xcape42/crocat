@@ -370,6 +370,23 @@ async function main() {
   });
   if (bodySubmit.error) throw bodySubmit.error;
 
+  const galleryHeadTransform = { x: -60, y: 120, scale: 1.1 };
+  const galleryBodyTransform = { x: 60, y: -120, scale: 0.9 };
+
+  const saveHeadTransform = await headClient.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'HEAD',
+    p_transform: galleryHeadTransform,
+  });
+  if (saveHeadTransform.error) throw saveHeadTransform.error;
+
+  const saveBodyTransform = await bodyClient.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'BODY',
+    p_transform: galleryBodyTransform,
+  });
+  if (saveBodyTransform.error) throw saveBodyTransform.error;
+
   for (const activeClient of [alpha, beta]) {
     const ready = await activeClient.rpc('set_ready', {
       p_room_id: betaRoom.room_id,
@@ -404,8 +421,14 @@ async function main() {
     || !artwork.title
     || artwork.favorite !== true
     || artwork.geometry_version !== 2
+    || artwork.head_transform?.x !== galleryHeadTransform.x
+    || artwork.head_transform?.y !== galleryHeadTransform.y
+    || artwork.head_transform?.scale !== galleryHeadTransform.scale
+    || artwork.body_transform?.x !== galleryBodyTransform.x
+    || artwork.body_transform?.y !== galleryBodyTransform.y
+    || artwork.body_transform?.scale !== galleryBodyTransform.scale
   ) {
-    throw new Error('Saved artwork metadata is incomplete');
+    throw new Error('Saved v2 artwork metadata or cross-seam transforms are incomplete');
   }
 
   const renamed = await alpha.rpc('rename_artwork', {
@@ -432,6 +455,8 @@ async function main() {
     betaSaved.id === artwork.id
     || betaSaved.partner_user_id !== alphaGuest.user.id
     || betaSaved.geometry_version !== 1
+    || betaSaved.head_transform?.y !== galleryHeadTransform.y
+    || betaSaved.body_transform?.y !== galleryBodyTransform.y
   ) {
     throw new Error('Second participant did not get an independent private artwork');
   }

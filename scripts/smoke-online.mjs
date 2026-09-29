@@ -510,12 +510,41 @@ async function main() {
     throw new Error('Final Reveal deadline was precomputed before Final Reveal started');
   }
 
+  const headTransformPayload = { x: 24, y: 120, scale: 1.05 };
+  const bodyTransformPayload = { x: -24, y: -120, scale: 0.95 };
+
   const headTransform = await head.rpc('save_transform', {
     p_round_id: round.id,
     p_role: 'HEAD',
-    p_transform: { x: 8, y: -3, scale: 1.05 },
+    p_transform: headTransformPayload,
   });
   if (headTransform.error) throw headTransform.error;
+
+  const bodyTransform = await body.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'BODY',
+    p_transform: bodyTransformPayload,
+  });
+  if (bodyTransform.error) throw bodyTransform.error;
+
+  const persistedCrossSeam = await domi
+    .from('submissions')
+    .select('role,transform')
+    .eq('round_id', round.id);
+  if (persistedCrossSeam.error) throw persistedCrossSeam.error;
+
+  const persistedHead = persistedCrossSeam.data.find((item) => item.role === 'HEAD');
+  const persistedBody = persistedCrossSeam.data.find((item) => item.role === 'BODY');
+  if (
+    persistedHead?.transform?.y !== headTransformPayload.y
+    || persistedHead?.transform?.x !== headTransformPayload.x
+    || persistedHead?.transform?.scale !== headTransformPayload.scale
+    || persistedBody?.transform?.y !== bodyTransformPayload.y
+    || persistedBody?.transform?.x !== bodyTransformPayload.x
+    || persistedBody?.transform?.scale !== bodyTransformPayload.scale
+  ) {
+    throw new Error('Cross-seam Adjustment transforms were not persisted exactly');
+  }
 
   const wrongTransform = await body.rpc('save_transform', {
     p_round_id: round.id,
@@ -562,6 +591,23 @@ async function main() {
     throw new Error('2/2 Adjustment Ready did not start Final Reveal');
   }
   assertFreshDeadline(twoReadyState.data.final_reveal_ends_at, 'Final Reveal deadline');
+
+  const revealTransforms = await domi
+    .from('submissions')
+    .select('role,transform')
+    .eq('round_id', round.id);
+  if (revealTransforms.error) throw revealTransforms.error;
+
+  const revealHead = revealTransforms.data.find((item) => item.role === 'HEAD');
+  const revealBody = revealTransforms.data.find((item) => item.role === 'BODY');
+  if (
+    revealHead?.transform?.y !== headTransformPayload.y
+    || revealHead?.transform?.x !== headTransformPayload.x
+    || revealBody?.transform?.y !== bodyTransformPayload.y
+    || revealBody?.transform?.x !== bodyTransformPayload.x
+  ) {
+    throw new Error('Final Reveal did not preserve cross-seam Adjustment transforms');
+  }
 
   const revealRoom = await domi
     .from('rooms')
