@@ -206,6 +206,24 @@ assert(
 );
 
 assert(
+  multiplayer.includes('enablePhaseTimerSync')
+    && multiplayer.includes('enterPhase')
+    && phaseSync.includes("enterPhase(round.id, 'prompt_select')")
+    && phaseSync.includes("enterPhase(round.id, 'drawing')")
+    && phaseSync.includes("enterPhase(round.id, 'adjusting')")
+    && phaseSync.includes("enterPhase(round.id, 'final_reveal')")
+    && prompt.includes('round.phase_timer_started_at === null')
+    && prompt.includes('timerWaiting ? 15 : countdownRemaining')
+    && draw.includes('round.phase_timer_started_at === null')
+    && draw.includes('timerWaiting ? configuredSeconds : countdownRemaining')
+    && adjust.includes('round.phase_timer_started_at === null')
+    && adjust.includes('timerWaiting ? 15 : countdownSeconds')
+    && reveal.includes('round.phase_timer_started_at === null')
+    && reveal.includes('timerWaiting ? 15 : countdownSeconds'),
+  'Online phase timers must stay at their full duration until both players have entered the phase.',
+);
+
+assert(
   room.includes('useReliablePhaseSync')
     && prompt.includes('useReliablePhaseSync')
     && draw.includes('useReliablePhaseSync')
