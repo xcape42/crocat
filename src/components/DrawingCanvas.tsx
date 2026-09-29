@@ -104,6 +104,19 @@ export function DrawingCanvas({
           onLayout={onCanvasLayout}
           {...responder.panHandlers}
         >
+          {role === 'HEAD' && (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.connectionZone,
+                {
+                  height: (40 / VIRTUAL_HEIGHT) * height,
+                  backgroundColor: world.colors.secondary,
+                },
+              ]}
+            />
+          )}
+
           <Svg
             pointerEvents="none"
             width="100%"
@@ -158,6 +171,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     overflow: 'hidden',
   },
+  connectionZone: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.08,
+  },
   connectionGuide: {
     position: 'absolute',
     left: 18,
@@ -168,5 +188,5 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   connectionGuideTop: { top: 20 },
-  connectionGuideBottom: { bottom: 20 },
+  connectionGuideBottom: { bottom: 40 },
 });

@@ -159,8 +159,8 @@ export function DrawingPreview({
             viewBox={`0 0 ${ARTWORK_WIDTH} ${ARTWORK_HEIGHT}`}
             preserveAspectRatio="none"
           >
-            <Part drawing={head} transform={headTransform} connectionY={ARTWORK_HEAD_CONNECTION_Y} />
             <Part drawing={body} transform={bodyTransform} connectionY={ARTWORK_BODY_CONNECTION_Y} />
+            <Part drawing={head} transform={headTransform} connectionY={ARTWORK_HEAD_CONNECTION_Y} />
           </Svg>
 
           {interactive && (

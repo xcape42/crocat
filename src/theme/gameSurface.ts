@@ -1,7 +1,7 @@
 export type GameSurfaceKind = 'drawing' | 'preview';
 
 export const DRAWING_SURFACE_ASPECT = 360 / 380;
-export const PREVIEW_SURFACE_ASPECT = 360 / 760;
+export const PREVIEW_SURFACE_ASPECT = 360 / 480;
 
 export function preferredGameSurfaceHeight(
   kind: GameSurfaceKind,

@@ -33,10 +33,10 @@ export function ArtworkThumbnail({ artwork, width = 126 }: Props) {
         fill={colors.card}
       />
       <G transform={artworkPartTransform(
-        artwork.head_transform,
-        ARTWORK_HEAD_CONNECTION_Y,
+        artwork.body_transform,
+        ARTWORK_BODY_CONNECTION_Y,
       )}>
-        {artwork.head_drawing.strokes.map((stroke) => (
+        {artwork.body_drawing.strokes.map((stroke) => (
           <Path
             key={stroke.id}
             d={drawingPath(stroke.points)}
@@ -50,10 +50,10 @@ export function ArtworkThumbnail({ artwork, width = 126 }: Props) {
         ))}
       </G>
       <G transform={artworkPartTransform(
-        artwork.body_transform,
-        ARTWORK_BODY_CONNECTION_Y,
+        artwork.head_transform,
+        ARTWORK_HEAD_CONNECTION_Y,
       )}>
-        {artwork.body_drawing.strokes.map((stroke) => (
+        {artwork.head_drawing.strokes.map((stroke) => (
           <Path
             key={stroke.id}
             d={drawingPath(stroke.points)}
