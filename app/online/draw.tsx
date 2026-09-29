@@ -252,13 +252,10 @@ export default function OnlineDrawScreen() {
             {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
           </View>
           <View style={styles.headerActions}>
+            <CountdownBadge remaining={remaining} />
             {!!me?.profile && (
               <Mascot themeKey={me.profile.theme_key} state="happy" size={42} />
             )}
-            <CountdownBadge remaining={remaining} />
-            <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
-              <Text style={styles.leave}>LEAVE ROUND</Text>
-            </Pressable>
           </View>
         </View>
 
@@ -291,6 +288,7 @@ export default function OnlineDrawScreen() {
           <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
         </View>
         <View style={styles.headerActions}>
+          <CountdownBadge remaining={remaining} />
           {!!me?.profile && (
             <Mascot
               themeKey={me.profile.theme_key}
@@ -298,10 +296,6 @@ export default function OnlineDrawScreen() {
               size={42}
             />
           )}
-          <CountdownBadge remaining={remaining} />
-          <Pressable accessibilityRole="button" disabled={busy} onPress={requestLeave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
         </View>
       </View>
 
@@ -357,7 +351,6 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
   waitingTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 },
   headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
-  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1.3, color: colors.muted },
   role: { fontSize: 29, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
   roleCompact: { fontSize: 25 },
