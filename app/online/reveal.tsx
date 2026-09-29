@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
   revealSide: { alignItems: 'flex-end', gap: 4 },
-  mascotRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  mascotRow: { flexDirection: 'row', alignItems: 'center', gap: 2, margin: 'auto' },
   promptReveal: { flexShrink: 0, alignItems: 'center' },
   promptTheme: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   promptTerm: { marginTop: 2, color: colors.ink, fontSize: 18, fontWeight: '900' },
