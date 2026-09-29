@@ -419,7 +419,22 @@ async function main() {
   }
   await body.removeChannel(promptChannel);
   if (!promptRealtimeSeen) {
-    throw new Error('BODY did not receive the prompt-to-drawing realtime update');
+    const promptFallback = await body
+      .from('game_rounds')
+      .select('status,prompt_term,prompt_theme')
+      .eq('id', round.id)
+      .single();
+    if (promptFallback.error) throw promptFallback.error;
+
+    if (
+      promptFallback.data.status !== 'drawing'
+      || promptFallback.data.prompt_term !== picked.term
+      || promptFallback.data.prompt_theme !== picked.theme
+    ) {
+      throw new Error(
+        'BODY received neither the prompt-to-drawing realtime update nor the authoritative fallback state',
+      );
+    }
   }
 
   const playerRows = await domi

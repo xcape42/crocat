@@ -36,6 +36,9 @@ export type OnlinePlayer = {
   ready: boolean;
   joined_at: string;
   last_seen_at: string;
+  phase_timer_sync_enabled?: boolean;
+  phase_round_id?: string | null;
+  phase_name?: 'prompt_select' | 'drawing' | 'adjusting' | 'final_reveal' | null;
   profile?: PlayerProfile;
 };
 
@@ -55,6 +58,7 @@ export type OnlineRound = {
   prompt_theme: string | null;
   prompt_selection_ends_at: string | null;
   prompt_reroll_used: boolean;
+  phase_timer_started_at?: string | null;
 };
 
 export type OnlineSubmission = {

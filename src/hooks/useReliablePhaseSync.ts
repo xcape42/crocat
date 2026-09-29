@@ -2,7 +2,11 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { AppState, Platform } from 'react-native';
 import type { GameRole } from '@/src/types/game';
-import { loadRoomPhaseSnapshot } from '@/src/features/multiplayer/room';
+import {
+  enablePhaseTimerSync,
+  enterPhase,
+  loadRoomPhaseSnapshot,
+} from '@/src/features/multiplayer/room';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 
 type OnlinePhaseScreen = 'lobby' | 'prompt' | 'drawing' | 'adjusting' | 'reveal';
@@ -51,6 +55,8 @@ export function useReliablePhaseSync({
 }: Options) {
   const router = useRouter();
   const inFlightRef = useRef(false);
+  const timerSyncEnabledRef = useRef(false);
+  const enteredPhaseRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!enabled || !roomId) return;
@@ -64,6 +70,15 @@ export function useReliablePhaseSync({
       inFlightRef.current = true;
 
       try {
+        if (!timerSyncEnabledRef.current) {
+          try {
+            await enablePhaseTimerSync(roomId);
+            timerSyncEnabledRef.current = true;
+          } catch {
+            // Backward-compatible during rollout; retry on the next reconcile.
+          }
+        }
+
         const state = await loadRoomPhaseSnapshot(roomId);
         if (cancelled) return;
 
@@ -81,6 +96,16 @@ export function useReliablePhaseSync({
               pathname: '/online/prompt',
               params: { roomId: room.id, roundId: round.id },
             });
+          } else {
+            const key = round.id + ':prompt_select';
+            if (enteredPhaseRef.current !== key) {
+              try {
+                await enterPhase(round.id, 'prompt_select');
+                enteredPhaseRef.current = key;
+              } catch {
+                // Retry through the reliable reconciliation loop.
+              }
+            }
           }
           return;
         }
@@ -100,6 +125,16 @@ export function useReliablePhaseSync({
                 endsAt: round.ends_at,
               },
             });
+          } else {
+            const key = round.id + ':drawing';
+            if (enteredPhaseRef.current !== key) {
+              try {
+                await enterPhase(round.id, 'drawing');
+                enteredPhaseRef.current = key;
+              } catch {
+                // Retry through the reliable reconciliation loop.
+              }
+            }
           }
           return;
         }
@@ -113,6 +148,16 @@ export function useReliablePhaseSync({
               pathname: '/online/adjust',
               params: { roomId: room.id, roundId: round.id, role },
             });
+          } else {
+            const key = round.id + ':adjusting';
+            if (enteredPhaseRef.current !== key) {
+              try {
+                await enterPhase(round.id, 'adjusting');
+                enteredPhaseRef.current = key;
+              } catch {
+                // Retry through the reliable reconciliation loop.
+              }
+            }
           }
           return;
         }
@@ -123,6 +168,16 @@ export function useReliablePhaseSync({
               pathname: '/online/reveal',
               params: { roomId: room.id, roundId: round.id },
             });
+          } else {
+            const key = round.id + ':final_reveal';
+            if (enteredPhaseRef.current !== key) {
+              try {
+                await enterPhase(round.id, 'final_reveal');
+                enteredPhaseRef.current = key;
+              } catch {
+                // Retry through the reliable reconciliation loop.
+              }
+            }
           }
         }
       } catch {

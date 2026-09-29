@@ -158,11 +158,20 @@ export default function OnlineDrawScreen() {
     }
   }, [checkRoomState, drawing, params.roundId, role]);
 
+  const timerWaiting =
+    round?.id === params.roundId
+    && round.phase_timer_started_at === null;
   const deadline =
     round?.id === params.roundId
       ? round.ends_at
       : params.endsAt;
-  const remaining = useDeadlineCountdown(deadline, deadlineFinish, { clock: 'server' });
+  const countdownRemaining = useDeadlineCountdown(
+    timerWaiting ? null : deadline,
+    deadlineFinish,
+    { clock: 'server' },
+  );
+  const configuredSeconds = Math.max(1, Number(params.seconds ?? 180));
+  const remaining = timerWaiting ? configuredSeconds : countdownRemaining;
 
   const submitCurrent = async () => {
     if (!params.roundId || busy || remaining <= 0) return;
