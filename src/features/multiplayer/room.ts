@@ -169,7 +169,33 @@ export async function loadRound(roundId: string): Promise<OnlineRound> {
   return data as OnlineRound;
 }
 
+export async function enablePhaseTimerSync(roomId: string) {
+  const { error } = await requireSupabase().rpc('enable_phase_timer_sync', {
+    p_room_id: roomId,
+  });
+  if (error) throw error;
+}
+
+export async function enterPhase(
+  roundId: string,
+  phase: 'prompt_select' | 'drawing' | 'adjusting' | 'final_reveal',
+): Promise<OnlineRound | null> {
+  const { data, error } = await requireSupabase().rpc('enter_phase', {
+    p_round_id: roundId,
+    p_phase: phase,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as OnlineRound | undefined) ?? null;
+}
+
 export async function setReady(roomId: string, ready: boolean) {
+  try {
+    await enablePhaseTimerSync(roomId);
+  } catch {
+    // Keep Ready compatible with a backend that has not received the timer-sync migration yet.
+  }
+
   const { error } = await requireSupabase().rpc('set_ready', {
     p_room_id: roomId,
     p_ready: ready,
