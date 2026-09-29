@@ -27,6 +27,31 @@ function first(data) {
   return Array.isArray(data) ? data[0] : data;
 }
 
+function assertWaiting(label, round) {
+  if (round.phase_timer_started_at !== null) {
+    throw new Error(label + ' timer started before both players entered the phase');
+  }
+}
+
+async function loadRound(supabase, roundId) {
+  const { data, error } = await supabase
+    .from('game_rounds')
+    .select('*')
+    .eq('id', roundId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function enterPhase(supabase, roundId, phase) {
+  const { data, error } = await supabase.rpc('enter_phase', {
+    p_round_id: roundId,
+    p_phase: phase,
+  });
+  if (error) throw error;
+  return first(data);
+}
+
 async function calibratedNow(supabase, artificialSkewMs) {
   const samples = [];
 
@@ -64,6 +89,8 @@ async function assertSyncedCountdown(
   deadline,
   leftClient,
   rightClient,
+  minSeconds,
+  maxSeconds,
 ) {
   const leftNow = await calibratedNow(leftClient, 120_000);
   const rightNow = await calibratedNow(rightClient, -90_000);
@@ -74,6 +101,18 @@ async function assertSyncedCountdown(
     throw new Error(
       label + ' countdown diverged after server-clock calibration: '
       + left + 's vs ' + right + 's',
+    );
+  }
+
+  if (
+    left < minSeconds
+    || left > maxSeconds
+    || right < minSeconds
+    || right > maxSeconds
+  ) {
+    throw new Error(
+      label + ' countdown did not begin in the expected window: '
+      + left + 's / ' + right + 's',
     );
   }
 
@@ -100,6 +139,11 @@ async function main() {
   if (joined.error) throw joined.error;
 
   for (const activeClient of [alpha, beta]) {
+    const timerSync = await activeClient.rpc('enable_phase_timer_sync', {
+      p_room_id: room.room_id,
+    });
+    if (timerSync.error) throw timerSync.error;
+
     const ready = await activeClient.rpc('set_ready', {
       p_room_id: room.room_id,
       p_ready: true,
@@ -112,24 +156,24 @@ async function main() {
   });
   if (started.error) throw started.error;
   const round = first(started.data);
+  assertWaiting('Prompt', round);
 
+  assertWaiting(
+    'Prompt after first entry',
+    await enterPhase(alpha, round.id, 'prompt_select'),
+  );
+  const promptStarted = await enterPhase(beta, round.id, 'prompt_select');
+  if (!promptStarted.phase_timer_started_at) {
+    throw new Error('Prompt timer did not start after the second player entered');
+  }
   const promptCountdown = await assertSyncedCountdown(
     'Prompt',
-    round.prompt_selection_ends_at,
+    promptStarted.prompt_selection_ends_at,
     alpha,
     beta,
+    12,
+    15,
   );
-
-  if (
-    promptCountdown.left < 12
-    || promptCountdown.left > 15
-    || promptCountdown.right < 12
-    || promptCountdown.right > 15
-  ) {
-    throw new Error(
-      'Prompt countdown did not begin near the server 15-second window',
-    );
-  }
 
   const headClient =
     round.head_player_id === alphaGuest.user.id ? alpha : beta;
@@ -140,23 +184,125 @@ async function main() {
   });
   if (selected.error) throw selected.error;
   const drawingRound = first(selected.data);
+  assertWaiting('Drawing', drawingRound);
 
+  assertWaiting(
+    'Drawing after first entry',
+    await enterPhase(alpha, round.id, 'drawing'),
+  );
+  const drawingStarted = await enterPhase(beta, round.id, 'drawing');
+  if (!drawingStarted.phase_timer_started_at) {
+    throw new Error('Drawing timer did not start after the second player entered');
+  }
   const drawingCountdown = await assertSyncedCountdown(
     'Drawing',
-    drawingRound.ends_at,
+    drawingStarted.ends_at,
     alpha,
     beta,
+    8,
+    10,
   );
 
+  const alphaRole =
+    round.head_player_id === alphaGuest.user.id ? 'HEAD' : 'BODY';
+  const betaRole = alphaRole === 'HEAD' ? 'BODY' : 'HEAD';
+
+  const alphaSubmit = await alpha.rpc('submit_drawing', {
+    p_round_id: round.id,
+    p_role: alphaRole,
+    p_drawing: { id: 'timer-alpha', strokes: [] },
+  });
+  if (alphaSubmit.error) throw alphaSubmit.error;
+
+  const betaSubmit = await beta.rpc('submit_drawing', {
+    p_round_id: round.id,
+    p_role: betaRole,
+    p_drawing: { id: 'timer-beta', strokes: [] },
+  });
+  if (betaSubmit.error) throw betaSubmit.error;
+
+  const adjustmentRound = await loadRound(alpha, round.id);
+  if (adjustmentRound.status !== 'adjusting') {
+    throw new Error('Timer smoke did not reach Adjustment');
+  }
+  assertWaiting('Adjustment', adjustmentRound);
+
+  assertWaiting(
+    'Adjustment after first entry',
+    await enterPhase(alpha, round.id, 'adjusting'),
+  );
+  const adjustmentStarted = await enterPhase(beta, round.id, 'adjusting');
+  if (!adjustmentStarted.phase_timer_started_at) {
+    throw new Error('Adjustment timer did not start after the second player entered');
+  }
+  const adjustmentCountdown = await assertSyncedCountdown(
+    'Adjustment',
+    adjustmentStarted.adjustment_ends_at,
+    alpha,
+    beta,
+    12,
+    15,
+  );
+
+  for (const activeClient of [alpha, beta]) {
+    const ready = await activeClient.rpc('set_ready', {
+      p_room_id: room.room_id,
+      p_ready: true,
+    });
+    if (ready.error) throw ready.error;
+  }
+
+  const revealAdvance = await alpha.rpc('advance_phase', {
+    p_room_id: room.room_id,
+  });
+  if (revealAdvance.error) throw revealAdvance.error;
+
+  const revealRound = await loadRound(alpha, round.id);
+  if (revealRound.status !== 'final_reveal') {
+    throw new Error('Timer smoke did not reach Final Reveal');
+  }
+  assertWaiting('Final Reveal', revealRound);
+
+  const roomBeforeRevealTimer = await alpha
+    .from('rooms')
+    .select('next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (roomBeforeRevealTimer.error) throw roomBeforeRevealTimer.error;
+  if (roomBeforeRevealTimer.data.next_round_at !== null) {
+    throw new Error('Next-round deadline started before both players entered Final Reveal');
+  }
+
+  assertWaiting(
+    'Final Reveal after first entry',
+    await enterPhase(alpha, round.id, 'final_reveal'),
+  );
+  const revealStarted = await enterPhase(beta, round.id, 'final_reveal');
+  if (!revealStarted.phase_timer_started_at) {
+    throw new Error('Final Reveal timer did not start after the second player entered');
+  }
+  const revealCountdown = await assertSyncedCountdown(
+    'Final Reveal',
+    revealStarted.final_reveal_ends_at,
+    alpha,
+    beta,
+    12,
+    15,
+  );
+
+  const revealRoom = await alpha
+    .from('rooms')
+    .select('next_round_at')
+    .eq('id', room.room_id)
+    .single();
+  if (revealRoom.error) throw revealRoom.error;
   if (
-    drawingCountdown.left < 8
-    || drawingCountdown.left > 10
-    || drawingCountdown.right < 8
-    || drawingCountdown.right > 10
+    Math.abs(
+      new Date(revealRoom.data.next_round_at).getTime()
+      - new Date(revealStarted.final_reveal_ends_at).getTime(),
+    ) > 100
   ) {
-    throw new Error(
-      'Drawing countdown did not begin near the configured 10-second window',
-    );
+    throw new Error('Final Reveal and next-round deadlines are not synchronized');
   }
 
   const betaLeave = await beta.rpc('leave_room', {
@@ -170,8 +316,13 @@ async function main() {
   if (alphaLeave.error) throw alphaLeave.error;
 
   console.log(
-    'Crocat 1.6.0 server-synced timer smoke passed',
-    { promptCountdown, drawingCountdown },
+    'Crocat synchronized phase-timer smoke passed',
+    {
+      promptCountdown,
+      drawingCountdown,
+      adjustmentCountdown,
+      revealCountdown,
+    },
   );
 }
 
