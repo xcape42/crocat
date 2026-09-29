@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
+import { Mascot } from '@/src/components/Mascot';
 import { PlayerPod } from '@/src/components/PlayerPod';
 import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
 import { Screen } from '@/src/components/Screen';
@@ -40,11 +41,13 @@ import type {
 } from '@/src/features/social/types';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code: string }>();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
   const {
     userId,
     room,
@@ -369,9 +372,18 @@ export default function OnlineRoomScreen() {
   return (
     <Screen backLabel="LEAVE" onBack={requestLeave} decorations="full">
       <View style={styles.header}>
-        <Text style={styles.kicker}>ONLINE LOBBY</Text>
-        <View style={styles.codeRow}>
-          <RoomCodeDisplay code={String(code)} />
+        <View style={styles.headerTop}>
+          <View style={styles.headerCopy}>
+            <Text style={styles.kicker}>ONLINE LOBBY</Text>
+            <View style={styles.codeRow}>
+              <RoomCodeDisplay code={String(code)} />
+            </View>
+          </View>
+          <Mascot
+            themeKey={themeKey}
+            state={players.length < requiredPlayers ? 'waiting' : 'happy'}
+            size={82}
+          />
         </View>
         <Text style={styles.copy}>Share the code or open All Friends to invite someone. Roles are randomized each round.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
@@ -529,6 +541,8 @@ export default function OnlineRoomScreen() {
 const styles = StyleSheet.create({
   back: { color: colors.muted, fontWeight: '800', letterSpacing: 1 },
   header: { marginTop: spacing.xl, marginBottom: spacing.lg },
+  headerTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerCopy: { flex: 1, minWidth: 0 },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.5, fontSize: 11 },
   codeRow: { marginTop: 6, alignItems: 'flex-start' },
   copy: { marginTop: 8, color: colors.muted, lineHeight: 21 },
