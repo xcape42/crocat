@@ -266,9 +266,19 @@ export default function OnlineAdjustScreen() {
     }
   }, [params.roomId, params.roundId, refresh, role]);
 
+  const timerWaiting =
+    round?.id === params.roundId
+    && round.phase_timer_started_at === null;
   const adjustmentDeadline =
-    round?.id === params.roundId ? round.adjustment_ends_at : null;
-  const secondsLeft = useDeadlineCountdown(adjustmentDeadline, finishAdjustment, { clock: 'server' });
+    round?.id === params.roundId && !timerWaiting
+      ? round.adjustment_ends_at
+      : null;
+  const countdownSeconds = useDeadlineCountdown(
+    adjustmentDeadline,
+    finishAdjustment,
+    { clock: 'server' },
+  );
+  const secondsLeft = timerWaiting ? 15 : countdownSeconds;
 
   const me = useMemo(
     () => players.find((player) => player.user_id === userId),
