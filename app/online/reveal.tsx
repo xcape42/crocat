@@ -320,6 +320,7 @@ export default function OnlineRevealScreen() {
           <Text style={[styles.title, compact && styles.titleCompact]}>This is your Crocat.</Text>
         </View>
         <View style={styles.revealSide}>
+          <CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />
           <View style={styles.mascotRow}>
             {players.map((player) => player.profile ? (
               <Mascot
@@ -330,7 +331,6 @@ export default function OnlineRevealScreen() {
               />
             ) : null)}
           </View>
-          <CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />
         </View>
       </View>
 
@@ -379,7 +379,6 @@ export default function OnlineRevealScreen() {
         </CrocatButton>
       </View>
 
-      <CrocatButton variant="ghost" onPress={leave}>HOME / LEAVE ROOM</CrocatButton>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </Screen>
   );
