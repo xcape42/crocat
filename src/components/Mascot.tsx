@@ -54,7 +54,7 @@ export function Mascot({
     ]).start();
   }, [animated, lift, reducedMotion, scale, state]);
 
-  const faceSize = Math.max(8, Math.round(size * 0.18));
+  const faceSize = Math.max(11, Math.round(size * 0.18));
   const accessorySize = Math.max(12, Math.round(size * 0.23));
 
   return (
@@ -91,7 +91,6 @@ export function Mascot({
         ]}
       >
         <Text
-          numberOfLines={1}
           style={[
             styles.face,
             { color: world.colors.text, fontSize: faceSize },

@@ -71,11 +71,11 @@ export function PlayerPod({
       ]}
     >
       <View style={styles.identity}>
-        <ProfileAvatar profile={profile} size={compact ? 44 : 54} />
+        <ProfileAvatar profile={profile} size={compact ? 40 : 54} />
         <Mascot
           themeKey={profile.themeKey}
           state={!online ? 'sleeping' : ready ? 'happy' : 'idle'}
-          size={compact ? 42 : 50}
+          size={compact ? 38 : 50}
         />
       </View>
 
@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
   },
   identity: {
     flexDirection: 'row',
+    flexWrap: 'nowrap',
     alignItems: 'center',
     gap: 6,
   },
