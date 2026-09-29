@@ -414,7 +414,10 @@ async function main() {
     throw new Error('Selected prompt lost its semantic split labels');
   }
 
-  for (let attempt = 0; attempt < 100 && !promptRealtimeSeen; attempt += 1) {
+  // Realtime is the fast path, but Crocat also has an authoritative
+  // server-state fallback. Do not burn the short Drawing window waiting
+  // for a transport-only signal before exercising that fallback.
+  for (let attempt = 0; attempt < 10 && !promptRealtimeSeen; attempt += 1) {
     await wait(100);
   }
   await body.removeChannel(promptChannel);
