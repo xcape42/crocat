@@ -331,13 +331,6 @@ export default function OnlineDrawScreen() {
       )}
 
       <View style={styles.metaRow}>
-        <View style={styles.hintWrap}>
-          <Text style={styles.hint}>
-            {role === 'HEAD'
-              ? `Draw: ${partLabel}. Connection line: bottom.`
-              : `Draw: ${partLabel}. Connection line: top.`}
-          </Text>
-        </View>
         {status}
       </View>
 
@@ -382,7 +375,7 @@ const styles = StyleSheet.create({
   promptWrap: { flexShrink: 0, flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   promptLabel: { color: colors.coral, fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   promptTerm: { color: colors.ink, fontSize: 20, fontWeight: '900' },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 7, flexShrink: 0 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 7, flexShrink: 0 },
   hintWrap: { backgroundColor: colors.moss, borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 6, flexShrink: 1 },
   hint: { color: colors.ink, fontWeight: '700', fontSize: 10 },
   status: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
