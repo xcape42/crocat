@@ -51,8 +51,12 @@ export const DRAWING_CONNECTION_ZONE = DRAWING_HEIGHT - ARTWORK_HEAD_CONNECTION_
 
 export const ARTWORK_MIN_SCALE = 0.75;
 export const ARTWORK_MAX_SCALE = 1.3;
-export const ARTWORK_MAX_OFFSET_X = Math.round(ARTWORK_WIDTH / 3);
-export const ARTWORK_MAX_OFFSET_Y = ARTWORK_OVERLAP * 2;
+export const ARTWORK_MIN_VISIBLE = 40;
+
+// The server intentionally keeps the original generous Adjustment envelope.
+// Client bounds stay inside it while ensuring each moved part remains recoverable.
+export const ARTWORK_SERVER_MAX_OFFSET_X = 360;
+export const ARTWORK_SERVER_MAX_OFFSET_Y = 760;
 
 export function artworkGeometryForVersion(version?: number | null): ArtworkGeometry {
   return version === LEGACY_ARTWORK_GEOMETRY_VERSION
@@ -60,12 +64,20 @@ export function artworkGeometryForVersion(version?: number | null): ArtworkGeome
     : CURRENT_ARTWORK_GEOMETRY;
 }
 
+/**
+ * Source-space crop for one drawing half.
+ *
+ * Crocat 1.8 keeps the full 360x380 drawing surface but uses only the source
+ * region around the semantic connection as the initial final composition.
+ * The crop is applied INSIDE the part transform so it travels with the part
+ * during Adjustment instead of pinning HEAD to the top and BODY to the bottom.
+ */
 export function artworkClipRect(
   role: GameRole,
   geometry: ArtworkGeometry = CURRENT_ARTWORK_GEOMETRY,
 ) {
   if (geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION) {
-    return { x: 0, y: 0, width: geometry.width, height: geometry.height };
+    return { x: 0, y: 0, width: DRAWING_WIDTH, height: DRAWING_HEIGHT };
   }
 
   const halfOverlap = geometry.overlap / 2;
@@ -74,25 +86,74 @@ export function artworkClipRect(
     return {
       x: 0,
       y: 0,
-      width: geometry.width,
-      height: geometry.splitY + halfOverlap,
+      width: DRAWING_WIDTH,
+      height: geometry.headConnectionY + halfOverlap,
     };
   }
 
-  const y = geometry.splitY - halfOverlap;
+  const y = geometry.bodyConnectionY - halfOverlap;
   return {
     x: 0,
     y,
-    width: geometry.width,
-    height: geometry.height - y,
+    width: DRAWING_WIDTH,
+    height: DRAWING_HEIGHT - y,
   };
 }
 
-export function clampArtworkTransform(transform: PartTransform): PartTransform {
+export function artworkTransformBounds(
+  role: GameRole,
+  scale: number,
+  geometry: ArtworkGeometry = CURRENT_ARTWORK_GEOMETRY,
+) {
+  const clip = artworkClipRect(role, geometry);
+  const connectionY = role === 'HEAD'
+    ? geometry.headConnectionY
+    : geometry.bodyConnectionY;
+
+  const leftAtZero =
+    geometry.splitX + scale * (clip.x - geometry.splitX);
+  const rightAtZero =
+    geometry.splitX + scale * (clip.x + clip.width - geometry.splitX);
+  const topAtZero =
+    geometry.splitY + scale * (clip.y - connectionY);
+  const bottomAtZero =
+    geometry.splitY + scale * (clip.y + clip.height - connectionY);
+
   return {
-    x: Math.max(-ARTWORK_MAX_OFFSET_X, Math.min(ARTWORK_MAX_OFFSET_X, transform.x)),
-    y: Math.max(-ARTWORK_MAX_OFFSET_Y, Math.min(ARTWORK_MAX_OFFSET_Y, transform.y)),
-    scale: Math.max(ARTWORK_MIN_SCALE, Math.min(ARTWORK_MAX_SCALE, transform.scale)),
+    minX: Math.max(
+      -ARTWORK_SERVER_MAX_OFFSET_X,
+      ARTWORK_MIN_VISIBLE - rightAtZero,
+    ),
+    maxX: Math.min(
+      ARTWORK_SERVER_MAX_OFFSET_X,
+      geometry.width - ARTWORK_MIN_VISIBLE - leftAtZero,
+    ),
+    minY: Math.max(
+      -ARTWORK_SERVER_MAX_OFFSET_Y,
+      ARTWORK_MIN_VISIBLE - bottomAtZero,
+    ),
+    maxY: Math.min(
+      ARTWORK_SERVER_MAX_OFFSET_Y,
+      geometry.height - ARTWORK_MIN_VISIBLE - topAtZero,
+    ),
+  };
+}
+
+export function clampArtworkTransform(
+  transform: PartTransform,
+  role: GameRole,
+  geometry: ArtworkGeometry = CURRENT_ARTWORK_GEOMETRY,
+): PartTransform {
+  const scale = Math.max(
+    ARTWORK_MIN_SCALE,
+    Math.min(ARTWORK_MAX_SCALE, transform.scale),
+  );
+  const bounds = artworkTransformBounds(role, scale, geometry);
+
+  return {
+    x: Math.max(bounds.minX, Math.min(bounds.maxX, transform.x)),
+    y: Math.max(bounds.minY, Math.min(bounds.maxY, transform.y)),
+    scale,
   };
 }
 

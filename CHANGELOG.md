@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.8.2 — Free cross-seam Adjustment
+
+- Restore the pre-1.8 incremental PanResponder drag model while keeping the 360 × 480 final canvas
+- Keep the 360 × 380 drawing surface, 3:4 final aspect, HEAD y=240 / BODY y=140 anchors and 20px default overlap unchanged
+- Move the v2 source crop inside each part transform so the cropped HEAD/BODY piece travels with the drawing instead of staying pinned to a fixed final half
+- Let Online Adjustment treat every drag on the artwork surface as movement of the current player's own role, even when the pointer starts across the original seam
+- Keep Local Split's original upper/lower hit selection because both parts are adjusted on the same device
+- Replace the restrictive ±40 vertical client clamp with role-aware recoverable bounds derived from canvas size, source crop, scale and a 40px minimum visible area
+- Allow HEAD to move deep into the lower final canvas and BODY deep into the upper final canvas
+- Preserve zoom range 0.75–1.30 and anchor-based scaling
+- Keep the existing server transform envelope unchanged at x ±360 / y ±760 because it already accepts the expanded client movement
+- Preserve Realtime transform broadcast, ownership, Ready, timers, Reliable Phase Sync and phase persistence
+- Render the same free transforms consistently in Adjustment, Reveal, Gallery thumbnails and SVG export
+- Preserve legacy v1 geometry/layer ordering and current v2 3:4 geometry
+- Extend smoke coverage with large positive HEAD and negative BODY cross-seam transforms
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.8.2
+
+
 ## 1.8.1 — Connection-zone drawing feedback
 
 - Keep all Crocat 1.8.0 geometry unchanged: 360 × 380 Drawing, 360 × 480 final, existing anchors, 20px overlap and geometry v1/v2

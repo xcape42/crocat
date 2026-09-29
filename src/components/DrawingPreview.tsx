@@ -51,8 +51,8 @@ function Part({
   if (!drawing) return null;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
-      <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+    <G transform={artworkPartTransform(transform, connectionY, geometry)}>
+      <G clipPath={`url(#${clipId})`}>
         {drawing.strokes.map((stroke) => (
           <Path
             key={stroke.id}
@@ -99,16 +99,12 @@ export function DrawingPreview({
       if (!interactive) return;
       if (Platform.OS === 'web') event.preventDefault();
 
-      const touchedRole: GameRole =
-        event.nativeEvent.locationY < layoutRef.current.height / 2 ? 'HEAD' : 'BODY';
+      // Online Adjustment already knows the owned role. Do not reject a drag
+      // merely because the finger started across the old HEAD/BODY seam.
+      const role: GameRole = interactiveRole ?? (
+        event.nativeEvent.locationY < layoutRef.current.height / 2 ? 'HEAD' : 'BODY'
+      );
 
-      if (interactiveRole && touchedRole !== interactiveRole) {
-        roleRef.current = null;
-        setActiveRole(null);
-        return;
-      }
-
-      const role = interactiveRole ?? touchedRole;
       roleRef.current = role;
       lastGestureRef.current = { x: 0, y: 0 };
       setActiveRole(role);
@@ -118,6 +114,8 @@ export function DrawingPreview({
       const role = roleRef.current;
       if (!interactive || !role || !onMovePart) return;
 
+      // Keep the pre-1.8 drag model: apply only the incremental screen delta
+      // and map that delta into the current virtual artwork size.
       const deltaScreenX = gestureState.dx - lastGestureRef.current.x;
       const deltaScreenY = gestureState.dy - lastGestureRef.current.y;
       lastGestureRef.current = { x: gestureState.dx, y: gestureState.dy };

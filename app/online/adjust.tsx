@@ -66,7 +66,7 @@ export default function OnlineAdjustScreen() {
   const advanceRef = useRef(false);
 
   const setTransformForRole = useCallback((targetRole: GameRole, transform: PartTransform) => {
-    const safe = clampArtworkTransform(transform);
+    const safe = clampArtworkTransform(transform, targetRole);
     if (targetRole === 'HEAD') setHeadTransform(safe);
     else setBodyTransform(safe);
   }, []);
@@ -217,7 +217,7 @@ export default function OnlineAdjustScreen() {
   }, [role]);
 
   const updateOwn = useCallback((transform: PartTransform) => {
-    const safe = clampArtworkTransform(transform);
+    const safe = clampArtworkTransform(transform, role);
     ownTransformRef.current = safe;
     setTransformForRole(role, safe);
     broadcastOwn(safe);

@@ -513,9 +513,33 @@ async function main() {
   const headTransform = await head.rpc('save_transform', {
     p_round_id: round.id,
     p_role: 'HEAD',
-    p_transform: { x: 8, y: -3, scale: 1.05 },
+    p_transform: { x: 120, y: 160, scale: 1.05 },
   });
   if (headTransform.error) throw headTransform.error;
+
+  const bodyTransform = await body.rpc('save_transform', {
+    p_round_id: round.id,
+    p_role: 'BODY',
+    p_transform: { x: -120, y: -160, scale: 0.95 },
+  });
+  if (bodyTransform.error) throw bodyTransform.error;
+
+  const persistedCrossSeam = await domi
+    .from('submissions')
+    .select('role,transform')
+    .eq('round_id', round.id);
+  if (persistedCrossSeam.error) throw persistedCrossSeam.error;
+
+  const persistedHead = persistedCrossSeam.data.find((item) => item.role === 'HEAD')?.transform;
+  const persistedBody = persistedCrossSeam.data.find((item) => item.role === 'BODY')?.transform;
+  if (
+    persistedHead?.x !== 120
+    || persistedHead?.y !== 160
+    || persistedBody?.x !== -120
+    || persistedBody?.y !== -160
+  ) {
+    throw new Error('Cross-seam Adjustment transforms were not persisted');
+  }
 
   const wrongTransform = await body.rpc('save_transform', {
     p_round_id: round.id,

@@ -49,10 +49,9 @@ function partSvg(
     : geometry.bodyConnectionY;
   const clipId = role === 'HEAD' ? 'head-clip' : 'body-clip';
 
-  return '<g clip-path="url(#' + clipId + ')">' +
-    '<g transform="' +
+  return '<g transform="' +
     escapeXml(artworkPartTransform(transform, connectionY, geometry)) +
-    '">' +
+    '"><g clip-path="url(#' + clipId + ')">' +
     strokes.map(strokeSvg).join('') +
     '</g></g>';
 }
@@ -80,7 +79,8 @@ export function renderArtworkSvg(artwork: SavedArtwork) {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + geometry.width +
       '" height="' + geometry.height +
-      '" viewBox="0 0 ' + geometry.width + ' ' + geometry.height + '">',
+      '" viewBox="0 0 ' + geometry.width + ' ' + geometry.height +
+      '" overflow="hidden">',
     '<defs>',
     clipSvg('BODY', geometry),
     clipSvg('HEAD', geometry),

@@ -65,7 +65,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       ...state[key],
       x: state[key].x + dx,
       y: state[key].y + dy,
-    });
+    }, role);
     return { [key]: next } as Partial<GameState>;
   }),
 
@@ -74,7 +74,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const next = clampArtworkTransform({
       ...state[key],
       scale: state[key].scale + delta,
-    });
+    }, role);
     return { [key]: next } as Partial<GameState>;
   }),
 

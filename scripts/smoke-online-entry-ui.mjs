@@ -259,15 +259,23 @@ assert(
   drawingPreview.includes('artworkClipRect')
     && drawingPreview.includes('body-artwork-clip')
     && drawingPreview.includes('head-artwork-clip')
-    && drawingPreview.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
-    && drawingPreview.includes('geometry.version === LEGACY_ARTWORK_GEOMETRY_VERSION')
-    && artworkThumbnail.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
-    && artworkExport.includes('LEGACY_ARTWORK_GEOMETRY_VERSION')
+    && drawingPreview.includes('<G transform={artworkPartTransform')
+    && drawingPreview.includes('<G clipPath={')
+    && drawingPreview.indexOf('<G transform={artworkPartTransform') < drawingPreview.indexOf('<G clipPath={')
+    && drawingPreview.includes('const role: GameRole = interactiveRole ??')
+    && !drawingPreview.includes('touchedRole !== interactiveRole')
+    && artworkGeometry.includes('export const ARTWORK_MIN_VISIBLE = 40')
+    && artworkGeometry.includes('artworkTransformBounds')
+    && artworkGeometry.includes('clampArtworkTransform(')
+    && artworkGeometry.includes('role: GameRole')
+    && artworkThumbnail.includes('<G transform={artworkPartTransform')
+    && artworkExport.includes("'<g transform=\"'")
     && artworkExport.includes('? [head, body]')
     && artworkExport.includes(': [body, head]')
-    && localGameStore.includes('clampArtworkTransform')
-    && adjust.includes('clampArtworkTransform'),
-  'Current previews must clip to the compact connection zone, preserve legacy HEAD/BODY layering, use BODY/HEAD layering for v2 and share bounded Adjustment transforms in Local and Online.',
+    && localGameStore.includes('}, role);')
+    && adjust.includes('clampArtworkTransform(transform, targetRole)')
+    && adjust.includes('clampArtworkTransform(transform, role)'),
+  'Adjustment must restore free pre-1.8 dragging: source-space clipping travels with each part, Online owns every drag across the seam, and Local/Online share role-aware recoverable bounds.',
 );
 
 assert(
@@ -320,4 +328,4 @@ assert(
   'Drawing screens must use semantic Oberer/Unterer Teil labels and avoid redundant technical hint copy for no-guide prompts.',
 );
 
-console.log('Crocat 1.8.1 connection-zone status, compact artwork, theme-bootstrap, phase-sync and UI contracts passed');
+console.log('Crocat 1.8.2 free Adjustment drag, connection-zone status and compact artwork contracts passed');
