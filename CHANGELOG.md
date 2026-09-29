@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.3 — Compact 3:4 composition and symmetric connection guides
+
+- Keep the original 360 × 380 drawing canvas, stroke coordinates and touch interaction unchanged
+- Compose the complete HEAD and BODY drawings into a 360 × 480 final artwork by increasing their visual overlap
+- Keep Adjustment drag, zoom, Realtime synchronization and transform persistence unchanged
+- Render HEAD after BODY so the upper drawing stays visually above the lower drawing in Adjustment, Reveal, thumbnails and SVG export
+- Move the HEAD bottom connection guide 20 px inward to 40 px and mirror BODY to 40 px from its top edge
+- Add subtle World-aware connection zones on both drawing halves: BODY uses the World primary tone and HEAD uses the World secondary tone
+- Keep both connection-zone tints deliberately light so they guide the seam without changing the drawing surface behavior
+- No Supabase migration or artwork wipe required
+- Align package, Expo and visible app versions to 1.7.3
+
+
 ## 1.7.2 — Flash-free World bootstrap
 
 - Fix the visible default/Moss flash before a user's persisted Crocat World is applied
