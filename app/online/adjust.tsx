@@ -350,6 +350,7 @@ export default function OnlineAdjustScreen() {
           <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
         </View>
         <View style={styles.headerActions}>
+          <CountdownBadge remaining={secondsLeft} label="ADJUST" />
           {!!me?.profile && (
             <Mascot
               themeKey={me.profile.theme_key}
@@ -357,10 +358,6 @@ export default function OnlineAdjustScreen() {
               size={40}
             />
           )}
-          <CountdownBadge remaining={secondsLeft} label="ADJUST" />
-          <Pressable accessibilityRole="button" disabled={readyBusy} onPress={requestLeave}>
-            <Text style={styles.leave}>LEAVE ROUND</Text>
-          </Pressable>
         </View>
       </View>
 
@@ -424,7 +421,6 @@ const styles = StyleSheet.create({
   },
   headerText: { flex: 1 },
   headerActions: { alignItems: 'center', gap: 5, flexShrink: 0 },
-  leave: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
   kicker: { color: colors.coral, fontWeight: '900', letterSpacing: 1.2, fontSize: 10 },
   title: { marginTop: 4, fontSize: 30, lineHeight: 33, fontWeight: '900', color: colors.ink, letterSpacing: -1.1 },
   titleCompact: { fontSize: 25, lineHeight: 28 },
