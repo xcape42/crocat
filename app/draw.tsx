@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
@@ -21,6 +21,7 @@ export default function DrawScreen() {
   const [color, setColor] = useState(colors.ink);
   const [submitted, setSubmitted] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const lastClearedRef = useRef<CrocatDrawing | null>(null);
 
   const finish = useCallback(() => {
     if (submitted) return;
@@ -34,8 +35,21 @@ export default function DrawScreen() {
     router.replace('/');
   };
 
-  const undo = () => setDrawing((current) => ({ ...current, strokes: current.strokes.slice(0, -1) }));
-  const clear = () => setDrawing((current) => ({ ...current, strokes: [] }));
+  const undo = () => setDrawing((current) => {
+    if (current.strokes.length === 0 && lastClearedRef.current) {
+      const restored = lastClearedRef.current;
+      lastClearedRef.current = null;
+      return restored;
+    }
+
+    return { ...current, strokes: current.strokes.slice(0, -1) };
+  });
+
+  const clear = () => setDrawing((current) => {
+    if (current.strokes.length === 0) return current;
+    lastClearedRef.current = current;
+    return { ...current, strokes: [] };
+  });
 
   return (
     <Screen
