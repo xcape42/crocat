@@ -269,7 +269,7 @@ assert(
     && artworkGeometry.includes('height: geometry.headConnectionY + halfOverlap')
     && artworkGeometry.includes('const y = geometry.bodyConnectionY - halfOverlap')
     && artworkThumbnail.includes('<G transform={artworkPartTransform(transform, connectionY, geometry)}>')
-    && artworkExport.includes("'<g transform="' +")
+    && artworkExport.includes('escapeXml(artworkPartTransform(transform, connectionY, geometry))')
     && artworkExport.includes('? [head, body]')
     && artworkExport.includes(': [body, head]')
     && localGameStore.includes('clampArtworkTransform')
