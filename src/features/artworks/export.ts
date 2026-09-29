@@ -49,14 +49,14 @@ export function renderArtworkSvg(artwork: SavedArtwork) {
       '" viewBox="0 0 ' + ARTWORK_WIDTH + ' ' + ARTWORK_HEIGHT + '">',
     '<rect width="100%" height="100%" fill="' + colors.card + '"/>',
     partSvg(
-      artwork.head_drawing.strokes,
-      artwork.head_transform,
-      ARTWORK_HEAD_CONNECTION_Y,
-    ),
-    partSvg(
       artwork.body_drawing.strokes,
       artwork.body_transform,
       ARTWORK_BODY_CONNECTION_Y,
+    ),
+    partSvg(
+      artwork.head_drawing.strokes,
+      artwork.head_transform,
+      ARTWORK_HEAD_CONNECTION_Y,
     ),
     '</svg>',
   ].join('');
