@@ -212,9 +212,19 @@ export default function OnlineRevealScreen() {
     };
   }, []);
 
+  const timerWaiting =
+    round?.id === roundId
+    && round.phase_timer_started_at === null;
   const revealDeadline =
-    round?.id === roundId ? round.final_reveal_ends_at : null;
-  const secondsLeft = useDeadlineCountdown(revealDeadline, tryAdvance, { clock: 'server' });
+    round?.id === roundId && !timerWaiting
+      ? round.final_reveal_ends_at
+      : null;
+  const countdownSeconds = useDeadlineCountdown(
+    revealDeadline,
+    tryAdvance,
+    { clock: 'server' },
+  );
+  const secondsLeft = timerWaiting ? 15 : countdownSeconds;
 
   const me = useMemo(
     () => players.find((player) => player.user_id === userId),
