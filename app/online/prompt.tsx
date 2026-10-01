@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   options: { flex: 1, minHeight: 0, justifyContent: 'center', gap: 10 },
   option: { padding: 18, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card },
-  optionReadonly: { borderColor: colors.line, opacity: 0.78, backgroundColor: 'transparent' },
+  optionReadonly: { border: 'none', opacity: 0.78, backgroundColor: 'transparent' },
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
