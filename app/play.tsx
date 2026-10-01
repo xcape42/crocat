@@ -20,7 +20,7 @@ export default function PlayScreen() {
           <Text style={[styles.kicker, { color: world.colors.accent }]}>PICK A WAY TO PLAY</Text>
           <Text style={[styles.title, { color: world.colors.text }]}>Choose your chaos.</Text>
           <Text style={[styles.copy, { color: world.colors.muted }]}>
-            Your world follows you. The game stays simple.
+            Find another Crocat in every way imaginable.
           </Text>
         </View>
         <Mascot themeKey={themeKey} state="happy" size={82} />
@@ -28,10 +28,10 @@ export default function PlayScreen() {
 
       <View style={styles.stack}>
         <CrocatCard variant="accent" style={styles.card}>
-          <Text style={[styles.badge, { color: world.colors.muted }]}>PRIMARY · ONLINE</Text>
+          <Text style={[styles.badge, { color: world.colors.muted }]}>ONLINE</Text>
           <Text style={[styles.mode, { color: world.colors.text }]}>Split Online</Text>
           <Text style={[styles.modeCopy, { color: world.colors.muted }]}>
-            Create a fresh room or enter a room code. Meet another Crocat world inside.
+            Create a fresh room or enter a room code. Meet another Crocat and create your own world.
           </Text>
           <View style={styles.metaRow}>
             <Text style={[styles.meta, { color: world.colors.muted, borderColor: world.colors.line }]}>2 DEVICES</Text>
