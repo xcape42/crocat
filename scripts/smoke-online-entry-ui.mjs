@@ -16,6 +16,9 @@ const avatar = read('src/components/ProfileAvatar.tsx');
 const profile = read('app/profile.tsx');
 const multiplayer = read('src/features/multiplayer/room.ts');
 const drawingCanvas = read('src/components/DrawingCanvas.tsx');
+const drawingToolbar = read('src/components/DrawingToolbar.tsx');
+const drawingTools = read('src/theme/drawingTools.ts');
+const gameTypes = read('src/types/game.ts');
 const drawingPreview = read('src/components/DrawingPreview.tsx');
 const interaction = read('src/theme/interaction.ts');
 const worlds = read('src/theme/worlds.ts');
@@ -187,11 +190,43 @@ assert(
   localDraw.includes('lastClearedRef')
     && localDraw.includes('if (current.strokes.length === 0 && lastClearedRef.current)')
     && localDraw.includes('lastClearedRef.current = current')
+    && localDraw.includes('onUndo={undo}')
+    && localDraw.includes('onClear={clear}')
     && draw.includes('lastClearedRef')
     && draw.includes('if (current.strokes.length === 0 && lastClearedRef.current)')
     && draw.includes('lastClearedRef.current = current')
-    && draw.includes('<Pressable onPress={clear}><Text style={styles.tool}>CLEAR</Text></Pressable>'),
-  'Local and online drawing CLEAR actions must be reversible through the existing UNDO control.',
+    && draw.includes('onUndo={undo}')
+    && draw.includes('onClear={clear}'),
+  'Local and online drawing CLEAR actions must be reversible through the shared toolbar UNDO control.',
+);
+
+assert(
+  drawingTools.includes("key: 'ink'")
+    && drawingTools.includes("key: 'coral'")
+    && drawingTools.includes("key: 'blue'")
+    && drawingTools.includes("key: 'green'")
+    && drawingTools.includes("key: 'yellow'")
+    && drawingTools.includes("key: 'violet'")
+    && drawingTools.includes("key: 'thin', label: 'Thin', width: 3")
+    && drawingTools.includes("key: 'normal', label: 'Normal', width: 6")
+    && drawingTools.includes("key: 'thick', label: 'Thick', width: 10")
+    && drawingToolbar.includes('DRAWING_PALETTE.map')
+    && drawingToolbar.includes('DRAWING_BRUSHES.map')
+    && localDraw.includes('brushWidth={brushWidth}')
+    && draw.includes('brushWidth={brushWidth}'),
+  'Local and online drawing must expose the same six-color palette and three brush widths.',
+);
+
+assert(
+  gameTypes.includes('color: string;')
+    && gameTypes.includes('width: number;')
+    && drawingCanvas.includes('color,')
+    && drawingCanvas.includes('width: brushWidth')
+    && drawingCanvas.includes('stroke={stroke.color}')
+    && drawingCanvas.includes('strokeWidth={stroke.width}')
+    && drawingPreview.includes('stroke={stroke.color}')
+    && drawingPreview.includes('strokeWidth={stroke.width}'),
+  'Color and brush width must remain stored and rendered per stroke through drawing, preview and reveal.',
 );
 
 assert(

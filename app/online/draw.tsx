@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
+import { DrawingToolbar } from '@/src/components/DrawingToolbar';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import {
@@ -19,11 +20,14 @@ import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/real
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import {
+  DEFAULT_DRAWING_BRUSH_WIDTH,
+  DEFAULT_DRAWING_COLOR,
+} from '@/src/theme/drawingTools';
 import { colors, radius } from '@/src/theme/tokens';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
-const palette = [colors.ink, '#DB5C46', '#477A91', '#6A8E3A'];
 
 const blankDrawing = (): CrocatDrawing => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -52,7 +56,8 @@ export default function OnlineDrawScreen() {
 
   const role: GameRole = params.role === 'BODY' ? 'BODY' : 'HEAD';
   const [drawing, setDrawing] = useState<CrocatDrawing>(blankDrawing);
-  const [color, setColor] = useState(colors.ink);
+  const [color, setColor] = useState(DEFAULT_DRAWING_COLOR);
+  const [brushWidth, setBrushWidth] = useState(DEFAULT_DRAWING_BRUSH_WIDTH);
   const [waiting, setWaiting] = useState(false);
   const [otherSubmitted, setOtherSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -335,22 +340,23 @@ export default function OnlineDrawScreen() {
       </View>
 
       <View style={styles.canvasArea}>
-        <DrawingCanvas role={role} drawing={drawing} onChange={setDrawing} color={color} />
+        <DrawingCanvas
+          role={role}
+          drawing={drawing}
+          onChange={setDrawing}
+          color={color}
+          brushWidth={brushWidth}
+        />
       </View>
 
-      <View style={styles.toolbar}>
-        <View style={styles.palette}>
-          {palette.map((item) => (
-            <Pressable
-              key={item}
-              onPress={() => setColor(item)}
-              style={[styles.swatch, { backgroundColor: item }, color === item && styles.swatchActive]}
-            />
-          ))}
-        </View>
-        <Pressable onPress={undo}><Text style={styles.tool}>UNDO</Text></Pressable>
-        <Pressable onPress={clear}><Text style={styles.tool}>CLEAR</Text></Pressable>
-      </View>
+      <DrawingToolbar
+        color={color}
+        brushWidth={brushWidth}
+        onColorChange={setColor}
+        onBrushWidthChange={setBrushWidth}
+        onUndo={undo}
+        onClear={clear}
+      />
 
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
         SUBMIT {partLabel.toUpperCase()}
@@ -382,11 +388,6 @@ const styles = StyleSheet.create({
   statusDone: { backgroundColor: colors.lime, borderColor: colors.ink },
   statusText: { color: colors.ink, fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
   canvasArea: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
-  toolbar: { minHeight: 44, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  palette: { flexDirection: 'row', gap: 7 },
-  swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: colors.paper },
-  swatchActive: { borderColor: colors.ink, transform: [{ scale: 1.08 }] },
-  tool: { fontSize: 11, fontWeight: '900', letterSpacing: 0.7, color: colors.muted },
   waiting: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   waitTitle: { fontSize: 38, lineHeight: 41, fontWeight: '900', letterSpacing: -1.4, color: colors.ink, textAlign: 'center' },
   waitTitleCompact: { fontSize: 32, lineHeight: 35 },
