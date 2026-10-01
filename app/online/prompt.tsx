@@ -226,16 +226,15 @@ export default function OnlinePromptScreen() {
         </View>
       </View>
 
-      {!isHead && (
-        <View style={styles.watchOnly}>
-          <Text style={styles.watchOnlyLabel}>WATCH ONLY</Text>
-          <Text style={styles.watchOnlyText}>
-            {headName} is choosing the prompt. You can follow the choice live, but only HEAD can interact.
-          </Text>
-        </View>
-      )}
-
       <View style={styles.options}>
+        {!isHead && (
+          <View style={styles.watchOnly}>
+            <Text style={styles.watchOnlyLabel}>WATCH ONLY</Text>
+            <Text style={styles.watchOnlyText}>
+              {headName} is choosing the prompt. You can follow the choice live, but only HEAD can interact.
+            </Text>
+          </View>
+        )}
         {options.map((option) => (
           <Pressable
             key={`${option.theme}-${option.term}`}
