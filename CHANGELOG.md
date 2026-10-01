@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.4 — World-aware mascot personalities and friendly idle motion
+
+- Keep the existing mascot design and World system intact while adding subtle personality differences
+- Give Moss a gentle sway, Moon a dreamy float and Candy a playful bounce using the existing Animated stack
+- Replace sad-looking waiting/nervous faces with warm, shy, curious, proud and excited expressions
+- Add occasional blink and side-glance moments with World-specific timing and no new animation dependency
+- Keep animation transform-only so mascot motion never shifts layout or overlaps interaction surfaces
+- Disable ambient motion and face moments when Reduced Motion is enabled
+- Use shy waiting in solo lobbies, excited when both players are ready, curious during prompt/adjustment and proud for ready players
+- Keep Reveal/celebrate as the strongest positive reaction
+- No Supabase migration required
+- Align package, Expo and visible app versions to 1.7.4
+
 ## 1.7.3 — Compact 3:4 composition and symmetric connection guides
 
 - Keep the original 360 × 380 drawing canvas, stroke coordinates and touch interaction unchanged
