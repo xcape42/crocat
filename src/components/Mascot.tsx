@@ -153,7 +153,12 @@ export function Mascot({
       nextTimer = setTimeout(() => {
         if (cancelled) return;
 
-        const moment = sequence[Math.floor(Math.random() * sequence.length)] ?? 'blink';
+        const moments =
+          state === 'idle'
+            ? sequence
+            : sequence.filter((moment) => moment !== 'blink');
+        const moment =
+          moments[Math.floor(Math.random() * moments.length)] ?? 'left';
         setFaceMoment(moment);
 
         resetTimer = setTimeout(() => {
@@ -239,9 +244,10 @@ export function Mascot({
     ],
   });
 
-  const face = faceMoment === 'blink'
-    ? BLINK_FACE
-    : world.mascot.faces[state];
+  const face =
+    state === 'idle' && faceMoment === 'blink'
+      ? BLINK_FACE
+      : world.mascot.faces[state];
 
   return (
     <Animated.View

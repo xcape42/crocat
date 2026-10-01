@@ -170,8 +170,11 @@ assert(
     && mascot.includes('transform: [{ translateX: faceShift }]')
     && mascot.includes("faceMoment === 'left'")
     && mascot.includes("faceMoment === 'right'")
+    && mascot.includes("state === 'idle'")
+    && mascot.includes("sequence.filter((moment) => moment !== 'blink')")
+    && mascot.includes("state === 'idle' && faceMoment === 'blink'")
     && !worlds.includes('expressions: {'),
-  'Each Crocat World must drive lightweight idle behavior while sharing one blink and moving the whole face for gaze.',
+  'Each Crocat World must share one idle-only blink while emotional faces can only shift left or right for gaze.',
 );
 
 assert(
