@@ -2,9 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.7.3
+## Stable version: 1.7.4
 
 Public app: https://xcape42.github.io/crocat/
+
+Crocat 1.7.4 gives each Crocat World a distinct mascot personality without changing the established mascot design: Moss stays gentle and shy, Moon feels dreamy and floaty, and Candy is a little more playful and bouncy. Friendly states replace sad-looking waiting expressions, while subtle transform-only idle motion, occasional blinks and side glances respect Reduced Motion and never affect layout or touch interaction.
 
 Crocat 1.6.6 replaces the Home screen ASCII mascot with a real local image asset. The sample mascot lives at `assets/images/crocat-home-example.png`, so future artwork can be swapped in without changing the Home screen component. The existing responsive circular hero treatment remains intact across mobile and web.
 

@@ -364,7 +364,7 @@ export default function OnlineAdjustScreen() {
           {!!me?.profile && (
             <Mascot
               themeKey={me.profile.theme_key}
-              state={secondsLeft <= 5 ? 'nervous' : (me.ready ? 'happy' : 'idle')}
+              state={secondsLeft <= 5 ? 'nervous' : (me.ready ? 'proud' : 'curious')}
               size={40}
             />
           )}

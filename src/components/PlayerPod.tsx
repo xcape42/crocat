@@ -74,7 +74,7 @@ export function PlayerPod({
         <ProfileAvatar profile={profile} size={compact ? 40 : 54} />
         <Mascot
           themeKey={profile.themeKey}
-          state={!online ? 'sleeping' : ready ? 'happy' : 'idle'}
+          state={!online ? 'sleeping' : ready ? 'proud' : 'idle'}
           size={compact ? 38 : 50}
         />
       </View>

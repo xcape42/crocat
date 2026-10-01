@@ -381,7 +381,7 @@ export default function OnlineRoomScreen() {
           </View>
           <Mascot
             themeKey={themeKey}
-            state={players.length < requiredPlayers ? 'waiting' : 'happy'}
+            state={players.length < requiredPlayers ? 'shy' : (allReady ? 'excited' : 'happy')}
             size={82}
           />
         </View>

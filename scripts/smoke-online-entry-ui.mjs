@@ -149,9 +149,36 @@ assert(
   screen.includes('DecorationLayer')
     && mascot.includes("type MascotState")
     && decoration.includes("pointerEvents=\"none\"")
+    && mascot.includes('pointerEvents="none"')
     && reducedMotion.includes('isReduceMotionEnabled')
     && reducedMotion.includes('reduceMotionChanged'),
   'World decoration and mascot motion must be shared, non-interactive and Reduced-Motion aware.',
+);
+
+assert(
+  worlds.includes("personality: 'gentle'")
+    && worlds.includes("personality: 'dreamy'")
+    && worlds.includes("personality: 'playful'")
+    && worlds.includes("style: 'sway'")
+    && worlds.includes("style: 'float'")
+    && worlds.includes("style: 'bounce'")
+    && mascot.includes('AMBIENT_STATES')
+    && mascot.includes('IDLE_FACE_STATES')
+    && mascot.includes('Math.random()')
+    && mascot.includes('world.mascot.idle'),
+  'Each Crocat World must drive its own lightweight mascot personality and idle behavior.',
+);
+
+assert(
+  !worlds.includes('• ︵ •')
+    && !worlds.includes('◉﹏◉')
+    && !worlds.includes("'sad'")
+    && !worlds.includes("'angry'")
+    && room.includes("players.length < requiredPlayers ? 'shy' : (allReady ? 'excited' : 'happy')")
+    && prompt.includes("state={isHead ? 'curious' : 'waiting'}")
+    && adjust.includes("me.ready ? 'proud' : 'curious'")
+    && reveal.includes('state="celebrate"'),
+  'Mascot states must stay friendly: shy/curious while waiting, proud/excited when ready and celebratory on reveal.',
 );
 
 assert(
@@ -329,4 +356,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.7.3 drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.7.4 mascot-personality, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
