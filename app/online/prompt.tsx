@@ -219,7 +219,7 @@ export default function OnlinePromptScreen() {
           {!!me?.profile && (
             <Mascot
               themeKey={me.profile.theme_key}
-              state={isHead ? 'drawing' : 'waiting'}
+              state={isHead ? 'curious' : 'waiting'}
               size={44}
             />
           )}
