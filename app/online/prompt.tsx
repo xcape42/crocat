@@ -252,7 +252,6 @@ export default function OnlinePromptScreen() {
             <Text style={styles.parts}>
               {(option.headLabel ?? 'HEAD').toUpperCase()} · {(option.bodyLabel ?? 'BODY').toUpperCase()}
             </Text>
-            <Text style={styles.action}>{isHead ? 'CHOOSE' : 'WATCHING · HEAD CHOOSES'}</Text>
           </Pressable>
         ))}
       </View>
@@ -320,7 +319,7 @@ const styles = StyleSheet.create({
   },
   options: { flex: 1, minHeight: 0, justifyContent: 'center', gap: 10 },
   option: { padding: 18, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card },
-  optionReadonly: { borderColor: colors.line, opacity: 0.78 },
+  optionReadonly: { borderColor: colors.line, opacity: 0.78, backgroundColor: none },
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
