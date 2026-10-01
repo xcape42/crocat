@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   status: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   role: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   ready: { fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
-  footer: { marginTop: 2, alignSelf: center },
+  footer: { margin: 2 auto 0 },
   action: {
     position: 'absolute',
     right: 9,
