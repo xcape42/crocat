@@ -95,7 +95,7 @@ export function RoomSettingsPanel({
 }
 
 const styles = StyleSheet.create({
-  card: { gap: 14, padding: 16, marginTop: 12 },
+  card: { gap: 14, padding: 16, marginTop: 20 },
   header: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' },
   eyebrow: { fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   title: { marginTop: 3, fontSize: 18, fontWeight: '900' },
