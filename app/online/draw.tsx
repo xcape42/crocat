@@ -315,6 +315,12 @@ export default function OnlineDrawScreen() {
         <View>
           <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
           <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
+          {!!promptTerm && (
+            <View style={styles.promptWrap}>
+              <Text style={styles.promptLabel}>DRAW</Text>
+              <Text style={styles.promptTerm}>{promptTerm}</Text>
+            </View>
+          )}
         </View>
         <View style={styles.headerActions}>
           <CountdownBadge remaining={remaining} />
@@ -327,13 +333,6 @@ export default function OnlineDrawScreen() {
           )}
         </View>
       </View>
-
-      {!!promptTerm && (
-        <View style={styles.promptWrap}>
-          <Text style={styles.promptLabel}>DRAW</Text>
-          <Text style={styles.promptTerm}>{promptTerm}</Text>
-        </View>
-      )}
 
       <View style={styles.metaRow}>
         {status}
