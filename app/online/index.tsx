@@ -96,7 +96,7 @@ export default function OnlineEntryScreen() {
     <Screen backLabel="PLAY" decorations="full">
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT ONLINE · 1.7.3</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT ONLINE · 1.7.4</Text>
           <Text style={[styles.title, { color: world.colors.text }]}>Bring your little world.</Text>
           <Text style={[styles.copy, { color: world.colors.muted }]}>
             Create a room or enter a code. When another player arrives, both worlds meet in the lobby.
