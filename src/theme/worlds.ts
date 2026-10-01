@@ -3,11 +3,19 @@ import type { CrocatWorldKey, ProfileThemeKey } from '@/src/features/profile/typ
 export type MascotState =
   | 'idle'
   | 'happy'
+  | 'shy'
+  | 'curious'
   | 'waiting'
   | 'drawing'
   | 'nervous'
+  | 'excited'
+  | 'proud'
   | 'celebrate'
   | 'sleeping';
+
+export type MascotPersonality = 'gentle' | 'dreamy' | 'playful';
+export type MascotIdleStyle = 'sway' | 'float' | 'bounce';
+export type MascotIdleExpression = 'blink' | 'left' | 'right';
 
 export type CrocatWorld = {
   key: CrocatWorldKey;
@@ -42,7 +50,16 @@ export type CrocatWorld = {
     fill: string;
     secondary: string;
     accessory: string;
+    personality: MascotPersonality;
     faces: Record<MascotState, string>;
+    idle: {
+      style: MascotIdleStyle;
+      expressionMinMs: number;
+      expressionMaxMs: number;
+      gazeMs: number;
+      sequence: readonly MascotIdleExpression[];
+      expressions: Record<MascotIdleExpression, string>;
+    };
   };
   motion: {
     ambientMs: number;
@@ -56,13 +73,24 @@ export type CrocatWorld = {
 
 const sharedFaces: Record<MascotState, string> = {
   idle: '• ᴗ •',
-  happy: '˶ᵔ ᵕ ᵔ˶',
-  waiting: '• ︵ •',
+  happy: 'ᵔ ᴗ ᵔ',
+  shy: '• ᴗ ◦',
+  curious: '• ᵕ ◉',
+  waiting: '◦ ᴗ •',
   drawing: '• ω •',
-  nervous: '◉﹏◉',
+  nervous: '◉ ᴗ ◉',
+  excited: '✦ ᴗ ✦',
+  proud: '˘ ᴗ ˘',
   celebrate: '★ ᴗ ★',
   sleeping: '− ᴗ −',
 };
+
+const worldFaces = (
+  overrides: Partial<Record<MascotState, string>> = {},
+): Record<MascotState, string> => ({
+  ...sharedFaces,
+  ...overrides,
+});
 
 export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
   moss: {
@@ -96,7 +124,20 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       fill: '#BBD68A',
       secondary: '#E5EECF',
       accessory: '❧',
-      faces: sharedFaces,
+      personality: 'gentle',
+      faces: worldFaces(),
+      idle: {
+        style: 'sway',
+        expressionMinMs: 5200,
+        expressionMaxMs: 8200,
+        gazeMs: 620,
+        sequence: ['blink', 'left', 'blink', 'right', 'blink'],
+        expressions: {
+          blink: '− ᴗ −',
+          left: '• ᴗ ◦',
+          right: '◦ ᴗ •',
+        },
+      },
     },
     motion: { ambientMs: 9000, floatDistance: 5, rotateDegrees: 2 },
     canvas: { cornerGlyphs: ['❧', '·'] },
@@ -132,7 +173,31 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       fill: '#C9C7F2',
       secondary: '#F4E9BE',
       accessory: '☾',
-      faces: sharedFaces,
+      personality: 'dreamy',
+      faces: worldFaces({
+        idle: '◌ ᴗ ◌',
+        happy: 'ᵔ ᵕ ᵔ',
+        shy: '◌ ᴗ •',
+        curious: '◌ ᵕ ◉',
+        waiting: '◌ ᴗ •',
+        drawing: '◌ ω ◌',
+        nervous: '◉ ᵕ ◉',
+        excited: '✦ ᵕ ✦',
+        proud: '˘ ᵕ ˘',
+        celebrate: '✦ ᴗ ✦',
+      }),
+      idle: {
+        style: 'float',
+        expressionMinMs: 6000,
+        expressionMaxMs: 9200,
+        gazeMs: 820,
+        sequence: ['left', 'blink', 'right', 'blink'],
+        expressions: {
+          blink: '˘ ᴗ ˘',
+          left: '◌ ᴗ •',
+          right: '• ᴗ ◌',
+        },
+      },
     },
     motion: { ambientMs: 10500, floatDistance: 6, rotateDegrees: 1.5 },
     canvas: { cornerGlyphs: ['✦', '☾'] },
@@ -168,7 +233,30 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       fill: '#FFB49E',
       secondary: '#FFD5A8',
       accessory: '✦',
-      faces: sharedFaces,
+      personality: 'playful',
+      faces: worldFaces({
+        idle: '• ω •',
+        happy: 'ᵔ ω ᵔ',
+        curious: '◉ ω •',
+        waiting: '◉ ᴗ •',
+        drawing: '• ω •',
+        nervous: '◉ ω ◉',
+        excited: '✦ ω ✦',
+        proud: '˘ ω ˘',
+        celebrate: '★ ω ★',
+      }),
+      idle: {
+        style: 'bounce',
+        expressionMinMs: 3800,
+        expressionMaxMs: 6500,
+        gazeMs: 460,
+        sequence: ['right', 'blink', 'left', 'right', 'blink'],
+        expressions: {
+          blink: '˘ ω ˘',
+          left: '◉ ᴗ •',
+          right: '• ᴗ ◉',
+        },
+      },
     },
     motion: { ambientMs: 7600, floatDistance: 4, rotateDegrees: 2.5 },
     canvas: { cornerGlyphs: ['●', '○'] },
