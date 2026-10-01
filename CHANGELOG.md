@@ -6,6 +6,7 @@
 - Give Moss a gentle sway, Moon a dreamy float and Candy a playful bounce using the existing Animated stack
 - Replace sad-looking waiting/nervous faces with warm, shy, curious, proud and excited expressions
 - Add occasional blink and side-glance moments with World-specific timing and no new animation dependency
+- Keep blinking visually consistent across Worlds and render side glances by smoothly shifting the complete face inside the blob
 - Keep animation transform-only so mascot motion never shifts layout or overlaps interaction surfaces
 - Disable ambient motion and face moments when Reduced Motion is enabled
 - Use shy waiting in solo lobbies, excited when both players are ready, curious during prompt/adjustment and proud for ready players

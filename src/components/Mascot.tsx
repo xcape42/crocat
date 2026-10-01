@@ -20,6 +20,8 @@ type Props = {
 
 type FaceMoment = 'base' | MascotIdleExpression;
 
+const BLINK_FACE = '− ᴗ −';
+
 const IDLE_FACE_STATES = new Set<MascotState>([
   'idle',
   'happy',
@@ -62,6 +64,7 @@ export function Mascot({
   const scale = useRef(new Animated.Value(1)).current;
   const lift = useRef(new Animated.Value(0)).current;
   const ambient = useRef(new Animated.Value(0)).current;
+  const faceShift = useRef(new Animated.Value(0)).current;
   const [faceMoment, setFaceMoment] = useState<FaceMoment>('base');
 
   useEffect(() => {
@@ -170,6 +173,35 @@ export function Mascot({
     };
   }, [animated, reducedMotion, state, world.key, world.mascot.idle]);
 
+
+  useEffect(() => {
+    faceShift.stopAnimation();
+
+    if (!animated || reducedMotion) {
+      faceShift.setValue(0);
+      return;
+    }
+
+    const gazeDistance = Math.max(1.5, size * 0.035);
+    const target =
+      faceMoment === 'left'
+        ? -gazeDistance
+        : faceMoment === 'right'
+          ? gazeDistance
+          : 0;
+
+    Animated.timing(faceShift, {
+      toValue: target,
+      duration: motion.fast,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+
+    return () => {
+      faceShift.stopAnimation();
+    };
+  }, [animated, faceMoment, faceShift, reducedMotion, size]);
+
   const faceSize = Math.max(11, Math.round(size * 0.18));
   const accessorySize = Math.max(12, Math.round(size * 0.23));
   const profile = idleMotion[world.mascot.idle.style];
@@ -207,10 +239,9 @@ export function Mascot({
     ],
   });
 
-  const face =
-    faceMoment === 'base'
-      ? world.mascot.faces[state]
-      : world.mascot.idle.expressions[faceMoment];
+  const face = faceMoment === 'blink'
+    ? BLINK_FACE
+    : world.mascot.faces[state];
 
   return (
     <Animated.View
@@ -256,15 +287,19 @@ export function Mascot({
           },
         ]}
       >
-        <Text
+        <Animated.Text
           numberOfLines={1}
           style={[
             styles.face,
-            { color: world.colors.text, fontSize: faceSize },
+            {
+              color: world.colors.text,
+              fontSize: faceSize,
+              transform: [{ translateX: faceShift }],
+            },
           ]}
         >
           {face}
-        </Text>
+        </Animated.Text>
       </View>
 
       <View

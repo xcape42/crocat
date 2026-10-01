@@ -58,7 +58,6 @@ export type CrocatWorld = {
       expressionMaxMs: number;
       gazeMs: number;
       sequence: readonly MascotIdleExpression[];
-      expressions: Record<MascotIdleExpression, string>;
     };
   };
   motion: {
@@ -132,11 +131,6 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
         expressionMaxMs: 8200,
         gazeMs: 620,
         sequence: ['blink', 'left', 'blink', 'right', 'blink'],
-        expressions: {
-          blink: '− ᴗ −',
-          left: '• ᴗ ◦',
-          right: '◦ ᴗ •',
-        },
       },
     },
     motion: { ambientMs: 9000, floatDistance: 5, rotateDegrees: 2 },
@@ -192,11 +186,6 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
         expressionMaxMs: 9200,
         gazeMs: 820,
         sequence: ['left', 'blink', 'right', 'blink'],
-        expressions: {
-          blink: '˘ ᴗ ˘',
-          left: '◌ ᴗ •',
-          right: '• ᴗ ◌',
-        },
       },
     },
     motion: { ambientMs: 10500, floatDistance: 6, rotateDegrees: 1.5 },
@@ -251,11 +240,6 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
         expressionMaxMs: 6500,
         gazeMs: 460,
         sequence: ['right', 'blink', 'left', 'right', 'blink'],
-        expressions: {
-          blink: '˘ ω ˘',
-          left: '◉ ᴗ •',
-          right: '• ᴗ ◉',
-        },
       },
     },
     motion: { ambientMs: 7600, floatDistance: 4, rotateDegrees: 2.5 },

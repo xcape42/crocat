@@ -165,8 +165,13 @@ assert(
     && mascot.includes('AMBIENT_STATES')
     && mascot.includes('IDLE_FACE_STATES')
     && mascot.includes('Math.random()')
-    && mascot.includes('world.mascot.idle'),
-  'Each Crocat World must drive its own lightweight mascot personality and idle behavior.',
+    && mascot.includes('world.mascot.idle')
+    && mascot.includes("const BLINK_FACE = '− ᴗ −'")
+    && mascot.includes('transform: [{ translateX: faceShift }]')
+    && mascot.includes("faceMoment === 'left'")
+    && mascot.includes("faceMoment === 'right'")
+    && !worlds.includes('expressions: {'),
+  'Each Crocat World must drive lightweight idle behavior while sharing one blink and moving the whole face for gaze.',
 );
 
 assert(
