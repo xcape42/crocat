@@ -1,5 +1,6 @@
 import type {
-  ProfileAvatarKey,
+  MascotCharacterKey,
+  MascotShapeKey,
   ProfileColorKey,
   ProfileSymbolKey,
   ProfileThemeKey,
@@ -11,7 +12,8 @@ export type FriendSummary = {
   display_name: string;
   friend_code: string;
   color_key: ProfileColorKey;
-  avatar_key: ProfileAvatarKey;
+  avatar_key: MascotShapeKey;
+  mascot_character_key: MascotCharacterKey;
   theme_key: ProfileThemeKey;
   symbol_key: ProfileSymbolKey;
   last_seen_at: string;
@@ -29,7 +31,8 @@ export type FriendRequestSummary = {
   display_name: string;
   friend_code: string;
   color_key: ProfileColorKey;
-  avatar_key: ProfileAvatarKey;
+  avatar_key: MascotShapeKey;
+  mascot_character_key: MascotCharacterKey;
   theme_key: ProfileThemeKey;
   symbol_key: ProfileSymbolKey;
   created_at: string;
@@ -42,7 +45,8 @@ export type LobbyInviteSummary = {
   room_code: string;
   display_name: string;
   color_key: ProfileColorKey;
-  avatar_key: ProfileAvatarKey;
+  avatar_key: MascotShapeKey;
+  mascot_character_key: MascotCharacterKey;
   theme_key: ProfileThemeKey;
   symbol_key: ProfileSymbolKey;
   created_at: string;
@@ -58,7 +62,8 @@ export type SocialRoomTicket = {
 export function socialProfileVisual(item: {
   display_name: string;
   color_key: ProfileColorKey;
-  avatar_key: ProfileAvatarKey;
+  avatar_key: MascotShapeKey;
+  mascot_character_key: MascotCharacterKey;
   theme_key: ProfileThemeKey;
   symbol_key: ProfileSymbolKey;
 }): ProfileVisual {
@@ -66,6 +71,7 @@ export function socialProfileVisual(item: {
     displayName: item.display_name,
     colorKey: item.color_key,
     avatarKey: item.avatar_key,
+    mascotCharacterKey: item.mascot_character_key,
     themeKey: item.theme_key,
     symbolKey: item.symbol_key,
   };
