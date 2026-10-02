@@ -6,6 +6,7 @@ import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Mascot } from '@/src/components/Mascot';
+import { profileToVisual } from '@/src/features/profile/types';
 import { Screen } from '@/src/components/Screen';
 import {
   advancePhase,
@@ -363,7 +364,7 @@ export default function OnlineAdjustScreen() {
           <CountdownBadge remaining={secondsLeft} label="ADJUST" />
           {!!me?.profile && (
             <Mascot
-              themeKey={me.profile.theme_key}
+              profile={profileToVisual(me.profile)}
               state={secondsLeft <= 5 ? 'nervous' : (me.ready ? 'proud' : 'curious')}
               size={40}
             />
