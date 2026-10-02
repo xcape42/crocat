@@ -12,6 +12,7 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import {
   listSavedArtworks,
   setArtworkFavorite,
@@ -37,6 +38,7 @@ export default function GalleryScreen() {
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
   const themeKey = useUiThemeStore((state) => state.themeKey);
+  const profile = useCurrentProfileVisual();
 
   const refresh = useCallback(async () => {
     try {
@@ -82,7 +84,7 @@ export default function GalleryScreen() {
         <ActivityIndicator style={{ marginTop: 70 }} color={colors.ink} />
       ) : !artworks.length ? (
         <CrocatCard variant="surface" style={styles.empty}>
-          <Mascot state="curious" size={82} />
+          <Mascot profile={profile ?? undefined} state="curious" size={82} />
           <Text style={styles.emptyTitle}>No weirdos saved yet.</Text>
           <Text style={styles.emptyCopy}>
             Star an online final reveal and it will appear here.
