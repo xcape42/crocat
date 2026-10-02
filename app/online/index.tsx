@@ -6,7 +6,7 @@ import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
-import type { PlayerProfile } from '@/src/features/profile/types';
+import { profileToVisual, type PlayerProfile } from '@/src/features/profile/types';
 import { createRoom, joinOrCreateRoom, loadRoomById } from '@/src/features/multiplayer/room';
 import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
@@ -103,6 +103,7 @@ export default function OnlineEntryScreen() {
           </Text>
         </View>
         <Mascot
+          profile={profile ? profileToVisual(profile) : undefined}
           state={busy ? 'happy' : 'idle'}
           size={88}
         />
