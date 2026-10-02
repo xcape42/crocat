@@ -46,7 +46,6 @@ jobs:
         run: npm run typecheck
 
       - name: Expo doctor
-        continue-on-error: true
         run: npm run doctor
 
       - name: Export web build
