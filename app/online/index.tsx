@@ -103,7 +103,6 @@ export default function OnlineEntryScreen() {
           </Text>
         </View>
         <Mascot
-          themeKey={themeKey}
           state={busy ? 'happy' : 'idle'}
           size={88}
         />
