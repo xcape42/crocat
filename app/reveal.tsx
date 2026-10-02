@@ -5,6 +5,7 @@ import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
@@ -13,6 +14,7 @@ export default function RevealScreen() {
   const router = useRouter();
   const setPhase = useGameStore((state) => state.setPhase);
   const themeKey = useUiThemeStore((state) => state.themeKey);
+  const profile = useCurrentProfileVisual();
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
   const leave = () => {
@@ -24,7 +26,7 @@ export default function RevealScreen() {
     <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)} decorations="full">
       <View style={styles.center}>
         <Text style={styles.kicker}>BOTH HALVES ARE IN</Text>
-        <View style={styles.mascot}><Mascot state="celebrate" size={112} /></View>
+        <View style={styles.mascot}><Mascot profile={profile ?? undefined} state="celebrate" size={112} /></View>
         <Text style={styles.title}>Meet your Crocat.</Text>
         <Text style={styles.copy}>No more secrets. Time for the reveal.</Text>
       </View>
