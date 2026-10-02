@@ -53,6 +53,7 @@ async function updateProfile(supabase, input) {
     p_avatar_key: input.avatar,
     p_theme_key: input.theme,
     p_symbol_key: input.symbol,
+    p_mascot_character_key: input.character,
   });
   if (result.error) throw result.error;
   return first(result.data);
@@ -88,14 +89,16 @@ async function main() {
     name: 'Alpha Fox',
     color: 'violet',
     avatar: 'ears',
-    theme: 'moon',
+    character: 'dreamy',
+    theme: 'halo',
     symbol: 'moon',
   });
   betaProfile = await updateProfile(beta, {
     name: 'Beta Bird',
     color: 'coral',
     avatar: 'spiky',
-    theme: 'candy',
+    character: 'playful',
+    theme: 'ember',
     symbol: 'spark',
   });
 
@@ -103,7 +106,8 @@ async function main() {
     alphaProfile.display_name !== 'Alpha Fox'
     || alphaProfile.color_key !== 'violet'
     || alphaProfile.avatar_key !== 'ears'
-    || alphaProfile.theme_key !== 'moon'
+    || alphaProfile.mascot_character_key !== 'dreamy'
+    || alphaProfile.theme_key !== 'halo'
     || alphaProfile.symbol_key !== 'moon'
   ) {
     throw new Error('Profile update did not persist all visual fields');
@@ -122,7 +126,8 @@ async function main() {
     reloadedProfile.user_id !== alphaGuest.user.id
     || reloadedProfile.display_name !== 'Alpha Fox'
     || reloadedProfile.friend_code !== alphaProfile.friend_code
-    || reloadedProfile.theme_key !== 'moon'
+    || reloadedProfile.mascot_character_key !== 'dreamy'
+    || reloadedProfile.theme_key !== 'halo'
   ) {
     throw new Error('Profile did not survive a fresh client/session reload');
   }
@@ -169,7 +174,8 @@ async function main() {
     acceptedFriend.friend_level !== 1
     || acceptedFriend.shared_rounds !== 0
     || acceptedFriend.friendship_label !== 'NEW FRIEND'
-    || acceptedFriend.theme_key !== 'candy'
+    || acceptedFriend.mascot_character_key !== 'playful'
+    || acceptedFriend.theme_key !== 'ember'
   ) {
     throw new Error('New friendship progress or World identity was not initialized correctly');
   }
