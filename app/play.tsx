@@ -4,6 +4,7 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
@@ -11,6 +12,7 @@ import { crocatWorld } from '@/src/theme/worlds';
 export default function PlayScreen() {
   const router = useRouter();
   const themeKey = useUiThemeStore((state) => state.themeKey);
+  const profile = useCurrentProfileVisual();
   const world = crocatWorld(themeKey);
 
   return (
@@ -23,7 +25,7 @@ export default function PlayScreen() {
             Find another Crocat in every way imaginable.
           </Text>
         </View>
-        <Mascot state="happy" size={82} />
+        <Mascot profile={profile ?? undefined} state="happy" size={82} />
       </View>
 
       <View style={styles.stack}>
