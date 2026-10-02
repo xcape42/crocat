@@ -2,8 +2,9 @@ import type { User } from '@supabase/supabase-js';
 import { ensureGuest } from '@/src/features/multiplayer/auth';
 import { requireSupabase } from '@/src/lib/supabase';
 import type {
+  MascotCharacterKey,
+  MascotShapeKey,
   PlayerProfile,
-  ProfileAvatarKey,
   ProfileColorKey,
   ProfileSymbolKey,
   ProfileThemeKey,
@@ -50,7 +51,8 @@ export async function loadCurrentProfile(): Promise<PlayerProfile> {
 export async function updateProfile(input: {
   displayName: string;
   colorKey: ProfileColorKey;
-  avatarKey: ProfileAvatarKey;
+  avatarKey: MascotShapeKey;
+  mascotCharacterKey: MascotCharacterKey;
   themeKey: ProfileThemeKey;
   symbolKey: ProfileSymbolKey;
 }): Promise<PlayerProfile> {
@@ -60,6 +62,7 @@ export async function updateProfile(input: {
     p_avatar_key: input.avatarKey,
     p_theme_key: input.themeKey,
     p_symbol_key: input.symbolKey,
+    p_mascot_character_key: input.mascotCharacterKey,
   });
   if (error) throw error;
   return one<PlayerProfile>(data);
