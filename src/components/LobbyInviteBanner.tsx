@@ -4,7 +4,6 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mascot } from '@/src/components/Mascot';
-import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
 import {
   acceptLobbyInvite,
@@ -90,8 +89,7 @@ export function LobbyInviteBanner() {
       ]}
     >
       <View style={styles.identity}>
-        <ProfileAvatar profile={socialProfileVisual(invite)} size={40} />
-        <Mascot themeKey={invite.theme_key} state="happy" size={36} />
+        <Mascot profile={socialProfileVisual(invite)} state="happy" size={44} />
       </View>
 
       <View style={styles.copy}>
@@ -147,7 +145,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
   },
-  identity: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  identity: { alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, minWidth: 0 },
   kicker: { fontSize: 8, fontWeight: '900', letterSpacing: 1 },
   name: { marginTop: 2, fontSize: 13, fontWeight: '900' },
