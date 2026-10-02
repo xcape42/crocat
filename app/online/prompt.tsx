@@ -6,6 +6,7 @@ import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CountdownBadge } from '@/src/components/CountdownBadge';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
+import { profileToVisual } from '@/src/features/profile/types';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
@@ -218,7 +219,7 @@ export default function OnlinePromptScreen() {
           <CountdownBadge remaining={remaining} label="PICK" />
           {!!me?.profile && (
             <Mascot
-              themeKey={me.profile.theme_key}
+              profile={profileToVisual(me.profile)}
               state={isHead ? 'curious' : 'waiting'}
               size={44}
             />
