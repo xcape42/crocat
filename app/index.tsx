@@ -36,10 +36,9 @@ export default function HomeScreen() {
 
         <MascotSlot compact={compact}>
           <Mascot
-            themeKey={themeKey}
             state="idle"
             size={compact ? 124 : 158}
-            accessibilityLabel={world.mascot.name + ' from ' + world.label}
+            accessibilityLabel={'Crocat mascot in ' + world.label}
           />
         </MascotSlot>
 
