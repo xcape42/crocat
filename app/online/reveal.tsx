@@ -12,6 +12,7 @@ import type { SavedArtwork } from '@/src/features/artworks/types';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Mascot } from '@/src/components/Mascot';
+import { profileToVisual } from '@/src/features/profile/types';
 import { Screen } from '@/src/components/Screen';
 import { currentUser } from '@/src/features/multiplayer/auth';
 import {
@@ -335,7 +336,7 @@ export default function OnlineRevealScreen() {
             {players.map((player) => player.profile ? (
               <Mascot
                 key={player.user_id}
-                themeKey={player.profile.theme_key}
+                profile={profileToVisual(player.profile)}
                 state="celebrate"
                 size={36}
               />

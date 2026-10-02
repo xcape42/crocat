@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Mascot } from '@/src/components/Mascot';
-import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import type { ProfileVisual } from '@/src/features/profile/types';
 import { useReducedMotion } from '@/src/hooks/useReducedMotion';
 import { motion } from '@/src/theme/motion';
@@ -71,11 +70,10 @@ export function PlayerPod({
       ]}
     >
       <View style={styles.identity}>
-        <ProfileAvatar profile={profile} size={compact ? 40 : 54} />
         <Mascot
-          themeKey={profile.themeKey}
+          profile={profile}
           state={!online ? 'sleeping' : ready ? 'proud' : 'idle'}
-          size={compact ? 38 : 50}
+          size={compact ? 48 : 58}
         />
       </View>
 

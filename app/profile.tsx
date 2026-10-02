@@ -8,15 +8,14 @@ import {
   View,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { useRouter } from 'expo-router';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
-import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { Screen } from '@/src/components/Screen';
 import {
-  PROFILE_AVATARS,
-  PROFILE_COLORS,
-  PROFILE_SYMBOLS,
+  MASCOT_CHARACTERS,
+  MASCOT_COLORS,
+  MASCOT_SHAPES,
+  MASCOT_SYMBOLS,
   PROFILE_THEMES,
 } from '@/src/features/profile/options';
 import {
@@ -24,38 +23,45 @@ import {
   updateProfile,
 } from '@/src/features/profile/api';
 import type {
+  CrocatWorldKey,
+  MascotCharacterKey,
+  MascotShapeKey,
   PlayerProfile,
-  ProfileAvatarKey,
   ProfileColorKey,
   ProfileSymbolKey,
-  CrocatWorldKey,
+  ProfileVisual,
 } from '@/src/features/profile/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { legacyMascotCharacterForTheme } from '@/src/theme/mascots';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { normalizeWorldKey } from '@/src/theme/worlds';
 
 export default function ProfileScreen() {
-  const router = useRouter();
   const uiThemeKey = useUiThemeStore((state) => state.themeKey);
+  const setUiThemeKey = useUiThemeStore((state) => state.setThemeKey);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [name, setName] = useState('');
   const [colorKey, setColorKey] = useState<ProfileColorKey>('moss');
-  const [avatarKey, setAvatarKey] = useState<ProfileAvatarKey>('round');
-  const [themeKey, setThemeKey] = useState<CrocatWorldKey>(uiThemeKey);
+  const [shapeKey, setShapeKey] = useState<MascotShapeKey>('round');
+  const [characterKey, setCharacterKey] = useState<MascotCharacterKey>('gentle');
   const [symbolKey, setSymbolKey] = useState<ProfileSymbolKey>('star');
+  const [themeKey, setThemeKey] = useState<CrocatWorldKey>(uiThemeKey);
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
-  const setUiThemeKey = useUiThemeStore((state) => state.setThemeKey);
 
   const apply = (next: PlayerProfile) => {
+    const normalizedWorld = normalizeWorldKey(next.theme_key);
     setProfile(next);
     setName(next.display_name);
     setColorKey(next.color_key);
-    setAvatarKey(next.avatar_key);
-    const normalizedWorld = normalizeWorldKey(next.theme_key);
-    setThemeKey(normalizedWorld);
+    setShapeKey(next.avatar_key);
+    setCharacterKey(
+      next.mascot_character_key
+      ?? legacyMascotCharacterForTheme(next.theme_key),
+    );
     setSymbolKey(next.symbol_key);
+    setThemeKey(normalizedWorld);
     setUiThemeKey(normalizedWorld);
   };
 
@@ -80,6 +86,15 @@ export default function ProfileScreen() {
     };
   }, []);
 
+  const preview: ProfileVisual = {
+    displayName: name || 'Crocat',
+    colorKey,
+    avatarKey: shapeKey,
+    mascotCharacterKey: characterKey,
+    themeKey,
+    symbolKey,
+  };
+
   const save = async () => {
     try {
       setBusy(true);
@@ -87,7 +102,8 @@ export default function ProfileScreen() {
       const next = await updateProfile({
         displayName: name,
         colorKey,
-        avatarKey,
+        avatarKey: shapeKey,
+        mascotCharacterKey: characterKey,
         themeKey,
         symbolKey,
       });
@@ -108,14 +124,6 @@ export default function ProfileScreen() {
     setTimeout(() => setNotice(''), 1800);
   };
 
-  const preview = {
-    displayName: name || 'Crocat',
-    colorKey,
-    avatarKey,
-    themeKey,
-    symbolKey,
-  };
-
   if (busy && !profile) {
     return (
       <Screen>
@@ -126,12 +134,8 @@ export default function ProfileScreen() {
 
   return (
     <Screen backLabel="HOME">
-
       <View style={styles.hero}>
-        <View style={styles.heroIdentity}>
-          <ProfileAvatar profile={preview} size={92} showSymbol />
-          <Mascot themeKey={themeKey} state="happy" size={76} />
-        </View>
+        <Mascot profile={preview} state="idle" size={112} />
         <View style={styles.heroText}>
           <Text style={styles.kicker}>YOUR CROCAT</Text>
           <Text style={styles.title}>{name || 'Profile'}</Text>
@@ -157,9 +161,9 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>COLOR · 1 OF 7</Text>
+        <Text style={styles.label}>MASCOT COLOR · 1 OF {MASCOT_COLORS.length}</Text>
         <View style={styles.options}>
-          {PROFILE_COLORS.map((item) => (
+          {MASCOT_COLORS.map((item) => (
             <Pressable
               key={item.key}
               accessibilityLabel={item.label}
@@ -175,15 +179,19 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>AVATAR · 1 OF 3</Text>
+        <Text style={styles.label}>MASCOT SHAPE · 1 OF {MASCOT_SHAPES.length}</Text>
         <View style={styles.options}>
-          {PROFILE_AVATARS.map((item) => (
+          {MASCOT_SHAPES.map((item) => (
             <Pressable
               key={item.key}
-              onPress={() => setAvatarKey(item.key)}
-              style={[styles.textOption, avatarKey === item.key && styles.selected]}
+              onPress={() => setShapeKey(item.key)}
+              style={[styles.textOption, shapeKey === item.key && styles.selected]}
             >
-              <Text style={styles.avatarFace}>{item.face}</Text>
+              <Mascot
+                profile={{ ...preview, avatarKey: item.key }}
+                animated={false}
+                size={54}
+              />
               <Text style={styles.optionLabel}>{item.label}</Text>
             </Pressable>
           ))}
@@ -191,8 +199,51 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>YOUR WORLD · 1 OF 3</Text>
-        <Text style={styles.themeHint}>Changes Crocat’s surfaces, accents and little background details.</Text>
+        <Text style={styles.label}>MASCOT CHARACTER · 1 OF {MASCOT_CHARACTERS.length}</Text>
+        <View style={styles.options}>
+          {MASCOT_CHARACTERS.map((item) => (
+            <Pressable
+              key={item.key}
+              onPress={() => setCharacterKey(item.key)}
+              style={[
+                styles.characterOption,
+                characterKey === item.key && styles.selected,
+              ]}
+            >
+              <Mascot
+                profile={{ ...preview, mascotCharacterKey: item.key }}
+                animated={false}
+                size={58}
+              />
+              <View style={styles.characterCopy}>
+                <Text style={styles.optionLabel}>{item.label}</Text>
+                <Text style={styles.characterDescription}>{item.description}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
+        <View style={styles.options}>
+          {MASCOT_SYMBOLS.map((item) => (
+            <Pressable
+              key={item.key}
+              onPress={() => setSymbolKey(item.key)}
+              style={[styles.symbolOption, symbolKey === item.key && styles.selected]}
+            >
+              <Text style={styles.symbol}>{item.glyph}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>YOUR WORLD · 1 OF {PROFILE_THEMES.length}</Text>
+        <Text style={styles.themeHint}>
+          Changes Crocat’s atmosphere, surfaces and background details — not your mascot.
+        </Text>
         <View style={styles.options}>
           {PROFILE_THEMES.map((item) => (
             <Pressable
@@ -209,7 +260,6 @@ export default function ProfileScreen() {
               ]}
             >
               <View style={styles.themePreviewTop}>
-                <Mascot themeKey={item.key} size={48} animated={false} />
                 <Text style={styles.themeName}>{item.label}</Text>
                 <View style={[styles.themeAccent, { backgroundColor: item.accent }]} />
               </View>
@@ -220,25 +270,11 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>SYMBOL · 1 OF 5</Text>
-        <View style={styles.options}>
-          {PROFILE_SYMBOLS.map((item) => (
-            <Pressable
-              key={item.key}
-              onPress={() => setSymbolKey(item.key)}
-              style={[styles.symbolOption, symbolKey === item.key && styles.selected]}
-            >
-              <Text style={styles.symbol}>{item.glyph}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
       <View style={styles.bottom}>
         <CrocatButton disabled={busy || name.trim().length < 2} onPress={save}>
           {busy ? 'SAVING…' : 'SAVE PROFILE'}
         </CrocatButton>
-  
+
         {!!notice && <Text style={styles.notice}>{notice}</Text>}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
@@ -247,7 +283,6 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  back: { color: colors.muted, fontWeight: '800', letterSpacing: 1 },
   hero: {
     marginTop: spacing.xl,
     flexDirection: 'row',
@@ -259,7 +294,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.card,
   },
-  heroIdentity: { alignItems: 'center', justifyContent: 'center', gap: 4 },
   heroText: { flex: 1, minWidth: 0 },
   kicker: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
   title: { marginTop: 4, fontSize: 34, fontWeight: '900', color: colors.ink, letterSpacing: -1 },
@@ -283,8 +317,8 @@ const styles = StyleSheet.create({
   colorOption: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line },
   textOption: {
     minWidth: 92,
-    minHeight: 68,
-    padding: 10,
+    minHeight: 92,
+    padding: 9,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -292,8 +326,33 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.card,
   },
-  avatarFace: { color: colors.ink, fontSize: 17, fontWeight: '900' },
-  optionLabel: { marginTop: 5, color: colors.ink, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  optionLabel: { color: colors.ink, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
+  characterOption: {
+    minWidth: 154,
+    flexGrow: 1,
+    minHeight: 86,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    backgroundColor: colors.card,
+  },
+  characterCopy: { flex: 1, minWidth: 0, gap: 3 },
+  characterDescription: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '700' },
+  symbolOption: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 24,
+    backgroundColor: colors.card,
+  },
+  symbol: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   themeHint: { color: colors.muted, fontSize: 11, lineHeight: 16 },
   themeOption: {
     minWidth: 150,
@@ -306,12 +365,12 @@ const styles = StyleSheet.create({
   themePreviewTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     gap: 9,
   },
   themeName: { color: colors.ink, fontSize: 11, fontWeight: '900', letterSpacing: 1 },
   themeAccent: {
-    width: 30,
+    width: 34,
     height: 14,
     borderRadius: radius.pill,
     borderWidth: 1,
@@ -331,18 +390,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-  symbolOption: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 24,
-    backgroundColor: colors.card,
-  },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
-  symbol: { color: colors.ink, fontSize: 20, fontWeight: '900' },
   selected: { borderWidth: 3, borderColor: colors.ink },
   notice: { marginTop: 10, textAlign: 'center', color: colors.ink, fontWeight: '900', fontSize: 11 },
   error: { marginTop: 10, textAlign: 'center', color: '#A74343', fontWeight: '700' },

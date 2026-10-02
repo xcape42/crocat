@@ -24,7 +24,7 @@ export default function RevealScreen() {
     <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)} decorations="full">
       <View style={styles.center}>
         <Text style={styles.kicker}>BOTH HALVES ARE IN</Text>
-        <View style={styles.mascot}><Mascot themeKey={themeKey} state="celebrate" size={112} /></View>
+        <View style={styles.mascot}><Mascot state="celebrate" size={112} /></View>
         <Text style={styles.title}>Meet your Crocat.</Text>
         <Text style={styles.copy}>No more secrets. Time for the reveal.</Text>
       </View>

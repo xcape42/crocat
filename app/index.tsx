@@ -19,7 +19,7 @@ export default function HomeScreen() {
   return (
     <Screen decorations="full">
       <View style={styles.topRow}>
-        <Text style={[styles.version, { color: world.colors.muted }]}>CROCAT 1.7.4</Text>
+        <Text style={[styles.version, { color: world.colors.muted }]}>CROCAT 1.8.0</Text>
         <Text style={[styles.dot, { color: world.colors.accent }]}>●</Text>
       </View>
 
@@ -36,10 +36,9 @@ export default function HomeScreen() {
 
         <MascotSlot compact={compact}>
           <Mascot
-            themeKey={themeKey}
             state="idle"
             size={compact ? 124 : 158}
-            accessibilityLabel={world.mascot.name + ' from ' + world.label}
+            accessibilityLabel={'Crocat mascot in ' + world.label}
           />
         </MascotSlot>
 

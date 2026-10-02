@@ -1,17 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import type { ProfileThemeKey } from '@/src/features/profile/types';
+import type {
+  MascotCharacterKey,
+  MascotShapeKey,
+  ProfileColorKey,
+  ProfileSymbolKey,
+} from '@/src/features/profile/types';
 import { useReducedMotion } from '@/src/hooks/useReducedMotion';
-import { motion } from '@/src/theme/motion';
 import {
-  crocatWorld,
+  mascotCharacter,
+  mascotColor,
+  mascotSymbol,
   type MascotIdleExpression,
   type MascotIdleStyle,
   type MascotState,
-} from '@/src/theme/worlds';
+} from '@/src/theme/mascots';
+import { motion } from '@/src/theme/motion';
+import { crocatPalette } from '@/src/theme/palette';
+
+type MascotProfile = {
+  displayName?: string;
+  colorKey?: ProfileColorKey;
+  avatarKey?: MascotShapeKey;
+  mascotCharacterKey?: MascotCharacterKey;
+  symbolKey?: ProfileSymbolKey;
+};
 
 type Props = {
-  themeKey?: ProfileThemeKey;
+  profile?: MascotProfile;
   state?: MascotState;
   size?: number;
   animated?: boolean;
@@ -52,15 +68,44 @@ const idleMotion: Record<
   bounce: { x: 0.65, y: 0.6, rotate: 1, breathe: 0.018 },
 };
 
+function shapeRadii(shape: MascotShapeKey, size: number) {
+  if (shape === 'ears') {
+    return {
+      borderTopLeftRadius: size * 0.46,
+      borderTopRightRadius: size * 0.32,
+      borderBottomLeftRadius: size * 0.36,
+      borderBottomRightRadius: size * 0.44,
+    };
+  }
+
+  if (shape === 'spiky') {
+    return {
+      borderTopLeftRadius: size * 0.29,
+      borderTopRightRadius: size * 0.46,
+      borderBottomLeftRadius: size * 0.43,
+      borderBottomRightRadius: size * 0.3,
+    };
+  }
+
+  return {
+    borderTopLeftRadius: size * 0.39,
+    borderTopRightRadius: size * 0.39,
+    borderBottomLeftRadius: size * 0.39,
+    borderBottomRightRadius: size * 0.39,
+  };
+}
+
 export function Mascot({
-  themeKey = 'moss',
+  profile,
   state = 'idle',
   size = 92,
   animated = true,
   accessibilityLabel,
 }: Props) {
-  const world = crocatWorld(themeKey);
   const reducedMotion = useReducedMotion();
+  const characterKey = profile?.mascotCharacterKey ?? 'gentle';
+  const character = mascotCharacter(characterKey);
+  const shape = profile?.avatarKey ?? 'round';
   const scale = useRef(new Animated.Value(1)).current;
   const lift = useRef(new Animated.Value(0)).current;
   const ambient = useRef(new Animated.Value(0)).current;
@@ -109,7 +154,7 @@ export function Mascot({
     const loop = Animated.loop(
       Animated.timing(ambient, {
         toValue: 1,
-        duration: world.motion.ambientMs,
+        duration: character.motion.ambientMs,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
@@ -124,10 +169,10 @@ export function Mascot({
   }, [
     ambient,
     animated,
+    character.key,
+    character.motion.ambientMs,
     reducedMotion,
     state,
-    world.key,
-    world.motion.ambientMs,
   ]);
 
   useEffect(() => {
@@ -145,7 +190,7 @@ export function Mascot({
         expressionMaxMs,
         gazeMs,
         sequence,
-      } = world.mascot.idle;
+      } = character.idle;
       const delay =
         expressionMinMs
         + Math.round(Math.random() * (expressionMaxMs - expressionMinMs));
@@ -176,8 +221,7 @@ export function Mascot({
       if (nextTimer) clearTimeout(nextTimer);
       if (resetTimer) clearTimeout(resetTimer);
     };
-  }, [animated, reducedMotion, state, world.key, world.mascot.idle]);
-
+  }, [animated, character.idle, character.key, reducedMotion, state]);
 
   useEffect(() => {
     faceShift.stopAnimation();
@@ -207,13 +251,13 @@ export function Mascot({
     };
   }, [animated, faceMoment, faceShift, reducedMotion, size]);
 
-  const faceSize = Math.max(11, Math.round(size * 0.18));
-  const accessorySize = Math.max(12, Math.round(size * 0.23));
-  const profile = idleMotion[world.mascot.idle.style];
-  const distance = world.motion.floatDistance * 0.55;
-  const horizontal = distance * profile.x;
-  const vertical = distance * profile.y;
-  const rotation = world.motion.rotateDegrees * profile.rotate * 0.5;
+  const faceSize = Math.max(9, Math.round(size * 0.18));
+  const accessorySize = Math.max(10, Math.round(size * 0.22));
+  const idleProfile = idleMotion[character.idle.style];
+  const distance = character.motion.floatDistance * 0.55;
+  const horizontal = distance * idleProfile.x;
+  const vertical = distance * idleProfile.y;
+  const rotation = character.motion.rotateDegrees * idleProfile.rotate * 0.5;
 
   const translateX = ambient.interpolate({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
@@ -237,9 +281,9 @@ export function Mascot({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
     outputRange: [
       1,
-      1 - profile.breathe,
+      1 - idleProfile.breathe,
       1,
-      1 + profile.breathe,
+      1 + idleProfile.breathe,
       1,
     ],
   });
@@ -247,7 +291,7 @@ export function Mascot({
   const face =
     state === 'idle' && faceMoment === 'blink'
       ? BLINK_FACE
-      : world.mascot.faces[state];
+      : character.faces[state];
 
   return (
     <Animated.View
@@ -255,7 +299,7 @@ export function Mascot({
       pointerEvents="none"
       accessibilityLabel={
         accessibilityLabel
-        ?? `${world.mascot.name} mascot · ${world.mascot.personality}`
+        ?? `${profile?.displayName ?? 'Crocat'} mascot · ${character.label.toLowerCase()}`
       }
       style={[
         styles.wrap,
@@ -280,16 +324,9 @@ export function Mascot({
             width: size,
             height: size * 0.82,
             marginTop: size * 0.12,
-            borderRadius: size * 0.38,
-            backgroundColor: world.mascot.fill,
-            borderColor: world.colors.text,
-            borderWidth: world.shapes.borderWidth,
-          },
-          world.shapes.organicCards && {
-            borderTopLeftRadius: size * 0.46,
-            borderTopRightRadius: size * 0.32,
-            borderBottomLeftRadius: size * 0.34,
-            borderBottomRightRadius: size * 0.45,
+            backgroundColor: mascotColor(profile?.colorKey),
+            borderColor: crocatPalette.ink,
+            ...shapeRadii(shape, size),
           },
         ]}
       >
@@ -298,7 +335,7 @@ export function Mascot({
           style={[
             styles.face,
             {
-              color: world.colors.text,
+              color: crocatPalette.ink,
               fontSize: faceSize,
               transform: [{ translateX: faceShift }],
             },
@@ -316,18 +353,18 @@ export function Mascot({
             width: size * 0.34,
             height: size * 0.34,
             borderRadius: size,
-            backgroundColor: world.mascot.secondary,
-            borderColor: world.colors.text,
+            backgroundColor: crocatPalette.cream,
+            borderColor: crocatPalette.ink,
           },
         ]}
       >
         <Text
           style={[
             styles.accessoryText,
-            { color: world.colors.text, fontSize: accessorySize },
+            { color: crocatPalette.ink, fontSize: accessorySize },
           ]}
         >
-          {world.mascot.accessory}
+          {mascotSymbol(profile?.symbolKey)}
         </Text>
       </View>
     </Animated.View>
@@ -342,6 +379,7 @@ const styles = StyleSheet.create({
   body: {
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
   },
   face: {
     fontWeight: '900',

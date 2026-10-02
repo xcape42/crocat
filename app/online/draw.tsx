@@ -7,6 +7,7 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingCanvas } from '@/src/components/DrawingCanvas';
 import { DrawingToolbar } from '@/src/components/DrawingToolbar';
 import { Mascot } from '@/src/components/Mascot';
+import { profileToVisual } from '@/src/features/profile/types';
 import { Screen } from '@/src/components/Screen';
 import {
   advanceDrawing,
@@ -283,7 +284,7 @@ export default function OnlineDrawScreen() {
           <View style={styles.headerActions}>
             <CountdownBadge remaining={remaining} />
             {!!me?.profile && (
-              <Mascot themeKey={me.profile.theme_key} state="happy" size={42} />
+              <Mascot profile={profileToVisual(me.profile)} state="happy" size={42} />
             )}
           </View>
         </View>
@@ -326,7 +327,7 @@ export default function OnlineDrawScreen() {
           <CountdownBadge remaining={remaining} />
           {!!me?.profile && (
             <Mascot
-              themeKey={me.profile.theme_key}
+              profile={profileToVisual(me.profile)}
               state={remaining <= 10 ? 'nervous' : 'drawing'}
               size={42}
             />

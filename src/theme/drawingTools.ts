@@ -1,12 +1,14 @@
-import { colors } from '@/src/theme/tokens';
+import { crocatPalette } from '@/src/theme/palette';
 
 export const DRAWING_PALETTE = [
-  { key: 'ink', label: 'Ink', color: colors.ink },
-  { key: 'coral', label: 'Coral', color: '#DB5C46' },
-  { key: 'blue', label: 'Blue', color: '#477A91' },
-  { key: 'green', label: 'Green', color: '#6A8E3A' },
-  { key: 'yellow', label: 'Yellow', color: '#C59A24' },
-  { key: 'violet', label: 'Violet', color: '#7556A3' },
+  { key: 'ink', label: 'Ink', color: crocatPalette.ink },
+  { key: 'coral', label: 'Coral', color: crocatPalette.coral },
+  { key: 'moss', label: 'Moss', color: crocatPalette.moss },
+  { key: 'sky', label: 'Sky', color: crocatPalette.sky },
+  { key: 'lavender', label: 'Lavender', color: crocatPalette.lavender },
+  { key: 'gold', label: 'Gold', color: crocatPalette.gold },
+  { key: 'berry', label: 'Berry', color: crocatPalette.berry },
+  { key: 'plum', label: 'Plum', color: crocatPalette.plum },
 ] as const;
 
 export const DRAWING_BRUSHES = [
@@ -15,5 +17,5 @@ export const DRAWING_BRUSHES = [
   { key: 'thick', label: 'Thick', width: 10 },
 ] as const;
 
-export const DEFAULT_DRAWING_COLOR = DRAWING_PALETTE[0].color;
+export const DEFAULT_DRAWING_COLOR: string = DRAWING_PALETTE[0].color;
 export const DEFAULT_DRAWING_BRUSH_WIDTH: number = DRAWING_BRUSHES[1].width;

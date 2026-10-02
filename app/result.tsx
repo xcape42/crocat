@@ -32,7 +32,7 @@ export default function ResultScreen() {
           <Text style={styles.kicker}>CROCAT COMPLETE</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
         </View>
-        <Mascot themeKey={themeKey} state="celebrate" size={compact ? 54 : 66} />
+        <Mascot state="celebrate" size={compact ? 54 : 66} />
       </View>
 
       <View style={styles.previewArea}>

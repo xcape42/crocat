@@ -1,14 +1,16 @@
+import { crocatPalette } from '@/src/theme/palette';
+
 export const colors = {
-  ink: '#17221D',
-  paper: '#F5F0E7',
-  card: '#FFFDF8',
-  moss: '#BBD68A',
-  lime: '#DDF37A',
-  coral: '#FF8B73',
-  blue: '#9FC7D8',
-  muted: '#68756E',
-  line: '#D8D1C5',
-  white: '#FFFFFF',
+  ink: crocatPalette.ink,
+  paper: crocatPalette.paper,
+  card: crocatPalette.cream,
+  moss: crocatPalette.mossSoft,
+  lime: crocatPalette.lime,
+  coral: crocatPalette.coralSoft,
+  blue: crocatPalette.skySoft,
+  muted: crocatPalette.muted,
+  line: crocatPalette.line,
+  white: crocatPalette.white,
 };
 
 export const radius = {

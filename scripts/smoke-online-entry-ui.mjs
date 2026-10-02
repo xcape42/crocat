@@ -12,7 +12,6 @@ const play = read('app/play.tsx');
 const entry = read('app/online/index.tsx');
 const room = read('app/online/room/[code].tsx');
 const friends = read('app/friends.tsx');
-const avatar = read('src/components/ProfileAvatar.tsx');
 const profile = read('app/profile.tsx');
 const multiplayer = read('src/features/multiplayer/room.ts');
 const drawingCanvas = read('src/components/DrawingCanvas.tsx');
@@ -24,6 +23,10 @@ const interaction = read('src/theme/interaction.ts');
 const worlds = read('src/theme/worlds.ts');
 const screen = read('src/components/Screen.tsx');
 const mascot = read('src/components/Mascot.tsx');
+const mascots = read('src/theme/mascots.ts');
+const palette = read('src/theme/palette.ts');
+const inviteBanner = read('src/components/LobbyInviteBanner.tsx');
+const artworkDetail = read('app/artwork/[id].tsx');
 const decoration = read('src/components/DecorationLayer.tsx');
 const playerPod = read('src/components/PlayerPod.tsx');
 const reducedMotion = read('src/hooks/useReducedMotion.ts');
@@ -115,9 +118,15 @@ assert(
 );
 
 assert(
-  avatar.includes('showSymbol = false')
-    && profile.includes('showSymbol'),
-  'Profile symbols must be hidden from shared avatars and visible only in the owner profile editor.',
+  !profile.includes('ProfileAvatar')
+    && !friends.includes('ProfileAvatar')
+    && !playerPod.includes('ProfileAvatar')
+    && !inviteBanner.includes('ProfileAvatar')
+    && !artworkDetail.includes('ProfileAvatar')
+    && playerPod.includes('<Mascot')
+    && inviteBanner.includes('<Mascot')
+    && artworkDetail.includes('<Mascot'),
+  'Mascot must be the single shared player identity; active UI must not render the legacy ProfileAvatar.',
 );
 
 assert(
@@ -141,8 +150,11 @@ assert(
   worlds.includes("moss:")
     && worlds.includes("moon:")
     && worlds.includes("candy:")
-    && profileOptions.includes('WORLD_OPTIONS.map'),
-  'Crocat Worlds must expose Moss, Moon and Candy through the shared profile theme model.',
+    && worlds.includes("halo:")
+    && worlds.includes("ember:")
+    && profileOptions.includes('WORLD_OPTIONS.map')
+    && !worlds.includes('mascot: {'),
+  'Crocat Worlds must expose five environment-only themes without owning mascot identity.',
 );
 
 assert(
@@ -156,32 +168,29 @@ assert(
 );
 
 assert(
-  worlds.includes("personality: 'gentle'")
-    && worlds.includes("personality: 'dreamy'")
-    && worlds.includes("personality: 'playful'")
-    && worlds.includes("style: 'sway'")
-    && worlds.includes("style: 'float'")
-    && worlds.includes("style: 'bounce'")
+  mascots.includes("gentle:")
+    && mascots.includes("dreamy:")
+    && mascots.includes("playful:")
+    && mascots.includes("style: 'sway'")
+    && mascots.includes("style: 'float'")
+    && mascots.includes("style: 'bounce'")
+    && mascot.includes('profile?: MascotProfile')
     && mascot.includes('AMBIENT_STATES')
     && mascot.includes('IDLE_FACE_STATES')
-    && mascot.includes('Math.random()')
-    && mascot.includes('world.mascot.idle')
+    && mascot.includes('character.idle')
     && mascot.includes("const BLINK_FACE = '− ᴗ −'")
     && mascot.includes('transform: [{ translateX: faceShift }]')
-    && mascot.includes("faceMoment === 'left'")
-    && mascot.includes("faceMoment === 'right'")
-    && mascot.includes("state === 'idle'")
     && mascot.includes("sequence.filter((moment) => moment !== 'blink')")
     && mascot.includes("state === 'idle' && faceMoment === 'blink'")
-    && !worlds.includes('expressions: {'),
-  'Each Crocat World must share one idle-only blink while emotional faces can only shift left or right for gaze.',
+    && !mascot.includes('crocatWorld('),
+  'Mascot character must independently own faces and idle personality while preserving idle-only blinking and emotional gaze.',
 );
 
 assert(
-  !worlds.includes('• ︵ •')
-    && !worlds.includes('◉﹏◉')
-    && !worlds.includes("'sad'")
-    && !worlds.includes("'angry'")
+  !mascots.includes('• ︵ •')
+    && !mascots.includes('◉﹏◉')
+    && !mascots.includes("'sad'")
+    && !mascots.includes("'angry'")
     && room.includes("players.length < requiredPlayers ? 'shy' : (allReady ? 'excited' : 'happy')")
     && prompt.includes("state={isHead ? 'curious' : 'waiting'}")
     && adjust.includes("me.ready ? 'proud' : 'curious'")
@@ -238,10 +247,14 @@ assert(
 assert(
   drawingTools.includes("key: 'ink'")
     && drawingTools.includes("key: 'coral'")
-    && drawingTools.includes("key: 'blue'")
-    && drawingTools.includes("key: 'green'")
-    && drawingTools.includes("key: 'yellow'")
-    && drawingTools.includes("key: 'violet'")
+    && drawingTools.includes("key: 'moss'")
+    && drawingTools.includes("key: 'sky'")
+    && drawingTools.includes("key: 'lavender'")
+    && drawingTools.includes("key: 'gold'")
+    && drawingTools.includes("key: 'berry'")
+    && drawingTools.includes("key: 'plum'")
+    && palette.includes("ember:")
+    && palette.includes("goldSoft:")
     && drawingTools.includes("key: 'thin', label: 'Thin', width: 3")
     && drawingTools.includes("key: 'normal', label: 'Normal', width: 6")
     && drawingTools.includes("key: 'thick', label: 'Thick', width: 10")
@@ -249,7 +262,7 @@ assert(
     && drawingToolbar.includes('DRAWING_BRUSHES.map')
     && localDraw.includes('brushWidth={brushWidth}')
     && draw.includes('brushWidth={brushWidth}'),
-  'Local and online drawing must expose the same six-color palette and three brush widths.',
+  'Local and online drawing must expose the shared eight-color Crocat palette and three brush widths.',
 );
 
 assert(
@@ -357,6 +370,17 @@ assert(
 );
 
 assert(
+  profile.includes('MASCOT COLOR')
+    && profile.includes('MASCOT SYMBOL')
+    && profile.includes('MASCOT SHAPE')
+    && profile.includes('MASCOT CHARACTER')
+    && profile.includes('YOUR WORLD')
+    && profileOptions.includes('MASCOT_CHARACTERS')
+    && profileOptions.includes('MASCOT_SHAPES'),
+  'Profile editing must present one mascot identity followed by an independent World selection.',
+);
+
+assert(
   !rootLayout.includes('setTimeout(')
     && !entry.includes('setThemeKey(')
     && entry.includes('const world = crocatWorld(themeKey)')
@@ -364,4 +388,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.7.4 mascot-personality, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.0 profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');

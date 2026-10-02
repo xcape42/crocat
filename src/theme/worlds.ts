@@ -1,21 +1,5 @@
 import type { CrocatWorldKey, ProfileThemeKey } from '@/src/features/profile/types';
-
-export type MascotState =
-  | 'idle'
-  | 'happy'
-  | 'shy'
-  | 'curious'
-  | 'waiting'
-  | 'drawing'
-  | 'nervous'
-  | 'excited'
-  | 'proud'
-  | 'celebrate'
-  | 'sleeping';
-
-export type MascotPersonality = 'gentle' | 'dreamy' | 'playful';
-export type MascotIdleStyle = 'sway' | 'float' | 'bounce';
-export type MascotIdleExpression = 'blink' | 'left' | 'right';
+import { crocatPalette } from '@/src/theme/palette';
 
 export type CrocatWorld = {
   key: CrocatWorldKey;
@@ -45,21 +29,6 @@ export type CrocatWorld = {
   background: {
     glyphs: readonly [string, string, string];
   };
-  mascot: {
-    name: string;
-    fill: string;
-    secondary: string;
-    accessory: string;
-    personality: MascotPersonality;
-    faces: Record<MascotState, string>;
-    idle: {
-      style: MascotIdleStyle;
-      expressionMinMs: number;
-      expressionMaxMs: number;
-      gazeMs: number;
-      sequence: readonly MascotIdleExpression[];
-    };
-  };
   motion: {
     ambientMs: number;
     floatDistance: number;
@@ -70,44 +39,23 @@ export type CrocatWorld = {
   };
 };
 
-const sharedFaces: Record<MascotState, string> = {
-  idle: '• ᴗ •',
-  happy: 'ᵔ ᴗ ᵔ',
-  shy: '◦ ᴗ ◦',
-  curious: '◉ ᵕ ◉',
-  waiting: '• ᴗ •',
-  drawing: '• ω •',
-  nervous: '◉ ᴗ ◉',
-  excited: '✦ ᴗ ✦',
-  proud: '˘ ᴗ ˘',
-  celebrate: '★ ᴗ ★',
-  sleeping: '− ᴗ −',
-};
-
-const worldFaces = (
-  overrides: Partial<Record<MascotState, string>> = {},
-): Record<MascotState, string> => ({
-  ...sharedFaces,
-  ...overrides,
-});
-
 export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
   moss: {
     key: 'moss',
     label: 'MOSS GARDEN',
     shortLabel: 'MOSS',
-    description: 'Warm leaves, soft paper and a tiny forest friend.',
+    description: 'Warm leaves, soft paper and a calm garden atmosphere.',
     colors: {
       background: '#F3F0E2',
       surface: '#FFFDF7',
-      card: '#FFFDF8',
-      primary: '#BBD68A',
-      secondary: '#DCE9C3',
-      accent: '#FF8B73',
-      text: '#17221D',
+      card: crocatPalette.cream,
+      primary: crocatPalette.mossSoft,
+      secondary: crocatPalette.leafSoft,
+      accent: crocatPalette.coralSoft,
+      text: crocatPalette.ink,
       muted: '#65736B',
       line: '#D5CEBD',
-      canvas: '#FFFDF8',
+      canvas: crocatPalette.cream,
       pattern: '#B9AE94',
     },
     shapes: {
@@ -118,21 +66,6 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       organicCards: true,
     },
     background: { glyphs: ['❧', '✦', '·'] },
-    mascot: {
-      name: 'Mossy',
-      fill: '#BBD68A',
-      secondary: '#E5EECF',
-      accessory: '❧',
-      personality: 'gentle',
-      faces: worldFaces(),
-      idle: {
-        style: 'sway',
-        expressionMinMs: 5200,
-        expressionMaxMs: 8200,
-        gazeMs: 620,
-        sequence: ['blink', 'left', 'blink', 'right', 'blink'],
-      },
-    },
     motion: { ambientMs: 9000, floatDistance: 5, rotateDegrees: 2 },
     canvas: { cornerGlyphs: ['❧', '·'] },
   },
@@ -146,7 +79,7 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       surface: '#F8F6FF',
       card: '#FCFAFF',
       primary: '#B9B8E9',
-      secondary: '#D9D5F5',
+      secondary: crocatPalette.moonSoft,
       accent: '#F0B86E',
       text: '#26243A',
       muted: '#6C6881',
@@ -162,32 +95,6 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       organicCards: false,
     },
     background: { glyphs: ['✦', '☾', '·'] },
-    mascot: {
-      name: 'Luma',
-      fill: '#C9C7F2',
-      secondary: '#F4E9BE',
-      accessory: '☾',
-      personality: 'dreamy',
-      faces: worldFaces({
-        idle: '◌ ᴗ ◌',
-        happy: 'ᵔ ᵕ ᵔ',
-        shy: '◌ ᴗ ◌',
-        curious: '◌ ᵕ ◌',
-        waiting: '• ᴗ •',
-        drawing: '◌ ω ◌',
-        nervous: '◉ ᵕ ◉',
-        excited: '✦ ᵕ ✦',
-        proud: '˘ ᵕ ˘',
-        celebrate: '✦ ᴗ ✦',
-      }),
-      idle: {
-        style: 'float',
-        expressionMinMs: 6000,
-        expressionMaxMs: 9200,
-        gazeMs: 820,
-        sequence: ['left', 'blink', 'right', 'blink'],
-      },
-    },
     motion: { ambientMs: 10500, floatDistance: 6, rotateDegrees: 1.5 },
     canvas: { cornerGlyphs: ['✦', '☾'] },
   },
@@ -195,7 +102,7 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
     key: 'candy',
     label: 'CANDY BLOB',
     shortLabel: 'CANDY',
-    description: 'Peachy blobs, tiny confetti and a bouncy little pal.',
+    description: 'Peachy surfaces, tiny confetti and playful warmth.',
     colors: {
       background: '#FFF0EA',
       surface: '#FFF8F4',
@@ -217,33 +124,66 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       organicCards: true,
     },
     background: { glyphs: ['●', '✦', '○'] },
-    mascot: {
-      name: 'Bloop',
-      fill: '#FFB49E',
-      secondary: '#FFD5A8',
-      accessory: '✦',
-      personality: 'playful',
-      faces: worldFaces({
-        idle: '• ω •',
-        happy: 'ᵔ ω ᵔ',
-        curious: '• ᵕ •',
-        waiting: '• ᴗ •',
-        drawing: '• ω •',
-        nervous: '◉ ω ◉',
-        excited: '✦ ω ✦',
-        proud: '˘ ω ˘',
-        celebrate: '★ ω ★',
-      }),
-      idle: {
-        style: 'bounce',
-        expressionMinMs: 3800,
-        expressionMaxMs: 6500,
-        gazeMs: 460,
-        sequence: ['right', 'blink', 'left', 'right', 'blink'],
-      },
-    },
     motion: { ambientMs: 7600, floatDistance: 4, rotateDegrees: 2.5 },
     canvas: { cornerGlyphs: ['●', '○'] },
+  },
+  halo: {
+    key: 'halo',
+    label: 'HALO CLOUD',
+    shortLabel: 'HALO',
+    description: 'Airy clouds, pale sky and a soft golden glow.',
+    colors: {
+      background: '#F2F7FB',
+      surface: '#FFFEFA',
+      card: '#FFFFFF',
+      primary: '#D9EAF4',
+      secondary: '#FFF0C8',
+      accent: crocatPalette.gold,
+      text: '#20303A',
+      muted: '#6E7C84',
+      line: '#D3E0E8',
+      canvas: '#FFFDF8',
+      pattern: '#AFC8D9',
+    },
+    shapes: {
+      cardRadius: 36,
+      buttonRadius: 999,
+      canvasRadius: 34,
+      borderWidth: 2,
+      organicCards: true,
+    },
+    background: { glyphs: ['✦', '○', '·'] },
+    motion: { ambientMs: 11200, floatDistance: 6, rotateDegrees: 1 },
+    canvas: { cornerGlyphs: ['✦', '○'] },
+  },
+  ember: {
+    key: 'ember',
+    label: 'EMBER VELVET',
+    shortLabel: 'EMBER',
+    description: 'Dusky plum, warm embers and a cooler night-time edge.',
+    colors: {
+      background: '#D8CCD7',
+      surface: '#EFE6ED',
+      card: '#F8F1F5',
+      primary: '#C68A9E',
+      secondary: '#D9A29A',
+      accent: crocatPalette.ember,
+      text: '#281A25',
+      muted: '#705866',
+      line: '#B9A7B4',
+      canvas: '#FFF8F5',
+      pattern: '#77516E',
+    },
+    shapes: {
+      cardRadius: 28,
+      buttonRadius: 20,
+      canvasRadius: 26,
+      borderWidth: 2,
+      organicCards: false,
+    },
+    background: { glyphs: ['◆', '✦', '·'] },
+    motion: { ambientMs: 8200, floatDistance: 4, rotateDegrees: 2 },
+    canvas: { cornerGlyphs: ['◆', '✦'] },
   },
 };
 
@@ -252,6 +192,8 @@ export const WORLD_OPTIONS = Object.values(CROCAT_WORLDS);
 export function normalizeWorldKey(key?: ProfileThemeKey | null): CrocatWorldKey {
   if (key === 'moon' || key === 'ink') return 'moon';
   if (key === 'candy') return 'candy';
+  if (key === 'halo') return 'halo';
+  if (key === 'ember') return 'ember';
   return 'moss';
 }
 

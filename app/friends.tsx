@@ -12,10 +12,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
-import { ProfileAvatar } from '@/src/components/ProfileAvatar';
 import { Screen } from '@/src/components/Screen';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
-import type { PlayerProfile } from '@/src/features/profile/types';
+import { profileToVisual, type PlayerProfile } from '@/src/features/profile/types';
 import {
   acceptLobbyInvite,
   declineLobbyInvite,
@@ -232,11 +231,10 @@ export default function FriendsScreen() {
     return (
       <CrocatCard key={friend.friend_user_id} style={styles.friendCard}>
         <View style={styles.friendIdentity}>
-          <ProfileAvatar profile={socialProfileVisual(friend)} size={52} />
           <Mascot
-            themeKey={friend.theme_key}
+            profile={socialProfileVisual(friend)}
             state={friend.online ? 'idle' : 'sleeping'}
-            size={42}
+            size={52}
             animated={false}
           />
         </View>
@@ -305,16 +303,7 @@ export default function FriendsScreen() {
 
         {!!profile && (
           <Pressable onPress={() => router.push('/profile')}>
-            <ProfileAvatar
-              profile={{
-                displayName: profile.display_name,
-                colorKey: profile.color_key,
-                avatarKey: profile.avatar_key,
-                themeKey: profile.theme_key,
-                symbolKey: profile.symbol_key,
-              }}
-              size={58}
-            />
+            <Mascot profile={profileToVisual(profile)} state="idle" size={58} />
           </Pressable>
         )}
       </View>
@@ -324,7 +313,7 @@ export default function FriendsScreen() {
           <Text style={styles.sectionTitle}>LOBBY INVITES</Text>
           {invites.map((item) => (
             <View key={item.invite_id} style={styles.card}>
-              <ProfileAvatar profile={socialProfileVisual(item)} size={50} />
+              <Mascot profile={socialProfileVisual(item)} state="happy" size={50} animated={false} />
               <View style={styles.cardText}>
                 <Text style={styles.name}>{item.display_name}</Text>
                 <Text style={styles.meta}>ROOM {item.room_code} · WANTS TO DRAW</Text>
@@ -392,7 +381,7 @@ export default function FriendsScreen() {
           <Text style={styles.sectionTitle}>REQUESTS</Text>
           {requests.map((item) => (
             <View key={item.friendship_id} style={styles.card}>
-              <ProfileAvatar profile={socialProfileVisual(item)} size={48} />
+              <Mascot profile={socialProfileVisual(item)} state="curious" size={48} animated={false} />
               <View style={styles.cardText}>
                 <Text style={styles.name}>{item.display_name}</Text>
                 <Text style={styles.meta}>
