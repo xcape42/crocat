@@ -7,13 +7,11 @@ import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
-import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, spacing } from '@/src/theme/tokens';
 
 export default function HandoffScreen() {
   const router = useRouter();
   const setPhase = useGameStore((state) => state.setPhase);
-  const themeKey = useUiThemeStore((state) => state.themeKey);
   const profile = useCurrentProfileVisual();
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
