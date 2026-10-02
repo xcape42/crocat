@@ -8,6 +8,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+const home = read('app/index.tsx');
 const play = read('app/play.tsx');
 const entry = read('app/online/index.tsx');
 const room = read('app/online/room/[code].tsx');
@@ -41,6 +42,11 @@ const realtime = read('src/features/multiplayer/realtime.ts');
 const rootLayout = read('app/_layout.tsx');
 const uiThemeStore = read('src/store/uiThemeStore.ts');
 const themeCache = read('src/features/profile/themeCache.ts');
+const gallery = read('app/gallery.tsx');
+const handoff = read('app/handoff.tsx');
+const localReveal = read('app/reveal.tsx');
+const result = read('app/result.tsx');
+const currentProfileVisual = read('src/hooks/useCurrentProfileVisual.ts');
 
 assert(
   play.includes("router.push('/online')"),
@@ -58,6 +64,19 @@ assert(
 assert(
   !entry.includes('openOrCreateRoom('),
   'Opening the online entry screen must not create or reuse a lobby automatically.',
+);
+
+assert(
+  currentProfileVisual.includes('ensureCurrentProfile()')
+    && currentProfileVisual.includes('profileToVisual(current)')
+    && home.includes('profile={profile ?? undefined}')
+    && play.includes('profile={profile ?? undefined}')
+    && entry.includes('profile={profile ? profileToVisual(profile) : undefined}')
+    && gallery.includes('profile={profile ?? undefined}')
+    && handoff.includes('profile={profile ?? undefined}')
+    && localReveal.includes('profile={profile ?? undefined}')
+    && result.includes('profile={profile ?? undefined}'),
+  'Home, Play, Online entry and remaining local identity screens must render the current personal mascot instead of a generic blob.',
 );
 
 assert(
