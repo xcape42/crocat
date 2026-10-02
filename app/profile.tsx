@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -37,6 +38,7 @@ import { colors, radius, spacing } from '@/src/theme/tokens';
 import { normalizeWorldKey } from '@/src/theme/worlds';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const uiThemeKey = useUiThemeStore((state) => state.themeKey);
   const setUiThemeKey = useUiThemeStore((state) => state.setThemeKey);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
@@ -108,8 +110,7 @@ export default function ProfileScreen() {
         symbolKey,
       });
       apply(next);
-      setNotice('PROFILE SAVED ✓');
-      setTimeout(() => setNotice(''), 1800);
+      router.replace('/');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save profile.');
     } finally {

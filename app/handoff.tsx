@@ -5,14 +5,14 @@ import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
-import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, spacing } from '@/src/theme/tokens';
 
 export default function HandoffScreen() {
   const router = useRouter();
   const setPhase = useGameStore((state) => state.setPhase);
-  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const profile = useCurrentProfileVisual();
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
   const leave = () => {
@@ -24,7 +24,7 @@ export default function HandoffScreen() {
     <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)} decorations="full">
       <View style={styles.center}>
         <Text style={styles.kicker}>DON'T PEEK.</Text>
-        <View style={styles.mascot}><Mascot state="shy" size={104} /></View>
+        <View style={styles.mascot}><Mascot profile={profile ?? undefined} state="shy" size={104} /></View>
         <Text style={styles.title}>Pass it to Sarah.</Text>
         <Text style={styles.copy}>Domi's head is safely hidden. Sarah gets the BODY and a fresh canvas with the connection line at the top.</Text>
       </View>

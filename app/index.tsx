@@ -5,6 +5,7 @@ import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
 import { MascotSlot } from '@/src/components/MascotSlot';
 import { Screen } from '@/src/components/Screen';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
@@ -14,6 +15,7 @@ export default function HomeScreen() {
   const { height } = useWindowDimensions();
   const compact = height < 760;
   const themeKey = useUiThemeStore((state) => state.themeKey);
+  const profile = useCurrentProfileVisual();
   const world = crocatWorld(themeKey);
 
   return (
@@ -36,9 +38,10 @@ export default function HomeScreen() {
 
         <MascotSlot compact={compact}>
           <Mascot
+            profile={profile ?? undefined}
             state="idle"
             size={compact ? 124 : 158}
-            accessibilityLabel={'Crocat mascot in ' + world.label}
+            accessibilityLabel="Your Crocat mascot"
           />
         </MascotSlot>
 

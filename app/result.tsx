@@ -4,8 +4,8 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
-import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
 
 export default function ResultScreen() {
@@ -13,7 +13,7 @@ export default function ResultScreen() {
   const { height } = useWindowDimensions();
   const compact = height < 720;
   const { head, body, headTransform, bodyTransform, resetRound, setPhase } = useGameStore();
-  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const profile = useCurrentProfileVisual();
 
   const replay = () => {
     resetRound();
@@ -32,7 +32,7 @@ export default function ResultScreen() {
           <Text style={styles.kicker}>CROCAT COMPLETE</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
         </View>
-        <Mascot state="celebrate" size={compact ? 54 : 66} />
+        <Mascot profile={profile ?? undefined} state="celebrate" size={compact ? 54 : 66} />
       </View>
 
       <View style={styles.previewArea}>
