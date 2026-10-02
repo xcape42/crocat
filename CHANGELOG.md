@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.8.0 — Unified profile mascot, independent Worlds and shared color system
+
+- Make the personal mascot the single player identity throughout Profile, Friends, Invites, Lobby, PlayerPod and artwork partner presentation
+- Remove the legacy ProfileAvatar UI and keep exactly one mascot per player presentation
+- Reuse existing profile color, avatar-shape and symbol fields as mascot customization without unnecessary schema churn
+- Add an independent mascot character choice: Gentle, Dreamy or Playful
+- Preserve existing friendly emotions, idle motion, gaze, idle-only blink and Reduced Motion behavior under the chosen mascot character
+- Separate all mascot faces, personality and idle parameters from Crocat Worlds
+- Keep Moss Garden, Moon Milk and Candy Blob as environment themes and add Halo Cloud plus Ember Velvet
+- Keep legacy Paper/Ink values compatible while exposing five current Worlds
+- Add one minimal profile field, mascot_character_key, and propagate it through Social, Invites and artwork snapshots
+- Backfill existing profiles so their previous Moss/Moon/Candy personality becomes their initial independent mascot character
+- Consolidate mascot, World and drawing colors around one Crocat palette
+- Expand Drawing to eight cohesive colors while preserving 3/6/10 brush widths and per-stroke color storage
+- Keep gameplay, phase synchronization, timers, drawing submission and Realtime behavior unchanged
+- Align package, Expo and visible app versions to 1.8.0
+
 ## 1.7.4 — World-aware mascot personalities and friendly idle motion
 
 - Keep the existing mascot design and World system intact while adding subtle personality differences
