@@ -5,11 +5,9 @@ import type {
   MascotShapeKey,
   ProfileColorKey,
   ProfileSymbolKey,
-  ProfileThemeKey,
 } from '@/src/features/profile/types';
 import { useReducedMotion } from '@/src/hooks/useReducedMotion';
 import {
-  legacyMascotCharacterForTheme,
   mascotCharacter,
   mascotColor,
   mascotSymbol,
@@ -26,7 +24,6 @@ type MascotProfile = {
   avatarKey?: MascotShapeKey;
   mascotCharacterKey?: MascotCharacterKey;
   symbolKey?: ProfileSymbolKey;
-  themeKey?: ProfileThemeKey;
 };
 
 type Props = {
@@ -106,9 +103,7 @@ export function Mascot({
   accessibilityLabel,
 }: Props) {
   const reducedMotion = useReducedMotion();
-  const characterKey =
-    profile?.mascotCharacterKey
-    ?? legacyMascotCharacterForTheme(profile?.themeKey);
+  const characterKey = profile?.mascotCharacterKey ?? 'gentle';
   const character = mascotCharacter(characterKey);
   const shape = profile?.avatarKey ?? 'round';
   const scale = useRef(new Animated.Value(1)).current;
