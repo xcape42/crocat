@@ -5,6 +5,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { ConfirmActionModal } from '@/src/components/ConfirmActionModal';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
+import { profileToVisual } from '@/src/features/profile/types';
 import { PlayerPod } from '@/src/components/PlayerPod';
 import { RoomCodeDisplay } from '@/src/components/RoomCodeDisplay';
 import { Screen } from '@/src/components/Screen';
@@ -41,13 +42,11 @@ import type {
 } from '@/src/features/social/types';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
-import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code: string }>();
-  const themeKey = useUiThemeStore((state) => state.themeKey);
   const {
     userId,
     room,
@@ -380,7 +379,7 @@ export default function OnlineRoomScreen() {
             </View>
           </View>
           <Mascot
-            themeKey={themeKey}
+            profile={me?.profile ? profileToVisual(me.profile) : undefined}
             state={players.length < requiredPlayers ? 'shy' : (allReady ? 'excited' : 'happy')}
             size={82}
           />
@@ -395,17 +394,12 @@ export default function OnlineRoomScreen() {
           const friend = friends.find((item) => item.friend_user_id === player.user_id);
           const request = friendRequests.find((item) => item.other_user_id === player.user_id);
           const visual = player.profile
-            ? {
-                displayName: player.profile.display_name,
-                colorKey: player.profile.color_key,
-                avatarKey: player.profile.avatar_key,
-                themeKey: player.profile.theme_key,
-                symbolKey: player.profile.symbol_key,
-              }
+            ? profileToVisual(player.profile)
             : {
                 displayName: player.display_name,
                 colorKey: 'moss' as const,
                 avatarKey: 'round' as const,
+                mascotCharacterKey: 'gentle' as const,
                 themeKey: 'moss' as const,
                 symbolKey: 'star' as const,
               };
