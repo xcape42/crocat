@@ -7,8 +7,10 @@ export type ProfileColorKey =
   | 'peach'
   | 'mint';
 
-export type ProfileAvatarKey = 'round' | 'ears' | 'spiky';
-export type CrocatWorldKey = 'moss' | 'moon' | 'candy';
+export type MascotShapeKey = 'round' | 'ears' | 'spiky';
+export type ProfileAvatarKey = MascotShapeKey;
+export type MascotCharacterKey = 'gentle' | 'dreamy' | 'playful';
+export type CrocatWorldKey = 'moss' | 'moon' | 'candy' | 'halo' | 'ember';
 export type ProfileThemeKey = CrocatWorldKey | 'paper' | 'ink';
 export type ProfileSymbolKey = 'star' | 'spark' | 'heart' | 'moon' | 'bolt';
 
@@ -17,7 +19,8 @@ export type PlayerProfile = {
   friend_code: string;
   display_name: string;
   color_key: ProfileColorKey;
-  avatar_key: ProfileAvatarKey;
+  avatar_key: MascotShapeKey;
+  mascot_character_key: MascotCharacterKey;
   theme_key: ProfileThemeKey;
   symbol_key: ProfileSymbolKey;
   last_seen_at: string;
@@ -28,7 +31,8 @@ export type PlayerProfile = {
 export type ProfileVisual = {
   displayName: string;
   colorKey: ProfileColorKey;
-  avatarKey: ProfileAvatarKey;
+  avatarKey: MascotShapeKey;
+  mascotCharacterKey: MascotCharacterKey;
   themeKey: ProfileThemeKey;
   symbolKey: ProfileSymbolKey;
 };
@@ -37,7 +41,8 @@ export type ProfileSnapshot = {
   userId?: string | null;
   displayName: string;
   colorKey: ProfileColorKey;
-  avatarKey: ProfileAvatarKey;
+  avatarKey: MascotShapeKey;
+  mascotCharacterKey?: MascotCharacterKey;
   themeKey: ProfileThemeKey;
   symbolKey: ProfileSymbolKey;
 };
@@ -47,6 +52,7 @@ export function profileToVisual(profile: PlayerProfile): ProfileVisual {
     displayName: profile.display_name,
     colorKey: profile.color_key,
     avatarKey: profile.avatar_key,
+    mascotCharacterKey: profile.mascot_character_key,
     themeKey: profile.theme_key,
     symbolKey: profile.symbol_key,
   };
