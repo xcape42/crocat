@@ -9,7 +9,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArtworkThumbnail } from '@/src/components/ArtworkThumbnail';
 import { CrocatButton } from '@/src/components/CrocatButton';
-import { ProfileAvatar } from '@/src/components/ProfileAvatar';
+import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import {
   deleteArtwork,
@@ -158,7 +158,7 @@ export default function ArtworkDetailScreen() {
 
       {!!partner && (
         <View style={styles.partnerCard}>
-          <ProfileAvatar profile={partner} size={58} />
+          <Mascot profile={partner} state="happy" size={58} animated={false} />
           <View style={styles.partnerText}>
             <Text style={styles.partnerLabel}>MADE WITH</Text>
             <Text style={styles.partnerName}>{partner.displayName}</Text>
