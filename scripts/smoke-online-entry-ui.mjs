@@ -381,6 +381,13 @@ assert(
 );
 
 assert(
+  profile.includes("const router = useRouter()")
+    && profile.includes("router.replace('/')")
+    && !profile.includes("setNotice('PROFILE SAVED ✓')"),
+  'Successful profile saves must return directly to Home without rendering a saved notice.',
+);
+
+assert(
   !rootLayout.includes('setTimeout(')
     && !entry.includes('setThemeKey(')
     && entry.includes('const world = crocatWorld(themeKey)')
