@@ -6,7 +6,6 @@ import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
-import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
 
 export default function ResultScreen() {
@@ -14,7 +13,6 @@ export default function ResultScreen() {
   const { height } = useWindowDimensions();
   const compact = height < 720;
   const { head, body, headTransform, bodyTransform, resetRound, setPhase } = useGameStore();
-  const themeKey = useUiThemeStore((state) => state.themeKey);
   const profile = useCurrentProfileVisual();
 
   const replay = () => {
