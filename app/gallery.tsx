@@ -18,7 +18,6 @@ import {
   setArtworkFavorite,
 } from '@/src/features/artworks/api';
 import type { SavedArtwork } from '@/src/features/artworks/types';
-import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 
 function partnerName(artwork: SavedArtwork) {
@@ -37,7 +36,6 @@ export default function GalleryScreen() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
-  const themeKey = useUiThemeStore((state) => state.themeKey);
   const profile = useCurrentProfileVisual();
 
   const refresh = useCallback(async () => {
