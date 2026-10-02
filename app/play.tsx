@@ -23,7 +23,7 @@ export default function PlayScreen() {
             Find another Crocat in every way imaginable.
           </Text>
         </View>
-        <Mascot themeKey={themeKey} state="happy" size={82} />
+        <Mascot state="happy" size={82} />
       </View>
 
       <View style={styles.stack}>
