@@ -17,5 +17,5 @@ export const DRAWING_BRUSHES = [
   { key: 'thick', label: 'Thick', width: 10 },
 ] as const;
 
-export const DEFAULT_DRAWING_COLOR = DRAWING_PALETTE[0].color;
+export const DEFAULT_DRAWING_COLOR: string = DRAWING_PALETTE[0].color;
 export const DEFAULT_DRAWING_BRUSH_WIDTH: number = DRAWING_BRUSHES[1].width;
