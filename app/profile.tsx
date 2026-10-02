@@ -179,21 +179,6 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
-        <View style={styles.options}>
-          {MASCOT_SYMBOLS.map((item) => (
-            <Pressable
-              key={item.key}
-              onPress={() => setSymbolKey(item.key)}
-              style={[styles.symbolOption, symbolKey === item.key && styles.selected]}
-            >
-              <Text style={styles.symbol}>{item.glyph}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
         <Text style={styles.label}>MASCOT SHAPE · 1 OF {MASCOT_SHAPES.length}</Text>
         <View style={styles.options}>
           {MASCOT_SHAPES.map((item) => (
@@ -234,6 +219,21 @@ export default function ProfileScreen() {
                 <Text style={styles.optionLabel}>{item.label}</Text>
                 <Text style={styles.characterDescription}>{item.description}</Text>
               </View>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
+        <View style={styles.options}>
+          {MASCOT_SYMBOLS.map((item) => (
+            <Pressable
+              key={item.key}
+              onPress={() => setSymbolKey(item.key)}
+              style={[styles.symbolOption, symbolKey === item.key && styles.selected]}
+            >
+              <Text style={styles.symbol}>{item.glyph}</Text>
             </Pressable>
           ))}
         </View>
