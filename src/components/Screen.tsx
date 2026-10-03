@@ -71,7 +71,11 @@ export function Screen({
       ]}
     >
       {decorations !== 'none' && (
-        <DecorationLayer intensity={decorations} celebrate={celebrate} />
+        <DecorationLayer
+          intensity={decorations}
+          celebrate={celebrate}
+          depth="back"
+        />
       )}
 
       {shouldShowBack && (
@@ -108,6 +112,14 @@ export function Screen({
           {children}
         </View>
       )}
+
+      {decorations !== 'none' && (
+        <DecorationLayer
+          intensity={decorations}
+          celebrate={celebrate}
+          depth="front"
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -132,12 +144,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   backPressed: { opacity: 0.55 },
-  scroll: { flex: 1 },
+  scroll: { flex: 1, zIndex: 1 },
   inner: {
     width: '100%',
     maxWidth: 900,
     alignSelf: 'center',
   },
   scrollContent: { flexGrow: 1 },
-  fixedContent: { flex: 1 },
+  fixedContent: { flex: 1, zIndex: 1 },
 });
