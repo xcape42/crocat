@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.6 — Theme contrast consolidation
+
+- Make screen-level copy follow the active World text and muted colors on dynamic backgrounds
+- Keep text permanently dark on intentionally light canvas, input and control surfaces
+- Add a shared surface-aware contrast helper for buttons, timer badges, confirmation actions and other changing fills
+- Fix secondary/primary button contrast in dark Worlds, including Vampire Blood white surfaces and Royal Gem gold surfaces
+- Fix Royal/Vampire room settings, profile inputs and room-code inputs where light canvases previously inherited light World text
+- Make read-only prompt options switch to World text when their card background becomes transparent
+- Retain fixed dark ink for drawing canvases/toolbars and other permanently light gameplay controls
+- Replace the invalid React Native readonly `border: 'none'` style with `borderWidth: 0`
+- Version Crocat as 1.8.6
+
 ## 1.8.5 — World identity redesign and Royal Gem
 
 - Retune Halo Cloud around powder blue, clean white and soft blush/lavender accents, removing the previous warm gold/brown feeling
