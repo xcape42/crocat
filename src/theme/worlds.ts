@@ -28,6 +28,8 @@ export type CrocatWorld = {
   };
   background: {
     glyphs: readonly [string, string, string];
+    fragments: readonly string[];
+    falling: readonly string[];
   };
   motion: {
     ambientMs: number;
@@ -65,7 +67,11 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       borderWidth: 2,
       organicCards: true,
     },
-    background: { glyphs: ['❧', '✦', '·'] },
+    background: {
+      glyphs: ['❧', '✦', '·'],
+      fragments: ['❧', '❦', '⌁', '✦', '·'],
+      falling: ['❧', '❦', '❧'],
+    },
     motion: { ambientMs: 9000, floatDistance: 5, rotateDegrees: 2 },
     canvas: { cornerGlyphs: ['❧', '·'] },
   },
@@ -94,7 +100,11 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       borderWidth: 2,
       organicCards: false,
     },
-    background: { glyphs: ['✦', '☾', '·'] },
+    background: {
+      glyphs: ['✦', '☾', '·'],
+      fragments: ['✦', '✧', '☾', '◌', '·'],
+      falling: ['✦', '✧', '·'],
+    },
     motion: { ambientMs: 10500, floatDistance: 6, rotateDegrees: 1.5 },
     canvas: { cornerGlyphs: ['✦', '☾'] },
   },
@@ -123,7 +133,11 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       borderWidth: 2,
       organicCards: true,
     },
-    background: { glyphs: ['●', '✦', '○'] },
+    background: {
+      glyphs: ['●', '✦', '○'],
+      fragments: ['●', '○', '◆', '✦', '·'],
+      falling: ['●', '○', '◆'],
+    },
     motion: { ambientMs: 7600, floatDistance: 4, rotateDegrees: 2.5 },
     canvas: { cornerGlyphs: ['●', '○'] },
   },
@@ -152,7 +166,11 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       borderWidth: 2,
       organicCards: true,
     },
-    background: { glyphs: ['✦', '○', '·'] },
+    background: {
+      glyphs: ['✦', '○', '·'],
+      fragments: ['✦', '☁', '○', '◌', '·'],
+      falling: ['✦', '☁', '○'],
+    },
     motion: { ambientMs: 11200, floatDistance: 6, rotateDegrees: 1 },
     canvas: { cornerGlyphs: ['✦', '○'] },
   },
@@ -181,7 +199,11 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       borderWidth: 2,
       organicCards: false,
     },
-    background: { glyphs: ['◆', '✦', '·'] },
+    background: {
+      glyphs: ['◆', '✦', '·'],
+      fragments: ['◆', '♦', '✦', '⌁', '·'],
+      falling: ['◆', '♦', '✦'],
+    },
     motion: { ambientMs: 8200, floatDistance: 4, rotateDegrees: 2 },
     canvas: { cornerGlyphs: ['◆', '✦'] },
   },
@@ -210,7 +232,11 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       borderWidth: 2,
       organicCards: false,
     },
-    background: { glyphs: ['✦', '◆', '●'] },
+    background: {
+      glyphs: ['✦', '◆', '●'],
+      fragments: ['✦', '◆', '●', '◇', '✧'],
+      falling: ['✦', '◆', '●', '◇'],
+    },
     motion: { ambientMs: 8800, floatDistance: 5, rotateDegrees: 2.2 },
     canvas: { cornerGlyphs: ['✦', '◆'] },
   },

@@ -20,7 +20,9 @@ import {
 import { exportArtwork } from '@/src/features/artworks/export';
 import type { SavedArtwork } from '@/src/features/artworks/types';
 import type { ProfileSnapshot } from '@/src/features/profile/types';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 function partnerSnapshot(artwork: SavedArtwork): ProfileSnapshot {
   if (artwork.partner_user_id === artwork.head_profile.userId) {
@@ -39,6 +41,8 @@ export default function ArtworkDetailScreen() {
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,7 +134,7 @@ export default function ArtworkDetailScreen() {
   if (!artwork) {
     return (
       <Screen backLabel="GALLERY">
-        {!error && <ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} />}
+        {!error && <ActivityIndicator style={{ marginTop: 80 }} color={world.colors.text} />}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </Screen>
     );
@@ -140,29 +144,52 @@ export default function ArtworkDetailScreen() {
     <Screen backLabel="GALLERY">
 
       <View style={styles.header}>
-        <Text style={styles.kicker}>{artwork.prompt_theme?.toUpperCase() ?? 'SAVED CROCAT'}</Text>
+        <Text style={[styles.kicker, { color: world.colors.accent }]}>{artwork.prompt_theme?.toUpperCase() ?? 'SAVED CROCAT'}</Text>
         <TextInput
           value={title}
           maxLength={60}
           onChangeText={setTitle}
           onBlur={() => void saveTitle()}
           onSubmitEditing={() => void saveTitle()}
-          style={styles.titleInput}
+          placeholderTextColor={world.colors.muted}
+          style={[
+            styles.titleInput,
+            {
+              color: world.colors.text,
+              borderBottomColor: world.colors.line,
+            },
+          ]}
         />
-        <Text style={styles.renameHint}>TAP THE TITLE TO RENAME</Text>
+        <Text style={[styles.renameHint, { color: world.colors.muted }]}>TAP THE TITLE TO RENAME</Text>
       </View>
 
-      <View style={styles.preview}>
+      <View
+        style={[
+          styles.preview,
+          {
+            borderColor: world.colors.line,
+            backgroundColor: world.colors.card,
+          },
+        ]}
+      >
         <ArtworkThumbnail artwork={artwork} width={270} />
       </View>
 
       {!!partner && (
-        <View style={styles.partnerCard}>
+        <View
+          style={[
+            styles.partnerCard,
+            {
+              backgroundColor: world.colors.card,
+              borderColor: world.colors.line,
+            },
+          ]}
+        >
           <Mascot profile={partner} state="happy" size={58} animated={false} />
           <View style={styles.partnerText}>
-            <Text style={styles.partnerLabel}>MADE WITH</Text>
-            <Text style={styles.partnerName}>{partner.displayName}</Text>
-            <Text style={styles.partnerMeta}>
+            <Text style={[styles.partnerLabel, { color: world.colors.muted }]}>MADE WITH</Text>
+            <Text style={[styles.partnerName, { color: world.colors.text }]}>{partner.displayName}</Text>
+            <Text style={[styles.partnerMeta, { color: world.colors.muted }]}>
               {partner.themeKey.toUpperCase()}
             </Text>
           </View>
@@ -213,6 +240,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     paddingHorizontal: 8,
     paddingVertical: 5,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   renameHint: { color: colors.muted, fontSize: 8, fontWeight: '900', letterSpacing: 1 },
   preview: {
