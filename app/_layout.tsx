@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -24,6 +24,7 @@ export default function RootLayout() {
   const themeReady = useUiThemeStore((state) => state.themeReady);
   const setThemeKey = useUiThemeStore((state) => state.setThemeKey);
   const profileBootstrapRef = useRef<Promise<void> | null>(null);
+  const [profileReady, setProfileReady] = useState(false);
   const uiTheme = crocatUiTheme(themeKey);
 
   useEffect(() => {
@@ -31,10 +32,19 @@ export default function RootLayout() {
     let expectedRevision = useUiThemeStore.getState().themeRevision;
 
     const cachePromise = loadCachedWorldKey();
-    const serverPromise = ensureCurrentProfile()
+    const identityPromise = ensureCurrentProfile();
+    const serverPromise = identityPromise
       .then(({ profile }) => normalizeWorldKey(profile.theme_key));
 
-    profileBootstrapRef.current = serverPromise.then(() => undefined);
+    profileBootstrapRef.current = identityPromise.then(() => undefined);
+
+    void identityPromise
+      .then(() => {
+        if (!stopped) setProfileReady(true);
+      })
+      .catch(() => {
+        if (!stopped) setProfileReady(true);
+      });
 
     const applyBootstrapTheme = (
       nextThemeKey: ReturnType<typeof normalizeWorldKey>,
@@ -145,7 +155,7 @@ export default function RootLayout() {
     };
   }, [roomId]);
 
-  if (!themeReady) {
+  if (!themeReady || !profileReady) {
     return (
       <SafeAreaProvider>
         <StatusBar style="dark" />
