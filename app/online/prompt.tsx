@@ -20,11 +20,15 @@ import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/real
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import type { PromptOption } from '@/src/features/multiplayer/types';
 
 export default function OnlinePromptScreen() {
   const router = useRouter();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const { roomId, roundId } = useLocalSearchParams<{ roomId: string; roundId: string }>();
   const {
     userId,
@@ -196,8 +200,10 @@ export default function OnlinePromptScreen() {
     return (
       <Screen scroll={false} backLabel="LEAVE" onBack={requestLeave}>
         <View style={styles.loading}>
-          <ActivityIndicator color={colors.ink} />
-          <Text style={styles.copy}>{error || 'Preparing prompt choices…'}</Text>
+          <ActivityIndicator color={world.colors.text} />
+          <Text style={[styles.copy, { color: world.colors.muted }]}>
+            {error || 'Preparing prompt choices…'}
+          </Text>
         </View>
       </Screen>
     );
@@ -207,11 +213,11 @@ export default function OnlinePromptScreen() {
     <Screen scroll={false} contentStyle={styles.screen} backLabel="LEAVE" onBack={requestLeave} decorations="quiet">
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.kicker}>ROOM {room.code} · PROMPT PICK</Text>
-          <Text style={styles.title}>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>ROOM {room.code} · PROMPT PICK</Text>
+          <Text style={[styles.title, { color: world.colors.text }]}>
             {isHead ? 'Pick what you will draw.' : `${headName} is choosing.`}
           </Text>
-          <Text style={styles.copy}>
+          <Text style={[styles.copy, { color: world.colors.muted }]}>
             Three prompts, three different themes. The theme disappears once drawing starts.
           </Text>
         </View>
@@ -248,9 +254,13 @@ export default function OnlinePromptScreen() {
               pressed && isHead && styles.optionPressed,
             ]}
           >
-            <Text style={styles.theme}>{option.theme.toUpperCase()}</Text>
-            <Text style={styles.term}>{option.term}</Text>
-            <Text style={styles.parts}>
+            <Text style={[styles.theme, !isHead && { color: world.colors.accent }]}>
+              {option.theme.toUpperCase()}
+            </Text>
+            <Text style={[styles.term, !isHead && { color: world.colors.text }]}>
+              {option.term}
+            </Text>
+            <Text style={[styles.parts, !isHead && { color: world.colors.muted }]}>
               {(option.headLabel ?? 'HEAD').toUpperCase()} · {(option.bodyLabel ?? 'BODY').toUpperCase()}
             </Text>
           </Pressable>
@@ -267,7 +277,9 @@ export default function OnlinePromptScreen() {
             {round.prompt_reroll_used ? 'REROLL USED' : 'NEW 3 · 1× REROLL'}
           </CrocatButton>
         ) : (
-          <Text style={styles.waiting}>You are BODY this round. Watch the choice happen live.</Text>
+          <Text style={[styles.waiting, { color: world.colors.muted }]}>
+            You are BODY this round. Watch the choice happen live.
+          </Text>
         )}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
@@ -320,7 +332,7 @@ const styles = StyleSheet.create({
   },
   options: { flex: 1, minHeight: 0, justifyContent: 'center', gap: 10 },
   option: { padding: 18, borderRadius: radius.md, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card },
-  optionReadonly: { border: 'none', opacity: 0.78, backgroundColor: 'transparent' },
+  optionReadonly: { borderWidth: 0, opacity: 0.78, backgroundColor: 'transparent' },
   optionPressed: { transform: [{ scale: 0.985 }], backgroundColor: colors.lime },
   theme: { color: colors.coral, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   term: { marginTop: 4, color: colors.ink, fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
