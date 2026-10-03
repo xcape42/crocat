@@ -35,6 +35,7 @@ import type {
   LobbyInviteSummary,
 } from '@/src/features/social/types';
 import { socialProfileVisual } from '@/src/features/social/types';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -49,18 +50,24 @@ function MiniButton({
   strong?: boolean;
   disabled?: boolean;
 }) {
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
+
   return (
     <Pressable
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.miniButton,
-        strong && styles.miniButtonStrong,
+        {
+          borderColor: world.colors.text,
+          backgroundColor: strong ? world.colors.primary : world.colors.surface,
+        },
         disabled && styles.disabled,
         pressed && !disabled && styles.pressed,
       ]}
     >
-      <Text style={styles.miniButtonText}>{label}</Text>
+      <Text style={[styles.miniButtonText, { color: world.colors.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -96,6 +103,8 @@ export default function FriendsScreen() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
 
   const refresh = useCallback(async () => {
     try {
@@ -241,7 +250,7 @@ export default function FriendsScreen() {
 
         <View style={styles.friendMain}>
           <View style={styles.friendTop}>
-            <Text style={styles.name}>{friend.display_name}</Text>
+            <Text style={[styles.name, { color: world.colors.text }]}>{friend.display_name}</Text>
             <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
               {lastSeenText(friend)}
             </Text>
@@ -250,7 +259,7 @@ export default function FriendsScreen() {
           <Text style={[styles.worldMeta, { color: friendWorld.colors.muted }]}>
             {friendWorld.label}
           </Text>
-          <Text style={styles.meta}>
+          <Text style={[styles.meta, { color: world.colors.muted }]}>
             LV {friend.friend_level} · {friend.friendship_label}
             {friend.open_room_code ? ' · OPEN ROOM ' + friend.open_room_code : ''}
           </Text>
@@ -287,7 +296,7 @@ export default function FriendsScreen() {
   if (loading) {
     return (
       <Screen>
-        <ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} />
+        <ActivityIndicator style={{ marginTop: 80 }} color={world.colors.text} />
       </Screen>
     );
   }
@@ -297,8 +306,8 @@ export default function FriendsScreen() {
 
       <View style={styles.header}>
         <View>
-          <Text style={styles.kicker}>{inviteRoomId ? 'INVITE TO ROOM' : 'YOUR PEOPLE'}</Text>
-          <Text style={styles.title}>Friends</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>{inviteRoomId ? 'INVITE TO ROOM' : 'YOUR PEOPLE'}</Text>
+          <Text style={[styles.title, { color: world.colors.text }]}>Friends</Text>
         </View>
 
         {!!profile && (
@@ -310,13 +319,19 @@ export default function FriendsScreen() {
 
       {!!invites.length && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>LOBBY INVITES</Text>
+          <Text style={[styles.sectionTitle, { color: world.colors.muted }]}>LOBBY INVITES</Text>
           {invites.map((item) => (
-            <View key={item.invite_id} style={styles.card}>
+            <View key={item.invite_id} style={[
+              styles.card,
+              {
+                borderColor: world.colors.line,
+                backgroundColor: world.colors.card,
+              },
+            ]}>
               <Mascot profile={socialProfileVisual(item)} state="happy" size={50} animated={false} />
               <View style={styles.cardText}>
-                <Text style={styles.name}>{item.display_name}</Text>
-                <Text style={styles.meta}>ROOM {item.room_code} · WANTS TO DRAW</Text>
+                <Text style={[styles.name, { color: world.colors.text }]}>{item.display_name}</Text>
+                <Text style={[styles.meta, { color: world.colors.muted }]}>ROOM {item.room_code} · WANTS TO DRAW</Text>
               </View>
               <View style={styles.cardActions}>
                 <MiniButton
@@ -342,10 +357,10 @@ export default function FriendsScreen() {
       <View style={styles.addCard}>
         <View style={styles.addTop}>
           <View>
-            <Text style={styles.sectionTitle}>ADD FRIEND</Text>
+            <Text style={[styles.sectionTitle, { color: world.colors.muted }]}>ADD FRIEND</Text>
           </View>
           <Pressable onPress={() => router.push('/profile')}>
-            <Text style={styles.editProfile}>EDIT PROFILE →</Text>
+            <Text style={[styles.editProfile, { color: world.colors.accent }]}>EDIT PROFILE →</Text>
           </Pressable>
         </View>
 
@@ -356,10 +371,17 @@ export default function FriendsScreen() {
               value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8),
             )}
             placeholder="FRIEND CODE"
-            placeholderTextColor={colors.muted}
+            placeholderTextColor={world.colors.muted}
             maxLength={8}
             autoCapitalize="characters"
-            style={styles.codeInput}
+            style={[
+              styles.codeInput,
+              {
+                borderColor: world.colors.text,
+                color: world.colors.text,
+                backgroundColor: world.colors.card,
+              },
+            ]}
           />
           <MiniButton
             strong
@@ -369,22 +391,28 @@ export default function FriendsScreen() {
           />
         </View>
         <Pressable onPress={copyCode}>
-          {!!profile && <Text style={styles.yourCode}>YOURS · {profile.friend_code}</Text>}
+          {!!profile && <Text style={[styles.yourCode, { color: world.colors.text }]}>YOURS · {profile.friend_code}</Text>}
         </Pressable>
       </View>
 
-      {!!notice && <Text style={styles.notice}>{notice}</Text>}
+      {!!notice && <Text style={[styles.notice, { color: world.colors.text }]}>{notice}</Text>}
       {!!error && <Text style={styles.error}>{error}</Text>}
 
       {!!requests.length && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>REQUESTS</Text>
+          <Text style={[styles.sectionTitle, { color: world.colors.muted }]}>REQUESTS</Text>
           {requests.map((item) => (
-            <View key={item.friendship_id} style={styles.card}>
+            <View key={item.friendship_id} style={[
+              styles.card,
+              {
+                borderColor: world.colors.line,
+                backgroundColor: world.colors.card,
+              },
+            ]}>
               <Mascot profile={socialProfileVisual(item)} state="curious" size={48} animated={false} />
               <View style={styles.cardText}>
-                <Text style={styles.name}>{item.display_name}</Text>
-                <Text style={styles.meta}>
+                <Text style={[styles.name, { color: world.colors.text }]}>{item.display_name}</Text>
+                <Text style={[styles.meta, { color: world.colors.muted }]}>
                   {item.direction === 'incoming' ? 'WANTS TO BE FRIENDS' : 'REQUEST SENT'}
                 </Text>
               </View>
@@ -425,34 +453,34 @@ export default function FriendsScreen() {
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>FRIENDS · {friends.length}</Text>
+        <Text style={[styles.sectionTitle, { color: world.colors.muted }]}>FRIENDS · {friends.length}</Text>
 
         {!friends.length ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyFace}>◉ ᴗ ◉</Text>
-            <Text style={styles.emptyTitle}>A little quiet here.</Text>
-            <Text style={styles.emptyCopy}>Share your friend code or add someone above.</Text>
+          <View style={[styles.empty, { borderColor: world.colors.line }]}>
+            <Text style={[styles.emptyFace, { color: world.colors.text }]}>◉ ᴗ ◉</Text>
+            <Text style={[styles.emptyTitle, { color: world.colors.text }]}>A little quiet here.</Text>
+            <Text style={[styles.emptyCopy, { color: world.colors.muted }]}>Share your friend code or add someone above.</Text>
           </View>
         ) : (
           <>
             <View style={styles.friendGroup}>
               <View style={styles.groupHeader}>
-                <Text style={styles.groupTitle}>ONLINE · {onlineFriends.length}</Text>
+                <Text style={[styles.groupTitle, { color: world.colors.text }]}>ONLINE · {onlineFriends.length}</Text>
                 <View style={styles.onlineDot} />
               </View>
               {onlineFriends.length
                 ? onlineFriends.map(renderFriend)
-                : <Text style={styles.groupEmpty}>No friends online right now.</Text>}
+                : <Text style={[styles.groupEmpty, { color: world.colors.muted }]}>No friends online right now.</Text>}
             </View>
 
             <View style={styles.friendGroup}>
               <View style={styles.groupHeader}>
-                <Text style={styles.groupTitle}>OFFLINE · {offlineFriends.length}</Text>
+                <Text style={[styles.groupTitle, { color: world.colors.text }]}>OFFLINE · {offlineFriends.length}</Text>
                 <View style={styles.offlineDot} />
               </View>
               {offlineFriends.length
                 ? offlineFriends.map(renderFriend)
-                : <Text style={styles.groupEmpty}>Everyone is online.</Text>}
+                : <Text style={[styles.groupEmpty, { color: world.colors.muted }]}>Everyone is online.</Text>}
             </View>
           </>
         )}
