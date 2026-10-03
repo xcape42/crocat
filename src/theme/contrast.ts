@@ -52,3 +52,7 @@ export function readableTextColor(
     ? dark
     : light;
 }
+
+export function readableErrorTextColor(backgroundColor: string) {
+  return readableTextColor(backgroundColor, '#A74343', '#FF9B9B');
+}
