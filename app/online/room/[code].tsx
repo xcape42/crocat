@@ -43,6 +43,7 @@ import type {
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -519,7 +520,11 @@ export default function OnlineRoomScreen() {
                 ? 'Both players are ready. Either player can start.'
                 : `${readyCount}/${requiredPlayers} ready. Both players must be ready to start.`))}
         </Text>
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && (
+          <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+            {error}
+          </Text>
+        )}
       </View>
 
       <ConfirmActionModal
