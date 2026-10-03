@@ -37,8 +37,8 @@ function contrastRatio(left: number, right: number) {
  */
 export function readableTextColor(
   backgroundColor: string,
-  dark = crocatPalette.ink,
-  light = crocatPalette.haloWhite,
+  dark: string = crocatPalette.ink,
+  light: string = crocatPalette.haloWhite,
 ) {
   const background = luminance(backgroundColor);
   const darkLum = luminance(dark);
