@@ -47,6 +47,7 @@ const handoff = read('app/handoff.tsx');
 const localReveal = read('app/reveal.tsx');
 const result = read('app/result.tsx');
 const currentProfileVisual = read('src/hooks/useCurrentProfileVisual.ts');
+const profileApi = read('src/features/profile/api.ts');
 const profileWorldPicker = read('src/components/ProfileWorldPicker.tsx');
 const profileCharacterPicker = read('src/components/ProfileCharacterPicker.tsx');
 
@@ -69,16 +70,22 @@ assert(
 );
 
 assert(
-  currentProfileVisual.includes('ensureCurrentProfile()')
-    && currentProfileVisual.includes('profileToVisual(current)')
-    && home.includes('profile={profile ?? undefined}')
-    && play.includes('profile={profile ?? undefined}')
-    && entry.includes('profile={profile ? profileToVisual(profile) : undefined}')
-    && gallery.includes('profile={profile ?? undefined}')
-    && handoff.includes('profile={profile ?? undefined}')
-    && localReveal.includes('profile={profile ?? undefined}')
-    && result.includes('profile={profile ?? undefined}'),
-  'Home, Play, Online entry and remaining local identity screens must render the current personal mascot instead of a generic blob.',
+  currentProfileVisual.includes('peekCurrentProfileVisual')
+    && currentProfileVisual.includes('ensureCurrentProfile()')
+    && profileApi.includes('let currentProfileVisual')
+    && profileApi.includes('cacheCurrentProfile')
+    && rootLayout.includes('profileReady')
+    && rootLayout.includes('if (!themeReady || !profileReady)')
+    && home.includes('{profile && (')
+    && play.includes('{profile && <Mascot')
+    && entry.includes('{profile && (')
+    && gallery.includes('{profile && <Mascot')
+    && handoff.includes('{profile && <Mascot')
+    && localReveal.includes('{profile && <Mascot')
+    && result.includes('{profile && (')
+    && !home.includes('profile={profile ?? undefined}')
+    && !entry.includes('profile={profile ? profileToVisual(profile) : undefined}'),
+  'Personal mascot screens must reuse the bootstrapped profile and never flash the generic green fallback.',
 );
 
 assert(
@@ -376,7 +383,7 @@ assert(
     && uiThemeStore.includes('rememberWorldKey')
     && rootLayout.includes('loadCachedWorldKey')
     && rootLayout.includes('Promise.race')
-    && rootLayout.includes('if (!themeReady)')
+    && rootLayout.includes('if (!themeReady || !profileReady)')
     && rootLayout.includes('applyBootstrapTheme')
     && rootLayout.includes('expectedRevision'),
   'World bootstrap must distinguish unresolved default state, use cache/server racing and protect newer theme changes from stale bootstrap writes.',
@@ -385,9 +392,12 @@ assert(
 assert(
   themeCache.includes("'crocat:world-theme:v1'")
     && themeCache.includes('normalizeWorldKey')
+    && themeCache.includes("value === 'halo'")
+    && themeCache.includes("value === 'ember'")
+    && themeCache.includes("value === 'shadow'")
     && rootLayout.includes("source: 'server'")
     && rootLayout.includes("persist: false"),
-  'The last confirmed World must be a bootstrap cache while the server profile remains authoritative.',
+  'The last confirmed World must bootstrap all current Worlds while the server profile remains authoritative.',
 );
 
 assert(
@@ -399,6 +409,17 @@ assert(
     && profileOptions.includes('MASCOT_CHARACTERS')
     && profileOptions.includes('MASCOT_SHAPES'),
   'Profile editing must present one mascot identity followed by an independent World selection.',
+);
+
+assert(
+  mascots.includes("key: 'slim'")
+    && mascots.includes("label: 'SLIM'")
+    && mascots.includes("key: 'angular'")
+    && mascots.includes("label: 'ANGULAR'")
+    && mascot.includes("shape === 'slim'")
+    && mascot.includes("shape === 'angular'")
+    && mascot.includes('accessoryRight'),
+  'Crocat 1.8.4 must expose distinct SLIM and ANGULAR mascot shapes with coherent accessory geometry.',
 );
 
 assert(
@@ -474,4 +495,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.3 World atmosphere, character explorer, color-character polish, profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.4 mascot shapes, profile bootstrap, World atmosphere, character explorer, color-character polish, profile-mascot-world, drawing-guide, reliable phase-sync and UI contracts passed');

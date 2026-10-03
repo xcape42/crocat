@@ -24,7 +24,9 @@ export default function HandoffScreen() {
     <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)} decorations="full">
       <View style={styles.center}>
         <Text style={styles.kicker}>DON'T PEEK.</Text>
-        <View style={styles.mascot}><Mascot profile={profile ?? undefined} state="shy" size={104} /></View>
+        <View style={styles.mascot}>
+          {profile && <Mascot profile={profile} state="shy" size={104} />}
+        </View>
         <Text style={styles.title}>Pass it to Sarah.</Text>
         <Text style={styles.copy}>Domi's head is safely hidden. Sarah gets the BODY and a fresh canvas with the connection line at the top.</Text>
       </View>

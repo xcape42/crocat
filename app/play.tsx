@@ -25,7 +25,7 @@ export default function PlayScreen() {
             Find another Crocat in every way imaginable.
           </Text>
         </View>
-        <Mascot profile={profile ?? undefined} state="happy" size={82} />
+        {profile && <Mascot profile={profile} state="happy" size={82} />}
       </View>
 
       <View style={styles.stack}>

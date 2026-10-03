@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { ensureGuest } from '@/src/features/multiplayer/auth';
 import { requireSupabase } from '@/src/lib/supabase';
+import { profileToVisual } from './types';
 import type {
   MascotCharacterKey,
   MascotShapeKey,
@@ -8,7 +9,19 @@ import type {
   ProfileColorKey,
   ProfileSymbolKey,
   ProfileThemeKey,
+  ProfileVisual,
 } from './types';
+
+let currentProfileVisual: ProfileVisual | null = null;
+
+export function peekCurrentProfileVisual(): ProfileVisual | null {
+  return currentProfileVisual;
+}
+
+function cacheCurrentProfile(profile: PlayerProfile) {
+  currentProfileVisual = profileToVisual(profile);
+  return profile;
+}
 
 function one<T>(data: T | T[] | null): T {
   const value = Array.isArray(data) ? data[0] : data;
@@ -30,9 +43,11 @@ export async function ensureCurrentProfile(
   });
   if (error) throw error;
 
+  const profile = cacheCurrentProfile(one<PlayerProfile>(data));
+
   return {
     user,
-    profile: one<PlayerProfile>(data),
+    profile,
   };
 }
 
@@ -45,7 +60,7 @@ export async function loadCurrentProfile(): Promise<PlayerProfile> {
     .maybeSingle();
 
   if (error) throw error;
-  return (data as PlayerProfile | null) ?? profile;
+  return cacheCurrentProfile((data as PlayerProfile | null) ?? profile);
 }
 
 export async function updateProfile(input: {
@@ -65,7 +80,7 @@ export async function updateProfile(input: {
     p_mascot_character_key: input.mascotCharacterKey,
   });
   if (error) throw error;
-  return one<PlayerProfile>(data);
+  return cacheCurrentProfile(one<PlayerProfile>(data));
 }
 
 export async function touchProfilePresence() {

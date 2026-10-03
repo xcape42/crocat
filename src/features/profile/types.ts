@@ -10,7 +10,7 @@ export type ProfileColorKey =
   | 'ember'
   | 'shadow';
 
-export type MascotShapeKey = 'round' | 'ears' | 'spiky';
+export type MascotShapeKey = 'round' | 'ears' | 'spiky' | 'slim' | 'angular';
 export type ProfileAvatarKey = MascotShapeKey;
 export type MascotCharacterKey = 'gentle' | 'dreamy' | 'playful' | 'sunny' | 'cool';
 export type CrocatWorldKey = 'moss' | 'moon' | 'candy' | 'halo' | 'ember' | 'shadow';

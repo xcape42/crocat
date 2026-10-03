@@ -378,11 +378,13 @@ export default function OnlineRoomScreen() {
               <RoomCodeDisplay code={String(code)} />
             </View>
           </View>
-          <Mascot
-            profile={me?.profile ? profileToVisual(me.profile) : undefined}
-            state={players.length < requiredPlayers ? 'shy' : (allReady ? 'excited' : 'happy')}
-            size={82}
-          />
+          {me?.profile && (
+            <Mascot
+              profile={profileToVisual(me.profile)}
+              state={players.length < requiredPlayers ? 'shy' : (allReady ? 'excited' : 'happy')}
+              size={82}
+            />
+          )}
         </View>
         <Text style={styles.copy}>Share the code or open All Friends to invite someone. Roles are randomized each round.</Text>
         {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}

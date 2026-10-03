@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.4 — Mascot shapes and profile bootstrap
+
+- Add two personal mascot shapes: SLIM and ANGULAR
+- Keep the five shape choices inside the existing Profile mascot-shape section with the same preview behavior
+- Persist the new shapes through the existing avatar_key field without adding a new profile column
+- Extend profile validation and the six-argument update_profile RPC for the new shape keys
+- Cache the already bootstrapped current Profile visual in memory and reuse it on subsequent screens
+- Keep RootLayout on the bootstrap surface until both World and current Profile loading have resolved
+- Remove generic Moss/green mascot fallbacks from Home, Play, Online Entry, Gallery, Handoff, Reveal, Result and the Online Room header
+- Expand the local World cache to recognize Halo, Ember and Colorful Shadow as well as the original Worlds
+- Preserve offline/local access: if profile loading genuinely fails, personal mascot slots remain empty rather than showing the wrong identity
+- Keep gameplay, mascot character/emotion logic, Worlds and Realtime behavior unchanged
+- Version Crocat as 1.8.4
+
 ## 1.8.3 — World atmosphere and Profile World explorer
 
 - Replace the compact Profile World grid with one larger World card in the same position

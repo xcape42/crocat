@@ -88,7 +88,7 @@ async function main() {
   alphaProfile = await updateProfile(alpha, {
     name: 'Alpha Fox',
     color: 'halo',
-    avatar: 'ears',
+    avatar: 'slim',
     character: 'sunny',
     theme: 'halo',
     symbol: 'moon',
@@ -96,7 +96,7 @@ async function main() {
   betaProfile = await updateProfile(beta, {
     name: 'Beta Bird',
     color: 'shadow',
-    avatar: 'spiky',
+    avatar: 'angular',
     character: 'cool',
     theme: 'shadow',
     symbol: 'spark',
@@ -105,7 +105,7 @@ async function main() {
   if (
     alphaProfile.display_name !== 'Alpha Fox'
     || alphaProfile.color_key !== 'halo'
-    || alphaProfile.avatar_key !== 'ears'
+    || alphaProfile.avatar_key !== 'slim'
     || alphaProfile.mascot_character_key !== 'sunny'
     || alphaProfile.theme_key !== 'halo'
     || alphaProfile.symbol_key !== 'moon'
@@ -126,6 +126,7 @@ async function main() {
     reloadedProfile.user_id !== alphaGuest.user.id
     || reloadedProfile.display_name !== 'Alpha Fox'
     || reloadedProfile.friend_code !== alphaProfile.friend_code
+    || reloadedProfile.avatar_key !== 'slim'
     || reloadedProfile.mascot_character_key !== 'sunny'
     || reloadedProfile.theme_key !== 'halo'
   ) {
@@ -174,6 +175,7 @@ async function main() {
     acceptedFriend.friend_level !== 1
     || acceptedFriend.shared_rounds !== 0
     || acceptedFriend.friendship_label !== 'NEW FRIEND'
+    || acceptedFriend.avatar_key !== 'angular'
     || acceptedFriend.mascot_character_key !== 'cool'
     || acceptedFriend.theme_key !== 'shadow'
   ) {

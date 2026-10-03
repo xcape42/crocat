@@ -82,7 +82,7 @@ export default function GalleryScreen() {
         <ActivityIndicator style={{ marginTop: 70 }} color={colors.ink} />
       ) : !artworks.length ? (
         <CrocatCard variant="surface" style={styles.empty}>
-          <Mascot profile={profile ?? undefined} state="curious" size={82} />
+          {profile && <Mascot profile={profile} state="curious" size={82} />}
           <Text style={styles.emptyTitle}>No weirdos saved yet.</Text>
           <Text style={styles.emptyCopy}>
             Star an online final reveal and it will appear here.

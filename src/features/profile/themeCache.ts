@@ -8,6 +8,9 @@ function isKnownThemeKey(value: string): value is ProfileThemeKey {
   return value === 'moss'
     || value === 'moon'
     || value === 'candy'
+    || value === 'halo'
+    || value === 'ember'
+    || value === 'shadow'
     || value === 'paper'
     || value === 'ink';
 }

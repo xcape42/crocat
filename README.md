@@ -2,11 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.8.3
+## Stable version: 1.8.4
 
 Public app: https://xcape42.github.io/crocat/
 
-Crocat 1.8.3 deepens the six Crocat Worlds with a larger swipeable World explorer, richer themed fragments and subtle layered ambient motion. Crocat 1.8.2 introduced a larger swipeable Profile character explorer with arrow navigation, visible character traits and interactive emotion previews. Crocat 1.8.1 polished the shared color system: Moss, Moon and Candy keep their established signature mascot colors, Halo adds a bright off-white, Ember keeps its velvet tone, and the new Colorful Shadow World adds a near-black mascot color with vivid night accents. Theme-linked colors are marked in Profile, while SUNNY and COOL expand the independent mascot character set to five complete personalities.
+Crocat 1.8.4 adds SLIM and ANGULAR mascot shapes and hardens profile bootstrap so personal mascots never flash the generic Moss fallback while entering a screen. Crocat 1.8.3 deepened the six Crocat Worlds with a larger swipeable World explorer, richer themed fragments and subtle layered ambient motion. Crocat 1.8.2 introduced a larger swipeable Profile character explorer with arrow navigation, visible character traits and interactive emotion previews. Crocat 1.8.1 polished the shared color system: Moss, Moon and Candy keep their established signature mascot colors, Halo adds a bright off-white, Ember keeps its velvet tone, and the new Colorful Shadow World adds a near-black mascot color with vivid night accents. Theme-linked colors are marked in Profile, while SUNNY and COOL expand the independent mascot character set to five complete personalities.
 
 Crocat 1.8.0 consolidates profile identity around one personal mascot. The mascot now replaces the old profile avatar throughout Friends, Invites, Lobby and saved-artwork identity, and can be customized independently by color, blob shape, character and symbol. Crocat Worlds now control only the surrounding atmosphere, with Moss Garden, Moon Milk and Candy Blob joined by Halo Cloud and Ember Velvet. Drawing colors, mascot colors and World accents now draw from one shared Crocat palette.
 

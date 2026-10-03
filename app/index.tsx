@@ -21,7 +21,7 @@ export default function HomeScreen() {
   return (
     <Screen decorations="full">
       <View style={styles.topRow}>
-        <Text style={[styles.version, { color: world.colors.muted }]}>CROCAT 1.8.3</Text>
+        <Text style={[styles.version, { color: world.colors.muted }]}>CROCAT 1.8.4</Text>
         <Text style={[styles.dot, { color: world.colors.accent }]}>●</Text>
       </View>
 
@@ -37,12 +37,14 @@ export default function HomeScreen() {
         </Text>
 
         <MascotSlot compact={compact}>
-          <Mascot
-            profile={profile ?? undefined}
-            state="idle"
-            size={compact ? 124 : 158}
-            accessibilityLabel="Your Crocat mascot"
-          />
+          {profile && (
+            <Mascot
+              profile={profile}
+              state="idle"
+              size={compact ? 124 : 158}
+              accessibilityLabel="Your Crocat mascot"
+            />
+          )}
         </MascotSlot>
 
         <CrocatCard variant="accent" style={styles.worldCard}>
