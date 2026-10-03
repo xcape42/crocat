@@ -6,7 +6,9 @@ import { CrocatButton } from '@/src/components/CrocatButton';
 import { DrawingPreview } from '@/src/components/DrawingPreview';
 import { Screen } from '@/src/components/Screen';
 import { useGameStore } from '@/src/store/gameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import type { GameRole } from '@/src/types/game';
 
 function ZoomControls({ role }: { role: GameRole }) {
@@ -38,6 +40,8 @@ export default function FinalizeScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const {
     head,
     body,
@@ -67,9 +71,11 @@ export default function FinalizeScreen() {
       decorations="none"
     >
       <View style={styles.header}>
-        <Text style={styles.kicker}>REVEAL</Text>
-        <Text style={[styles.title, compact && styles.titleCompact]}>A beautiful accident.</Text>
-        <Text style={[styles.copy, compact && styles.copyCompact]}>
+        <Text style={[styles.kicker, { color: world.colors.accent }]}>REVEAL</Text>
+        <Text style={[styles.title, { color: world.colors.text }, compact && styles.titleCompact]}>
+          A beautiful accident.
+        </Text>
+        <Text style={[styles.copy, { color: world.colors.muted }, compact && styles.copyCompact]}>
           Drag HEAD or BODY directly. Use − / + only to adjust the zoom.
         </Text>
       </View>
