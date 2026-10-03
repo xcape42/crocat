@@ -42,10 +42,14 @@ import type {
 } from '@/src/features/social/types';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 export default function OnlineRoomScreen() {
   const router = useRouter();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const { code } = useLocalSearchParams<{ code: string }>();
   const {
     userId,
@@ -365,7 +369,7 @@ export default function OnlineRoomScreen() {
   };
 
   if (!room && !error) {
-    return <Screen><ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} /></Screen>;
+    return <Screen><ActivityIndicator style={{ marginTop: 80 }} color={world.colors.text} /></Screen>;
   }
 
   return (
@@ -373,7 +377,7 @@ export default function OnlineRoomScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerCopy}>
-            <Text style={styles.kicker}>ONLINE LOBBY</Text>
+            <Text style={[styles.kicker, { color: world.colors.accent }]}>ONLINE LOBBY</Text>
             <View style={styles.codeRow}>
               <RoomCodeDisplay code={String(code)} />
             </View>
@@ -386,8 +390,12 @@ export default function OnlineRoomScreen() {
             />
           )}
         </View>
-        <Text style={styles.copy}>Share the code or open All Friends to invite someone. Roles are randomized each round.</Text>
-        {!!joinNotice && <Text style={styles.joinNotice}>{joinNotice}</Text>}
+        <Text style={[styles.copy, { color: world.colors.muted }]}>
+          Share the code or open All Friends to invite someone. Roles are randomized each round.
+        </Text>
+        {!!joinNotice && (
+          <Text style={[styles.joinNotice, { color: world.colors.text }]}>{joinNotice}</Text>
+        )}
       </View>
 
       <View style={styles.players}>
@@ -408,11 +416,13 @@ export default function OnlineRoomScreen() {
 
           const relationship = player.user_id === userId ? null : (
             friend ? (
-              <Text style={styles.friendState}>
+              <Text style={[styles.friendState, { color: world.colors.accent }]}>
                 FRIENDS · LV {friend.friend_level} · {friend.friendship_label}
               </Text>
             ) : request?.direction === 'outgoing' ? (
-              <Text style={styles.requestState}>FRIEND REQUEST SENT</Text>
+              <Text style={[styles.requestState, { color: world.colors.muted }]}>
+                FRIEND REQUEST SENT
+              </Text>
             ) : (
               <Pressable
                 disabled={!!socialBusy}
@@ -459,7 +469,9 @@ export default function OnlineRoomScreen() {
 
         {players.length < requiredPlayers && (
           <View style={styles.waiting}>
-            <Text style={styles.waitingText}>A second little world can join here…</Text>
+            <Text style={[styles.waitingText, { color: world.colors.muted }]}>
+              A second little world can join here…
+            </Text>
           </View>
         )}
       </View>
@@ -498,7 +510,7 @@ export default function OnlineRoomScreen() {
         >
           START ROUND
         </CrocatButton>
-        <Text style={styles.lobbyNote}>
+        <Text style={[styles.lobbyNote, { color: world.colors.muted }]}>
           {players.length < 2
             ? 'Waiting for the second player…'
             : (!allPlayersActive
