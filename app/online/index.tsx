@@ -12,6 +12,7 @@ import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/r
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -153,7 +154,11 @@ export default function OnlineEntryScreen() {
       </CrocatCard>
 
       {busy && <ActivityIndicator style={{ marginTop: 16 }} color={world.colors.text} />}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
     </Screen>
   );
 }
