@@ -180,9 +180,13 @@ assert(
     && worlds.includes("candy:")
     && worlds.includes("halo:")
     && worlds.includes("ember:")
+    && worlds.includes("shadow:")
+    && worlds.includes("royal:")
+    && worlds.includes("label: 'VAMPIRE BLOOD'")
+    && worlds.includes("label: 'ROYAL GEM'")
     && profileOptions.includes('WORLD_OPTIONS.map')
     && !worlds.includes('mascot: {'),
-  'Crocat Worlds must expose five environment-only themes without owning mascot identity.',
+  'Crocat Worlds must expose all seven environment-only themes without owning mascot identity.',
 );
 
 assert(
@@ -395,6 +399,7 @@ assert(
     && themeCache.includes("value === 'halo'")
     && themeCache.includes("value === 'ember'")
     && themeCache.includes("value === 'shadow'")
+    && themeCache.includes("value === 'royal'")
     && rootLayout.includes("source: 'server'")
     && rootLayout.includes("persist: false"),
   'The last confirmed World must bootstrap all current Worlds while the server profile remains authoritative.',
@@ -473,6 +478,7 @@ assert(
     && mascots.includes("worldKey: 'candy'")
     && mascots.includes("worldKey: 'halo'")
     && mascots.includes("worldKey: 'shadow'")
+    && mascots.includes("worldKey: 'royal'")
     && worlds.includes("label: 'COLORFUL SHADOW'")
     && worlds.includes("key: 'shadow'")
     && profile.includes('WORLD colors are the signature colors')
@@ -495,4 +501,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.4 mascot shapes, profile bootstrap, World atmosphere, character explorer, color-character polish, profile-mascot-world, drawing-guide, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.5 World redesign, Royal Gem, mascot shapes, profile bootstrap, World atmosphere, character explorer, profile-mascot-world, drawing-guide, reliable phase-sync and UI contracts passed');
