@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.2 — Profile character explorer
+
+- Replace the compact five-card mascot character grid with one larger focused character explorer in the same Profile position
+- Cycle characters with previous/next arrows or a horizontal swipe gesture
+- Show the selected character name, description, position and concise personality traits around a larger live mascot preview
+- Add interactive emotion controls below the preview for all established mascot states without changing the saved character selection
+- Keep the existing personal color, shape, symbol and World controls unchanged
+- Preserve mascot idle animation, emotion behavior, Reduced Motion and profile persistence
+- Preserve successful Save Profile behavior: save first, then return directly to Home without a success banner
+- Keep backend schema and gameplay unchanged
+- Version Crocat as 1.8.2
+
 ## 1.8.1 — Color, World and character polish
 
 - Preserve the established Moss Garden, Moon Milk and Candy Blob signature mascot colors exactly
