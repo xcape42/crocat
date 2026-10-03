@@ -98,25 +98,25 @@ function shapeGeometry(shape: MascotShapeKey, size: number) {
 
   if (shape === 'slim') {
     return {
-      width: size * 0.68,
-      height: size * 0.88,
-      marginTop: size * 0.09,
-      borderTopLeftRadius: size * 0.3,
-      borderTopRightRadius: size * 0.3,
-      borderBottomLeftRadius: size * 0.34,
+      width: size * 0.76,
+      height: size * 0.86,
+      marginTop: size * 0.1,
+      borderTopLeftRadius: size * 0.32,
+      borderTopRightRadius: size * 0.31,
+      borderBottomLeftRadius: size * 0.35,
       borderBottomRightRadius: size * 0.34,
     };
   }
 
   if (shape === 'angular') {
     return {
-      width: size * 0.92,
-      height: size * 0.8,
-      marginTop: size * 0.13,
-      borderTopLeftRadius: size * 0.1,
-      borderTopRightRadius: size * 0.16,
-      borderBottomLeftRadius: size * 0.14,
-      borderBottomRightRadius: size * 0.08,
+      width: size * 0.91,
+      height: size * 0.81,
+      marginTop: size * 0.125,
+      borderTopLeftRadius: size * 0.18,
+      borderTopRightRadius: size * 0.23,
+      borderBottomLeftRadius: size * 0.22,
+      borderBottomRightRadius: size * 0.16,
     };
   }
 
