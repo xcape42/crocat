@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CrocatCard } from '@/src/components/CrocatCard';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import { crocatWorld } from '@/src/theme/worlds';
 
 const ROUND_OPTIONS = [60, 120, 180, 300];
@@ -62,7 +63,16 @@ export function RoomSettingsPanel({
                     },
                   ]}
                 >
-                  <Text style={[styles.optionText, { color: world.colors.text }]}>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      {
+                        color: readableTextColor(
+                          active ? world.colors.primary : world.colors.canvas,
+                        ),
+                      },
+                    ]}
+                  >
                     {seconds / 60}m
                   </Text>
                 </Pressable>
@@ -80,7 +90,7 @@ export function RoomSettingsPanel({
               },
             ]}
           >
-            <Text style={[styles.readonlyText, { color: world.colors.text }]}>
+            <Text style={[styles.readonlyText, { color: readableTextColor(world.colors.canvas) }]}>
               {Math.round(roundSeconds / 60)} MINUTES
             </Text>
           </View>
