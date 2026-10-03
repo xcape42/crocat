@@ -8,12 +8,13 @@ export type ProfileColorKey =
   | 'mint'
   | 'halo'
   | 'ember'
-  | 'shadow';
+  | 'shadow'
+  | 'royal';
 
 export type MascotShapeKey = 'round' | 'ears' | 'spiky' | 'slim' | 'angular';
 export type ProfileAvatarKey = MascotShapeKey;
 export type MascotCharacterKey = 'gentle' | 'dreamy' | 'playful' | 'sunny' | 'cool';
-export type CrocatWorldKey = 'moss' | 'moon' | 'candy' | 'halo' | 'ember' | 'shadow';
+export type CrocatWorldKey = 'moss' | 'moon' | 'candy' | 'halo' | 'ember' | 'shadow' | 'royal';
 export type ProfileThemeKey = CrocatWorldKey | 'paper' | 'ink';
 export type ProfileSymbolKey = 'star' | 'spark' | 'heart' | 'moon' | 'bolt';
 

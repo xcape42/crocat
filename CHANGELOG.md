@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.5 — World identity redesign and Royal Gem
+
+- Retune Halo Cloud around powder blue, clean white and soft blush/lavender accents, removing the previous warm gold/brown feeling
+- Redesign Ember Velvet as VAMPIRE BLOOD with a red, black and white visual system while keeping the stored `ember` key backward-compatible
+- Replace Vampire Blood fragments with sharper dark-night symbols and blood-red accents
+- Retune Colorful Shadow to near-black surfaces with violet, lilac and smoke-gray accents instead of the previous multicolor neon mix
+- Add the seventh Crocat World, ROYAL GEM, with gold, diamond-white, sapphire-blue, ruby-red and emerald-green accents
+- Add a matching ROYAL signature mascot color and persist the new World/color through profile validation and the update_profile RPC
+- Extend local World bootstrap/cache support and UI smoke contracts for Royal Gem
+- Keep gameplay, multiplayer synchronization, mascot character logic and artwork interaction behavior unchanged
+- Version Crocat as 1.8.5
+
 ## 1.8.4 — Mascot shapes and profile bootstrap
 
 - Add two personal mascot shapes: SLIM and ANGULAR
