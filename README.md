@@ -2,9 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.8.4
+## Stable version: 1.8.5
 
 Public app: https://xcape42.github.io/crocat/
+
+Crocat 1.8.5 refreshes the Crocat Worlds: Halo Cloud is now powder-blue and cloud-soft without the old warm gold/brown cast, Ember Velvet becomes the red/black/white VAMPIRE BLOOD identity while retaining its compatible stored key, Colorful Shadow moves to a near-black violet-and-gray palette, and the new ROYAL GEM World adds gold, diamond light, sapphire, ruby and emerald accents. Royal Gem is persisted through the existing profile system and carries its own signature mascot color.
 
 Crocat 1.8.4 adds SLIM and ANGULAR mascot shapes and hardens profile bootstrap so personal mascots never flash the generic Moss fallback while entering a screen. Crocat 1.8.3 deepened the six Crocat Worlds with a larger swipeable World explorer, richer themed fragments and subtle layered ambient motion. Crocat 1.8.2 introduced a larger swipeable Profile character explorer with arrow navigation, visible character traits and interactive emotion previews. Crocat 1.8.1 polished the shared color system: Moss, Moon and Candy keep their established signature mascot colors, Halo adds a bright off-white, Ember keeps its velvet tone, and the new Colorful Shadow World adds a near-black mascot color with vivid night accents. Theme-linked colors are marked in Profile, while SUNNY and COOL expand the independent mascot character set to five complete personalities.
 
