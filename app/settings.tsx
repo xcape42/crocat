@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/src/components/Screen';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 const futureSettings = [
   { label: 'THEME', value: 'SYSTEM', note: 'Light / dark themes will live here.' },
@@ -11,11 +13,15 @@ const futureSettings = [
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
 
   return (
     <Screen backLabel="HOME">
-      <Text style={styles.title}>Settings</Text>
-      <Text style={styles.copy}>General Crocat preferences live here. Settings for a specific game belong to that game room.</Text>
+      <Text style={[styles.title, { color: world.colors.text }]}>Settings</Text>
+      <Text style={[styles.copy, { color: world.colors.muted }]}>
+        General Crocat preferences live here. Settings for a specific game belong to that game room.
+      </Text>
 
       <View style={styles.stack}>
         {futureSettings.map((setting) => (
