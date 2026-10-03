@@ -1,6 +1,6 @@
 {
   "name": "crocat",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
