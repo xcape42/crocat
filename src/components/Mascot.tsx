@@ -69,9 +69,16 @@ const idleMotion: Record<
   bounce: { x: 0.65, y: 0.6, rotate: 1, breathe: 0.018 },
 };
 
-function shapeRadii(shape: MascotShapeKey, size: number) {
+function shapeGeometry(shape: MascotShapeKey, size: number) {
+  const base = {
+    width: size,
+    height: size * 0.82,
+    marginTop: size * 0.12,
+  };
+
   if (shape === 'ears') {
     return {
+      ...base,
       borderTopLeftRadius: size * 0.46,
       borderTopRightRadius: size * 0.32,
       borderBottomLeftRadius: size * 0.36,
@@ -81,6 +88,7 @@ function shapeRadii(shape: MascotShapeKey, size: number) {
 
   if (shape === 'spiky') {
     return {
+      ...base,
       borderTopLeftRadius: size * 0.29,
       borderTopRightRadius: size * 0.46,
       borderBottomLeftRadius: size * 0.43,
@@ -88,7 +96,32 @@ function shapeRadii(shape: MascotShapeKey, size: number) {
     };
   }
 
+  if (shape === 'slim') {
+    return {
+      width: size * 0.68,
+      height: size * 0.88,
+      marginTop: size * 0.09,
+      borderTopLeftRadius: size * 0.3,
+      borderTopRightRadius: size * 0.3,
+      borderBottomLeftRadius: size * 0.34,
+      borderBottomRightRadius: size * 0.34,
+    };
+  }
+
+  if (shape === 'angular') {
+    return {
+      width: size * 0.92,
+      height: size * 0.8,
+      marginTop: size * 0.13,
+      borderTopLeftRadius: size * 0.1,
+      borderTopRightRadius: size * 0.16,
+      borderBottomLeftRadius: size * 0.14,
+      borderBottomRightRadius: size * 0.08,
+    };
+  }
+
   return {
+    ...base,
     borderTopLeftRadius: size * 0.39,
     borderTopRightRadius: size * 0.39,
     borderBottomLeftRadius: size * 0.39,
@@ -254,6 +287,8 @@ export function Mascot({
 
   const faceSize = Math.max(9, Math.round(size * 0.18));
   const accessorySize = Math.max(10, Math.round(size * 0.22));
+  const geometry = shapeGeometry(shape, size);
+  const accessoryRight = (size - geometry.width) / 2 - 2;
   const idleProfile = idleMotion[character.idle.style];
   const distance = character.motion.floatDistance * 0.55;
   const horizontal = distance * idleProfile.x;
@@ -322,12 +357,9 @@ export function Mascot({
         style={[
           styles.body,
           {
-            width: size,
-            height: size * 0.82,
-            marginTop: size * 0.12,
+            ...geometry,
             backgroundColor: mascotColor(profile?.colorKey),
             borderColor: mascotInk(profile?.colorKey),
-            ...shapeRadii(shape, size),
           },
         ]}
       >
