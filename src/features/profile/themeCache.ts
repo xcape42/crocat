@@ -11,6 +11,7 @@ function isKnownThemeKey(value: string): value is ProfileThemeKey {
     || value === 'halo'
     || value === 'ember'
     || value === 'shadow'
+    || value === 'royal'
     || value === 'paper'
     || value === 'ink';
 }
