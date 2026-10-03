@@ -10,6 +10,7 @@ import { useReducedMotion } from '@/src/hooks/useReducedMotion';
 import {
   mascotCharacter,
   mascotColor,
+  mascotInk,
   mascotSymbol,
   type MascotIdleExpression,
   type MascotIdleStyle,
@@ -325,7 +326,7 @@ export function Mascot({
             height: size * 0.82,
             marginTop: size * 0.12,
             backgroundColor: mascotColor(profile?.colorKey),
-            borderColor: crocatPalette.ink,
+            borderColor: mascotInk(profile?.colorKey),
             ...shapeRadii(shape, size),
           },
         ]}
@@ -335,7 +336,7 @@ export function Mascot({
           style={[
             styles.face,
             {
-              color: crocatPalette.ink,
+              color: mascotInk(profile?.colorKey),
               fontSize: faceSize,
               transform: [{ translateX: faceShift }],
             },

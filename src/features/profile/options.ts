@@ -19,6 +19,9 @@ export const PROFILE_THEMES: Array<{
   background: string;
   accent: string;
   pattern: string;
+  text: string;
+  muted: string;
+  line: string;
 }> = WORLD_OPTIONS.map((world) => ({
   key: world.key,
   label: world.label,
@@ -26,4 +29,7 @@ export const PROFILE_THEMES: Array<{
   background: world.colors.background,
   accent: world.colors.accent,
   pattern: world.background.glyphs.join('  '),
+  text: world.colors.text,
+  muted: world.colors.muted,
+  line: world.colors.line,
 }));

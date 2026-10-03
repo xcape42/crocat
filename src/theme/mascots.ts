@@ -1,4 +1,5 @@
 import type {
+  CrocatWorldKey,
   MascotCharacterKey,
   MascotShapeKey,
   ProfileColorKey,
@@ -42,6 +43,15 @@ export type MascotCharacter = {
   };
 };
 
+export type MascotColorOption = {
+  key: ProfileColorKey;
+  label: string;
+  hex: string;
+  ink: string;
+  worldKey?: CrocatWorldKey;
+  worldLabel?: string;
+};
+
 const gentleFaces: Record<MascotState, string> = {
   idle: '• ᴗ •',
   happy: 'ᵔ ᴗ ᵔ',
@@ -82,6 +92,34 @@ const playfulFaces: Record<MascotState, string> = {
   proud: '˘ ω ˘',
   celebrate: '★ ω ★',
   sleeping: '− ᴗ −',
+};
+
+const sunnyFaces: Record<MascotState, string> = {
+  idle: '• ◡ •',
+  happy: 'ᵔ ◡ ᵔ',
+  shy: '◦ ◡ ◦',
+  curious: '◉ ◡ •',
+  waiting: '• ◡ •',
+  drawing: '• ▿ •',
+  nervous: '◉ ◡ ◉',
+  excited: '✦ ◡ ✦',
+  proud: '˘ ◡ ˘',
+  celebrate: '★ ◡ ★',
+  sleeping: '− ◡ −',
+};
+
+const coolFaces: Record<MascotState, string> = {
+  idle: '• ‿ •',
+  happy: 'ᵔ ‿ ᵔ',
+  shy: '◦ ‿ ◦',
+  curious: '◉ ‿ •',
+  waiting: '• ‿ •',
+  drawing: '• ᴗ •',
+  nervous: '◉ ‿ ◉',
+  excited: '✦ ‿ ✦',
+  proud: '˘ ‿ ˘',
+  celebrate: '★ ‿ ★',
+  sleeping: '− ‿ −',
 };
 
 export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
@@ -127,20 +165,89 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
     },
     motion: { ambientMs: 7600, floatDistance: 4, rotateDegrees: 2.5 },
   },
+  sunny: {
+    key: 'sunny',
+    label: 'SUNNY',
+    description: 'Open, cheerful and quietly enthusiastic.',
+    faces: sunnyFaces,
+    idle: {
+      style: 'bounce',
+      expressionMinMs: 4600,
+      expressionMaxMs: 7400,
+      gazeMs: 520,
+      sequence: ['blink', 'right', 'left', 'blink', 'right'],
+    },
+    motion: { ambientMs: 8200, floatDistance: 4.5, rotateDegrees: 2.2 },
+  },
+  cool: {
+    key: 'cool',
+    label: 'COOL',
+    description: 'Relaxed, confident and softly amused.',
+    faces: coolFaces,
+    idle: {
+      style: 'float',
+      expressionMinMs: 5600,
+      expressionMaxMs: 8600,
+      gazeMs: 760,
+      sequence: ['left', 'right', 'blink', 'left'],
+    },
+    motion: { ambientMs: 9800, floatDistance: 3.8, rotateDegrees: 1.2 },
+  },
 };
 
-export const MASCOT_COLOR_OPTIONS: Array<{
-  key: ProfileColorKey;
-  label: string;
-  hex: string;
-}> = [
-  { key: 'moss', label: 'MOSS', hex: crocatPalette.mossSoft },
-  { key: 'lime', label: 'LIME', hex: crocatPalette.lime },
-  { key: 'coral', label: 'CORAL', hex: crocatPalette.coralSoft },
-  { key: 'blue', label: 'SKY', hex: crocatPalette.skySoft },
-  { key: 'violet', label: 'LAVENDER', hex: crocatPalette.lavenderSoft },
-  { key: 'peach', label: 'PEACH', hex: crocatPalette.peach },
-  { key: 'mint', label: 'MINT', hex: crocatPalette.mint },
+export const MASCOT_COLOR_OPTIONS: MascotColorOption[] = [
+  {
+    key: 'moss',
+    label: 'MOSS',
+    hex: crocatPalette.mossSoft,
+    ink: crocatPalette.ink,
+    worldKey: 'moss',
+    worldLabel: 'MOSS',
+  },
+  {
+    key: 'violet',
+    label: 'MOON',
+    hex: crocatPalette.moon,
+    ink: crocatPalette.ink,
+    worldKey: 'moon',
+    worldLabel: 'MOON',
+  },
+  {
+    key: 'coral',
+    label: 'CANDY',
+    hex: crocatPalette.candy,
+    ink: crocatPalette.ink,
+    worldKey: 'candy',
+    worldLabel: 'CANDY',
+  },
+  {
+    key: 'halo',
+    label: 'HALO',
+    hex: crocatPalette.haloWhite,
+    ink: crocatPalette.ink,
+    worldKey: 'halo',
+    worldLabel: 'HALO',
+  },
+  {
+    key: 'ember',
+    label: 'EMBER',
+    hex: crocatPalette.emberWorld,
+    ink: crocatPalette.ink,
+    worldKey: 'ember',
+    worldLabel: 'EMBER',
+  },
+  {
+    key: 'shadow',
+    label: 'SHADOW',
+    hex: crocatPalette.shadowInk,
+    ink: crocatPalette.haloWhite,
+    worldKey: 'shadow',
+    worldLabel: 'SHADOW',
+  },
+  { key: 'blue', label: 'SKY', hex: crocatPalette.skySoft, ink: crocatPalette.ink },
+  { key: 'mint', label: 'MINT', hex: crocatPalette.mint, ink: crocatPalette.ink },
+  { key: 'peach', label: 'PEACH', hex: crocatPalette.peach, ink: crocatPalette.ink },
+  { key: 'lime', label: 'LIME', hex: crocatPalette.lime, ink: crocatPalette.ink },
 ];
 
 export const MASCOT_SHAPE_OPTIONS: Array<{
@@ -166,9 +273,17 @@ export const MASCOT_SYMBOL_OPTIONS: Array<{
 
 export const MASCOT_CHARACTER_OPTIONS = Object.values(MASCOT_CHARACTERS);
 
+export function mascotColorOption(key?: ProfileColorKey | null) {
+  return MASCOT_COLOR_OPTIONS.find((item) => item.key === key)
+    ?? MASCOT_COLOR_OPTIONS[0];
+}
+
 export function mascotColor(key?: ProfileColorKey | null) {
-  return MASCOT_COLOR_OPTIONS.find((item) => item.key === key)?.hex
-    ?? crocatPalette.mossSoft;
+  return mascotColorOption(key).hex;
+}
+
+export function mascotInk(key?: ProfileColorKey | null) {
+  return mascotColorOption(key).ink;
 }
 
 export function mascotSymbol(key?: ProfileSymbolKey | null) {
@@ -185,5 +300,7 @@ export function legacyMascotCharacterForTheme(
 ): MascotCharacterKey {
   if (themeKey === 'moon' || themeKey === 'ink') return 'dreamy';
   if (themeKey === 'candy') return 'playful';
+  if (themeKey === 'halo') return 'sunny';
+  if (themeKey === 'ember' || themeKey === 'shadow') return 'cool';
   return 'gentle';
 }

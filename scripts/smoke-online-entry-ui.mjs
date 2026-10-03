@@ -271,9 +271,9 @@ assert(
     && drawingTools.includes("key: 'lavender'")
     && drawingTools.includes("key: 'gold'")
     && drawingTools.includes("key: 'berry'")
-    && drawingTools.includes("key: 'plum'")
-    && palette.includes("ember:")
-    && palette.includes("goldSoft:")
+    && drawingTools.includes("key: 'shadow'")
+    && palette.includes("shadowInk:")
+    && palette.includes("haloWhite:")
     && drawingTools.includes("key: 'thin', label: 'Thin', width: 3")
     && drawingTools.includes("key: 'normal', label: 'Normal', width: 6")
     && drawingTools.includes("key: 'thick', label: 'Thick', width: 10")
@@ -400,6 +400,21 @@ assert(
 );
 
 assert(
+  mascots.includes("key: 'sunny'")
+    && mascots.includes("key: 'cool'")
+    && mascots.includes("worldKey: 'moss'")
+    && mascots.includes("worldKey: 'moon'")
+    && mascots.includes("worldKey: 'candy'")
+    && mascots.includes("worldKey: 'halo'")
+    && mascots.includes("worldKey: 'shadow'")
+    && worlds.includes("label: 'COLORFUL SHADOW'")
+    && worlds.includes("key: 'shadow'")
+    && profile.includes('WORLD colors are the signature colors')
+    && mascot.includes('mascotInk(profile?.colorKey)'),
+  'Crocat 1.8.1 must keep World-linked mascot colors visible, add Colorful Shadow and support SUNNY/COOL characters with readable dark mascots.',
+);
+
+assert(
   profile.includes("const router = useRouter()")
     && profile.includes("router.replace('/')")
     && !profile.includes("setNotice('PROFILE SAVED ✓')"),
@@ -414,4 +429,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.0 profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.1 color-character polish, profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');

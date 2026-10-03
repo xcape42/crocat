@@ -2,13 +2,13 @@ import { crocatPalette } from '@/src/theme/palette';
 
 export const DRAWING_PALETTE = [
   { key: 'ink', label: 'Ink', color: crocatPalette.ink },
-  { key: 'coral', label: 'Coral', color: crocatPalette.coral },
+  { key: 'coral', label: 'Candy', color: crocatPalette.candy },
   { key: 'moss', label: 'Moss', color: crocatPalette.moss },
   { key: 'sky', label: 'Sky', color: crocatPalette.sky },
-  { key: 'lavender', label: 'Lavender', color: crocatPalette.lavender },
+  { key: 'lavender', label: 'Moon', color: crocatPalette.moon },
   { key: 'gold', label: 'Gold', color: crocatPalette.gold },
   { key: 'berry', label: 'Berry', color: crocatPalette.berry },
-  { key: 'plum', label: 'Plum', color: crocatPalette.plum },
+  { key: 'shadow', label: 'Shadow', color: crocatPalette.shadowViolet },
 ] as const;
 
 export const DRAWING_BRUSHES = [

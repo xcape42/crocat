@@ -87,26 +87,26 @@ async function main() {
 
   alphaProfile = await updateProfile(alpha, {
     name: 'Alpha Fox',
-    color: 'violet',
+    color: 'halo',
     avatar: 'ears',
-    character: 'dreamy',
+    character: 'sunny',
     theme: 'halo',
     symbol: 'moon',
   });
   betaProfile = await updateProfile(beta, {
     name: 'Beta Bird',
-    color: 'coral',
+    color: 'shadow',
     avatar: 'spiky',
-    character: 'playful',
-    theme: 'ember',
+    character: 'cool',
+    theme: 'shadow',
     symbol: 'spark',
   });
 
   if (
     alphaProfile.display_name !== 'Alpha Fox'
-    || alphaProfile.color_key !== 'violet'
+    || alphaProfile.color_key !== 'halo'
     || alphaProfile.avatar_key !== 'ears'
-    || alphaProfile.mascot_character_key !== 'dreamy'
+    || alphaProfile.mascot_character_key !== 'sunny'
     || alphaProfile.theme_key !== 'halo'
     || alphaProfile.symbol_key !== 'moon'
   ) {
@@ -126,7 +126,7 @@ async function main() {
     reloadedProfile.user_id !== alphaGuest.user.id
     || reloadedProfile.display_name !== 'Alpha Fox'
     || reloadedProfile.friend_code !== alphaProfile.friend_code
-    || reloadedProfile.mascot_character_key !== 'dreamy'
+    || reloadedProfile.mascot_character_key !== 'sunny'
     || reloadedProfile.theme_key !== 'halo'
   ) {
     throw new Error('Profile did not survive a fresh client/session reload');
@@ -174,8 +174,8 @@ async function main() {
     acceptedFriend.friend_level !== 1
     || acceptedFriend.shared_rounds !== 0
     || acceptedFriend.friendship_label !== 'NEW FRIEND'
-    || acceptedFriend.mascot_character_key !== 'playful'
-    || acceptedFriend.theme_key !== 'ember'
+    || acceptedFriend.mascot_character_key !== 'cool'
+    || acceptedFriend.theme_key !== 'shadow'
   ) {
     throw new Error('New friendship progress or World identity was not initialized correctly');
   }

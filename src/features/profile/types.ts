@@ -5,12 +5,15 @@ export type ProfileColorKey =
   | 'blue'
   | 'violet'
   | 'peach'
-  | 'mint';
+  | 'mint'
+  | 'halo'
+  | 'ember'
+  | 'shadow';
 
 export type MascotShapeKey = 'round' | 'ears' | 'spiky';
 export type ProfileAvatarKey = MascotShapeKey;
-export type MascotCharacterKey = 'gentle' | 'dreamy' | 'playful';
-export type CrocatWorldKey = 'moss' | 'moon' | 'candy' | 'halo' | 'ember';
+export type MascotCharacterKey = 'gentle' | 'dreamy' | 'playful' | 'sunny' | 'cool';
+export type CrocatWorldKey = 'moss' | 'moon' | 'candy' | 'halo' | 'ember' | 'shadow';
 export type ProfileThemeKey = CrocatWorldKey | 'paper' | 'ink';
 export type ProfileSymbolKey = 'star' | 'spark' | 'heart' | 'moon' | 'bolt';
 
