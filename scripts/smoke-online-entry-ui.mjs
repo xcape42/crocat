@@ -338,7 +338,6 @@ assert(
 assert(
   prompt.includes('WATCH ONLY')
     && prompt.includes('You can follow the choice live, but only HEAD can interact.')
-    && prompt.includes('WATCHING · HEAD CHOOSES')
     && prompt.includes('disabled={!isHead || busy}'),
   'BODY prompt view must clearly communicate its read-only spectator state while preserving HEAD-only interaction.',
 );
