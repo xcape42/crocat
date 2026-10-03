@@ -26,7 +26,9 @@ import { removeChannel, subscribeToRoom } from '@/src/features/multiplayer/realt
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import type { CrocatDrawing, PartTransform } from '@/src/types/game';
 
 const ZERO: PartTransform = { x: 0, y: 0, scale: 1 };
@@ -35,6 +37,8 @@ export default function OnlineRevealScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const { roundId, roomId } = useLocalSearchParams<{ roundId: string; roomId: string }>();
   const {
     userId,
@@ -316,8 +320,10 @@ export default function OnlineRevealScreen() {
     return (
       <Screen scroll={false} backLabel="HOME" onBack={() => void leave()}>
         <View style={styles.loading}>
-          <ActivityIndicator color={colors.ink} />
-          <Text style={styles.copy}>{error || 'Preparing final reveal…'}</Text>
+          <ActivityIndicator color={world.colors.text} />
+          <Text style={[styles.copy, { color: world.colors.muted }]}>
+            {error || 'Preparing final reveal…'}
+          </Text>
         </View>
       </Screen>
     );
@@ -327,8 +333,10 @@ export default function OnlineRevealScreen() {
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={() => void leave()} decorations="full" celebrate>
       <View style={styles.header}>
         <View>
-          <Text style={styles.kicker}>ROOM {room.code} · FINAL REVEAL</Text>
-          <Text style={[styles.title, compact && styles.titleCompact]}>This is your Crocat.</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>ROOM {room.code} · FINAL REVEAL</Text>
+          <Text style={[styles.title, { color: world.colors.text }, compact && styles.titleCompact]}>
+            This is your Crocat.
+          </Text>
         </View>
         <View style={styles.revealSide}>
           <CountdownBadge remaining={secondsLeft} label="NEXT ROUND" />
@@ -347,8 +355,10 @@ export default function OnlineRevealScreen() {
 
       {!!round?.prompt_term && (
         <View style={styles.promptReveal}>
-          <Text style={styles.promptTheme}>{round.prompt_theme?.toUpperCase()}</Text>
-          <Text style={styles.promptTerm}>{round.prompt_term}</Text>
+          <Text style={[styles.promptTheme, { color: world.colors.accent }]}>
+            {round.prompt_theme?.toUpperCase()}
+          </Text>
+          <Text style={[styles.promptTerm, { color: world.colors.text }]}>{round.prompt_term}</Text>
         </View>
       )}
 
@@ -361,7 +371,7 @@ export default function OnlineRevealScreen() {
         />
       </View>
 
-      <Text style={styles.copy}>
+      <Text style={[styles.copy, { color: world.colors.muted }]}>
         {!allPlayersActive
           ? `${missingPlayer?.display_name ?? 'The other player'} is currently away. The next round waits until both players are active again.`
           : 'Final result is locked. If both players are ready, the next round starts immediately; otherwise it starts when the 15-second timer ends.'}
@@ -380,7 +390,9 @@ export default function OnlineRevealScreen() {
       </CrocatButton>
 
       <View style={styles.readyRow}>
-        <Text style={styles.readyStatus}>{readyCount}/{Math.max(1, players.length)} READY</Text>
+        <Text style={[styles.readyStatus, { color: world.colors.muted }]}>
+          {readyCount}/{Math.max(1, players.length)} READY
+        </Text>
         <CrocatButton
           variant={me?.ready ? 'secondary' : 'coral'}
           disabled={readyBusy || !me}
