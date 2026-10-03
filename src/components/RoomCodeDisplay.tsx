@@ -85,18 +85,20 @@ export function RoomCodeDisplay({ code }: Props) {
               },
             ]}
           >
-            <Text
-              style={[
-                styles.copyText,
-                {
-                  color: readableTextColor(
-                    copied === key ? world.colors.primary : world.colors.surface,
-                  ),
-                },
-              ]}
-            >
-              {label}
-            </Text>
+            {({ pressed }) => (
+              <Text
+                style={[
+                  styles.copyText,
+                  {
+                    color: readableTextColor(
+                      pressed ? world.colors.primary : world.colors.surface,
+                    ),
+                  },
+                ]}
+              >
+                {label}
+              </Text>
+            )}
           </Pressable>
         ))}
       </View>
