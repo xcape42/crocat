@@ -491,6 +491,7 @@ assert(
 
 assert(
   contrast.includes('readableTextColor')
+    && contrast.includes('readableErrorTextColor')
     && contrast.includes('contrastRatio')
     && crocatButton.includes('readableTextColor(backgroundColor)')
     && countdownBadge.includes('readableTextColor(backgroundColor)')
