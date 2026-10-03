@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { ensureGuest } from '@/src/features/multiplayer/auth';
 import { requireSupabase } from '@/src/lib/supabase';
+import { profileToVisual } from './types';
 import type {
   MascotCharacterKey,
   MascotShapeKey,
@@ -9,7 +10,6 @@ import type {
   ProfileSymbolKey,
   ProfileThemeKey,
   ProfileVisual,
-  profileToVisual,
 } from './types';
 
 let currentProfileVisual: ProfileVisual | null = null;
