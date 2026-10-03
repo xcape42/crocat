@@ -27,6 +27,7 @@ import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 import type { CrocatDrawing, PartTransform } from '@/src/types/game';
@@ -402,7 +403,11 @@ export default function OnlineRevealScreen() {
         </CrocatButton>
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
     </Screen>
   );
 }
