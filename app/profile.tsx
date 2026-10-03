@@ -35,7 +35,7 @@ import type {
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { legacyMascotCharacterForTheme } from '@/src/theme/mascots';
 import { colors, radius, spacing } from '@/src/theme/tokens';
-import { normalizeWorldKey } from '@/src/theme/worlds';
+import { crocatWorld, normalizeWorldKey } from '@/src/theme/worlds';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -51,6 +51,7 @@ export default function ProfileScreen() {
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const world = crocatWorld(themeKey);
 
   const apply = (next: PlayerProfile) => {
     const normalizedWorld = normalizeWorldKey(next.theme_key);
@@ -128,79 +129,108 @@ export default function ProfileScreen() {
   if (busy && !profile) {
     return (
       <Screen>
-        <ActivityIndicator style={{ marginTop: 80 }} color={colors.ink} />
+        <ActivityIndicator style={{ marginTop: 80 }} color={world.colors.text} />
       </Screen>
     );
   }
 
   return (
     <Screen backLabel="HOME">
-      <View style={styles.hero}>
+      <View style={[styles.hero, { borderColor: world.colors.line, backgroundColor: world.colors.card }]}>
         <Mascot profile={preview} state="idle" size={112} />
         <View style={styles.heroText}>
-          <Text style={styles.kicker}>YOUR CROCAT</Text>
-          <Text style={styles.title}>{name || 'Profile'}</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>YOUR CROCAT</Text>
+          <Text style={[styles.title, { color: world.colors.text }]}>{name || 'Profile'}</Text>
           {!!profile && (
             <Pressable onPress={copyCode} style={styles.friendCode}>
-              <Text style={styles.friendCodeLabel}>FRIEND CODE</Text>
-              <Text selectable style={styles.friendCodeValue}>{profile.friend_code}</Text>
+              <Text style={[styles.friendCodeLabel, { color: world.colors.muted }]}>FRIEND CODE</Text>
+              <Text selectable style={[styles.friendCodeValue, { color: world.colors.text }]}>{profile.friend_code}</Text>
             </Pressable>
           )}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>NAME</Text>
+        <Text style={[styles.label, { color: world.colors.muted }]}>NAME</Text>
         <TextInput
           value={name}
           onChangeText={(value) => setName(value.slice(0, 18))}
           placeholder="Your name"
-          placeholderTextColor={colors.muted}
-          style={styles.input}
+          placeholderTextColor={world.colors.muted}
+          style={[
+            styles.input,
+            {
+              borderColor: world.colors.text,
+              backgroundColor: world.colors.canvas,
+              color: world.colors.text,
+            },
+          ]}
           maxLength={18}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>MASCOT COLOR · 1 OF {MASCOT_COLORS.length}</Text>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT COLOR · 1 OF {MASCOT_COLORS.length}</Text>
+        <Text style={[styles.colorHint, { color: world.colors.muted }]}>
+          WORLD colors are the signature colors of their matching Crocat World.
+        </Text>
         <View style={styles.options}>
           {MASCOT_COLORS.map((item) => (
             <Pressable
               key={item.key}
-              accessibilityLabel={item.label}
+              accessibilityLabel={item.worldLabel ? item.label + ' · ' + item.worldLabel + ' World' : item.label}
               onPress={() => setColorKey(item.key)}
               style={[
                 styles.colorOption,
-                { backgroundColor: item.hex },
+                {
+                  borderColor: colorKey === item.key ? world.colors.text : world.colors.line,
+                  backgroundColor: world.colors.card,
+                },
                 colorKey === item.key && styles.selected,
               ]}
-            />
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>MASCOT SHAPE · 1 OF {MASCOT_SHAPES.length}</Text>
-        <View style={styles.options}>
-          {MASCOT_SHAPES.map((item) => (
-            <Pressable
-              key={item.key}
-              onPress={() => setShapeKey(item.key)}
-              style={[styles.textOption, shapeKey === item.key && styles.selected]}
             >
-              <Mascot
-                profile={{ ...preview, avatarKey: item.key }}
-                animated={false}
-                size={54}
+              <View
+                style={[
+                  styles.colorSwatch,
+                  {
+                    backgroundColor: item.hex,
+                    borderColor: item.ink,
+                  },
+                ]}
               />
-              <Text style={styles.optionLabel}>{item.label}</Text>
+              <Text style={[styles.colorName, { color: world.colors.text }]}>{item.label}</Text>
+              {!!item.worldLabel && (
+                <Text style={[styles.colorWorld, { color: world.colors.muted }]}>
+                  {item.worldLabel} WORLD
+                </Text>
+              )}
             </Pressable>
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>MASCOT CHARACTER · 1 OF {MASCOT_CHARACTERS.length}</Text>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT SHAPE · 1 OF {MASCOT_SHAPES.length}</Text>
+        <View style={styles.options}>
+          {MASCOT_SHAPES.map((item) => (
+            <Pressable
+              key={item.key}
+              onPress={() => setShapeKey(item.key)}
+              style={[styles.textOption, { borderColor: world.colors.line, backgroundColor: world.colors.card }, shapeKey === item.key && { borderWidth: 3, borderColor: world.colors.text }]}
+            >
+              <Mascot
+                profile={{ ...preview, avatarKey: item.key }}
+                animated={false}
+                size={54}
+              />
+              <Text style={[styles.optionLabel, { color: world.colors.text }]}>{item.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT CHARACTER · 1 OF {MASCOT_CHARACTERS.length}</Text>
         <View style={styles.options}>
           {MASCOT_CHARACTERS.map((item) => (
             <Pressable
@@ -208,7 +238,8 @@ export default function ProfileScreen() {
               onPress={() => setCharacterKey(item.key)}
               style={[
                 styles.characterOption,
-                characterKey === item.key && styles.selected,
+                { borderColor: world.colors.line, backgroundColor: world.colors.card },
+                characterKey === item.key && { borderWidth: 3, borderColor: world.colors.text },
               ]}
             >
               <Mascot
@@ -217,8 +248,8 @@ export default function ProfileScreen() {
                 size={58}
               />
               <View style={styles.characterCopy}>
-                <Text style={styles.optionLabel}>{item.label}</Text>
-                <Text style={styles.characterDescription}>{item.description}</Text>
+                <Text style={[styles.optionLabel, { color: world.colors.text }]}>{item.label}</Text>
+                <Text style={[styles.characterDescription, { color: world.colors.muted }]}>{item.description}</Text>
               </View>
             </Pressable>
           ))}
@@ -226,23 +257,23 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
         <View style={styles.options}>
           {MASCOT_SYMBOLS.map((item) => (
             <Pressable
               key={item.key}
               onPress={() => setSymbolKey(item.key)}
-              style={[styles.symbolOption, symbolKey === item.key && styles.selected]}
+              style={[styles.symbolOption, { borderColor: world.colors.line, backgroundColor: world.colors.card }, symbolKey === item.key && { borderWidth: 3, borderColor: world.colors.text }]}
             >
-              <Text style={styles.symbol}>{item.glyph}</Text>
+              <Text style={[styles.symbol, { color: world.colors.text }]}>{item.glyph}</Text>
             </Pressable>
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>YOUR WORLD · 1 OF {PROFILE_THEMES.length}</Text>
-        <Text style={styles.themeHint}>
+        <Text style={[styles.label, { color: world.colors.muted }]}>YOUR WORLD · 1 OF {PROFILE_THEMES.length}</Text>
+        <Text style={[styles.themeHint, { color: world.colors.muted }]}>
           Changes Crocat’s atmosphere, surfaces and background details — not your mascot.
         </Text>
         <View style={styles.options}>
@@ -256,16 +287,19 @@ export default function ProfileScreen() {
               }}
               style={[
                 styles.themeOption,
-                { backgroundColor: item.background },
-                themeKey === item.key && styles.selected,
+                {
+                  backgroundColor: item.background,
+                  borderColor: themeKey === item.key ? item.text : item.line,
+                  borderWidth: themeKey === item.key ? 3 : 1,
+                },
               ]}
             >
               <View style={styles.themePreviewTop}>
-                <Text style={styles.themeName}>{item.label}</Text>
-                <View style={[styles.themeAccent, { backgroundColor: item.accent }]} />
+                <Text style={[styles.themeName, { color: item.text }]}>{item.label}</Text>
+                <View style={[styles.themeAccent, { backgroundColor: item.accent, borderColor: item.text }]} />
               </View>
-              <Text style={styles.themePattern}>{item.pattern}</Text>
-              <Text style={styles.themeDescription}>{item.description}</Text>
+              <Text style={[styles.themePattern, { color: item.text }]}>{item.pattern}</Text>
+              <Text style={[styles.themeDescription, { color: item.muted }]}>{item.description}</Text>
             </Pressable>
           ))}
         </View>
@@ -276,7 +310,7 @@ export default function ProfileScreen() {
           {busy ? 'SAVING…' : 'SAVE PROFILE'}
         </CrocatButton>
 
-        {!!notice && <Text style={styles.notice}>{notice}</Text>}
+        {!!notice && <Text style={[styles.notice, { color: world.colors.text }]}>{notice}</Text>}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
     </Screen>
@@ -315,7 +349,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  colorOption: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.line },
+  colorHint: { fontSize: 10, lineHeight: 14 },
+  colorOption: {
+    width: 68,
+    minHeight: 72,
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  colorSwatch: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5 },
+  colorName: { fontSize: 8, fontWeight: '900', letterSpacing: 0.5 },
+  colorWorld: { fontSize: 6, fontWeight: '900', letterSpacing: 0.45 },
   textOption: {
     minWidth: 92,
     minHeight: 92,
