@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import { crocatWorld } from '@/src/theme/worlds';
 
 type Props = PropsWithChildren<{
@@ -28,6 +29,9 @@ export function CrocatButton({
           ? world.colors.surface
           : 'transparent';
   const borderColor = variant === 'ghost' ? world.colors.line : world.colors.text;
+  const labelColor = variant === 'ghost'
+    ? world.colors.muted
+    : readableTextColor(backgroundColor);
 
   return (
     <Pressable
@@ -54,7 +58,7 @@ export function CrocatButton({
       <Text
         style={[
           styles.label,
-          { color: variant === 'ghost' ? world.colors.muted : world.colors.text },
+          { color: labelColor },
         ]}
       >
         {children}
