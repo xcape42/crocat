@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
-import { ensureCurrentProfile } from '@/src/features/profile/api';
+import {
+  ensureCurrentProfile,
+  peekCurrentProfileVisual,
+} from '@/src/features/profile/api';
 import {
   profileToVisual,
   type ProfileVisual,
 } from '@/src/features/profile/types';
 
 export function useCurrentProfileVisual() {
-  const [profile, setProfile] = useState<ProfileVisual | null>(null);
+  const [profile, setProfile] = useState<ProfileVisual | null>(
+    peekCurrentProfileVisual,
+  );
 
   useEffect(() => {
+    if (profile) return;
+
     let cancelled = false;
 
     void ensureCurrentProfile()
@@ -20,7 +27,7 @@ export function useCurrentProfileVisual() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [profile]);
 
   return profile;
 }
