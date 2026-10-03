@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import { crocatWorld } from '@/src/theme/worlds';
 
 type Props = {
@@ -84,7 +85,20 @@ export function RoomCodeDisplay({ code }: Props) {
               },
             ]}
           >
-            <Text style={[styles.copyText, { color: world.colors.text }]}>{label}</Text>
+            {({ pressed }) => (
+              <Text
+                style={[
+                  styles.copyText,
+                  {
+                    color: readableTextColor(
+                      pressed ? world.colors.primary : world.colors.surface,
+                    ),
+                  },
+                ]}
+              >
+                {label}
+              </Text>
+            )}
           </Pressable>
         ))}
       </View>

@@ -8,11 +8,13 @@ import { DrawingToolbar } from '@/src/components/DrawingToolbar';
 import { Screen } from '@/src/components/Screen';
 import { Timer } from '@/src/components/Timer';
 import { useGameStore } from '@/src/store/gameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import {
   DEFAULT_DRAWING_BRUSH_WIDTH,
   DEFAULT_DRAWING_COLOR,
 } from '@/src/theme/drawingTools';
 import { colors, radius } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import type { CrocatDrawing } from '@/src/types/game';
 
 
@@ -20,6 +22,8 @@ export default function DrawScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const { currentRole, roundSeconds, submitDrawing, makeBlankDrawing, setPhase } = useGameStore();
   const [drawing, setDrawing] = useState<CrocatDrawing>(() => makeBlankDrawing());
   const [color, setColor] = useState(DEFAULT_DRAWING_COLOR);
@@ -66,8 +70,12 @@ export default function DrawScreen() {
     >
       <View style={styles.top}>
         <View>
-          <Text style={styles.kicker}>{currentRole === 'HEAD' ? 'DOMI · YOUR PART' : 'SARAH · YOUR PART'}</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{currentRole}</Text>
+          <Text style={[styles.kicker, { color: world.colors.muted }]}>
+            {currentRole === 'HEAD' ? 'DOMI · YOUR PART' : 'SARAH · YOUR PART'}
+          </Text>
+          <Text style={[styles.role, { color: world.colors.text }, compact && styles.roleCompact]}>
+            {currentRole}
+          </Text>
         </View>
         <Timer seconds={roundSeconds} onComplete={finish} />
       </View>

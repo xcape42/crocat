@@ -12,7 +12,8 @@ import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/r
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
-import { radius, spacing } from '@/src/theme/tokens';
+import { readableErrorTextColor } from '@/src/theme/contrast';
+import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
 export default function OnlineEntryScreen() {
@@ -94,7 +95,7 @@ export default function OnlineEntryScreen() {
     <Screen backLabel="PLAY" decorations="full">
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT ONLINE · 1.8.5</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT ONLINE · 1.8.6</Text>
           <Text style={[styles.title, { color: world.colors.text }]}>Bring your little world.</Text>
           <Text style={[styles.copy, { color: world.colors.muted }]}>
             Create a room or enter a code. When another player arrives, both worlds meet in the lobby.
@@ -133,14 +134,14 @@ export default function OnlineEntryScreen() {
           value={code}
           onChangeText={(value) => setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
           placeholder="CROC42"
-          placeholderTextColor={world.colors.muted}
+          placeholderTextColor={colors.muted}
           maxLength={6}
           style={[
             styles.input,
             styles.code,
             {
-              borderColor: world.colors.text,
-              color: world.colors.text,
+              borderColor: colors.ink,
+              color: colors.ink,
               backgroundColor: world.colors.canvas,
               borderRadius: world.shapes.cardRadius,
             },
@@ -153,7 +154,11 @@ export default function OnlineEntryScreen() {
       </CrocatCard>
 
       {busy && <ActivityIndicator style={{ marginTop: 16 }} color={world.colors.text} />}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
     </Screen>
   );
 }

@@ -36,6 +36,7 @@ import type {
 } from '@/src/features/social/types';
 import { socialProfileVisual } from '@/src/features/social/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -251,7 +252,12 @@ export default function FriendsScreen() {
         <View style={styles.friendMain}>
           <View style={styles.friendTop}>
             <Text style={[styles.name, { color: world.colors.text }]}>{friend.display_name}</Text>
-            <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
+            <Text
+              style={[
+                styles.presence,
+                { color: friend.online ? '#79B975' : world.colors.muted },
+              ]}
+            >
               {lastSeenText(friend)}
             </Text>
           </View>
@@ -396,7 +402,11 @@ export default function FriendsScreen() {
       </View>
 
       {!!notice && <Text style={[styles.notice, { color: world.colors.text }]}>{notice}</Text>}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
 
       {!!requests.length && (
         <View style={styles.section}>

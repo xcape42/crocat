@@ -7,12 +7,16 @@ import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 export default function RevealScreen() {
   const router = useRouter();
   const setPhase = useGameStore((state) => state.setPhase);
   const profile = useCurrentProfileVisual();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
   const leave = () => {
@@ -23,12 +27,12 @@ export default function RevealScreen() {
   return (
     <Screen backLabel="LEAVE" onBack={() => setLeaveConfirmOpen(true)} decorations="full">
       <View style={styles.center}>
-        <Text style={styles.kicker}>BOTH HALVES ARE IN</Text>
+        <Text style={[styles.kicker, { color: world.colors.muted }]}>BOTH HALVES ARE IN</Text>
         <View style={styles.mascot}>
           {profile && <Mascot profile={profile} state="celebrate" size={112} />}
         </View>
-        <Text style={styles.title}>Meet your Crocat.</Text>
-        <Text style={styles.copy}>No more secrets. Time for the reveal.</Text>
+        <Text style={[styles.title, { color: world.colors.text }]}>Meet your Crocat.</Text>
+        <Text style={[styles.copy, { color: world.colors.muted }]}>No more secrets. Time for the reveal.</Text>
       </View>
       <CrocatButton variant="coral" onPress={() => router.replace('/finalize')}>REVEAL</CrocatButton>
       <ConfirmActionModal

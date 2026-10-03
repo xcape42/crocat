@@ -21,11 +21,14 @@ import { removeChannel, subscribeToRound } from '@/src/features/multiplayer/real
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import {
   DEFAULT_DRAWING_BRUSH_WIDTH,
   DEFAULT_DRAWING_COLOR,
 } from '@/src/theme/drawingTools';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
 import type { CrocatDrawing, GameRole } from '@/src/types/game';
 
@@ -39,6 +42,8 @@ export default function OnlineDrawScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const {
     reset,
     userId,
@@ -278,8 +283,12 @@ export default function OnlineDrawScreen() {
       <Screen scroll={false} contentStyle={styles.waitingScreen} backLabel="LEAVE" onBack={requestLeave} decorations="quiet">
         <View style={styles.waitingTop}>
           <View>
-            <Text style={styles.kicker}>{playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED</Text>
-            {!!promptTerm && <Text style={styles.prompt}>DRAW · {promptTerm}</Text>}
+            <Text style={[styles.kicker, { color: world.colors.muted }]}>
+              {playerName.toUpperCase()} · {partLabel.toUpperCase()} SUBMITTED
+            </Text>
+            {!!promptTerm && (
+              <Text style={[styles.prompt, { color: world.colors.text }]}>DRAW · {promptTerm}</Text>
+            )}
           </View>
           <View style={styles.headerActions}>
             <CountdownBadge remaining={remaining} />
@@ -290,8 +299,10 @@ export default function OnlineDrawScreen() {
         </View>
 
         <View style={styles.waiting}>
-          <Text style={[styles.waitTitle, compact && styles.waitTitleCompact]}>Your version is saved.</Text>
-          <Text style={styles.waitCopy}>
+          <Text style={[styles.waitTitle, { color: world.colors.text }, compact && styles.waitTitleCompact]}>
+            Your version is saved.
+          </Text>
+          <Text style={[styles.waitCopy, { color: world.colors.muted }]}>
             You can keep it submitted or go back to the canvas and submit a newer version before time runs out.
           </Text>
           {status}
@@ -304,7 +315,11 @@ export default function OnlineDrawScreen() {
         >
           BACK TO DRAWING
         </CrocatButton>
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && (
+          <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+            {error}
+          </Text>
+        )}
         {leaveModal}
       </Screen>
     );
@@ -314,12 +329,12 @@ export default function OnlineDrawScreen() {
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave} decorations="none">
       <View style={styles.top}>
         <View>
-          <Text style={styles.kicker}>{playerName.toUpperCase()} · ONLINE</Text>
-          <Text style={[styles.role, compact && styles.roleCompact]}>{partLabel}</Text>
+          <Text style={[styles.kicker, { color: world.colors.muted }]}>{playerName.toUpperCase()} · ONLINE</Text>
+          <Text style={[styles.role, { color: world.colors.text }, compact && styles.roleCompact]}>{partLabel}</Text>
           {!!promptTerm && (
             <View style={styles.promptWrap}>
-              <Text style={styles.promptLabel}>DRAW</Text>
-              <Text style={styles.promptTerm}>{promptTerm}</Text>
+              <Text style={[styles.promptLabel, { color: world.colors.accent }]}>DRAW</Text>
+              <Text style={[styles.promptTerm, { color: world.colors.text }]}>{promptTerm}</Text>
             </View>
           )}
         </View>
@@ -361,7 +376,11 @@ export default function OnlineDrawScreen() {
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
         SUBMIT {partLabel.toUpperCase()}
       </CrocatButton>
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
       {leaveModal}
     </Screen>
   );

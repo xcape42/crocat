@@ -13,12 +13,15 @@ import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import {
   listSavedArtworks,
   setArtworkFavorite,
 } from '@/src/features/artworks/api';
 import type { SavedArtwork } from '@/src/features/artworks/types';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 function partnerName(artwork: SavedArtwork) {
   if (artwork.partner_user_id === artwork.head_profile.userId) {
@@ -37,6 +40,8 @@ export default function GalleryScreen() {
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
   const profile = useCurrentProfileVisual();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
 
   const refresh = useCallback(async () => {
     try {
@@ -71,20 +76,20 @@ export default function GalleryScreen() {
     <Screen backLabel="HOME" decorations="full">
 
       <View style={styles.header}>
-        <Text style={styles.kicker}>YOUR COLLECTION</Text>
-        <Text style={styles.title}>Gallery</Text>
-        <Text style={styles.copy}>
+        <Text style={[styles.kicker, { color: world.colors.accent }]}>YOUR COLLECTION</Text>
+        <Text style={[styles.title, { color: world.colors.text }]}>Gallery</Text>
+        <Text style={[styles.copy, { color: world.colors.muted }]}>
           The Crocats worth keeping. Stars stay at the top.
         </Text>
       </View>
 
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 70 }} color={colors.ink} />
+        <ActivityIndicator style={{ marginTop: 70 }} color={world.colors.text} />
       ) : !artworks.length ? (
         <CrocatCard variant="surface" style={styles.empty}>
           {profile && <Mascot profile={profile} state="curious" size={82} />}
-          <Text style={styles.emptyTitle}>No weirdos saved yet.</Text>
-          <Text style={styles.emptyCopy}>
+          <Text style={[styles.emptyTitle, { color: world.colors.text }]}>No weirdos saved yet.</Text>
+          <Text style={[styles.emptyCopy, { color: world.colors.muted }]}>
             Star an online final reveal and it will appear here.
           </Text>
           <CrocatButton onPress={() => router.push('/play')}>MAKE ONE</CrocatButton>
@@ -108,7 +113,7 @@ export default function GalleryScreen() {
 
               <View style={styles.cardBody}>
                 <View style={styles.cardTop}>
-                  <Text numberOfLines={2} style={styles.artTitle}>
+                  <Text numberOfLines={2} style={[styles.artTitle, { color: world.colors.text }]}>
                     {artwork.title}
                   </Text>
                   <Pressable
@@ -120,19 +125,19 @@ export default function GalleryScreen() {
                     }}
                     style={styles.starButton}
                   >
-                    <Text style={styles.star}>
+                    <Text style={[styles.star, { color: world.colors.accent }]}>
                       {artwork.favorite ? '★' : '☆'}
                     </Text>
                   </Pressable>
                 </View>
 
-                <Text style={styles.term}>
+                <Text style={[styles.term, { color: world.colors.accent }]}>
                   {(artwork.prompt_term ?? 'CROCAT').toUpperCase()}
                 </Text>
-                <Text style={styles.partner}>
+                <Text style={[styles.partner, { color: world.colors.text }]}>
                   WITH {partnerName(artwork).toUpperCase()}
                 </Text>
-                <Text style={styles.date}>
+                <Text style={[styles.date, { color: world.colors.muted }]}>
                   {new Date(artwork.created_at).toLocaleDateString()}
                 </Text>
               </View>
@@ -142,7 +147,11 @@ export default function GalleryScreen() {
         </View>
       )}
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
     </Screen>
   );
 }

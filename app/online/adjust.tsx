@@ -24,8 +24,11 @@ import {
 import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
 
 const ZERO: PartTransform = { x: 0, y: 0, scale: 1 };
@@ -42,6 +45,8 @@ export default function OnlineAdjustScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
   const compact = height < 720;
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
   const params = useLocalSearchParams<{
     roomId: string;
     roundId: string;
@@ -345,8 +350,10 @@ export default function OnlineAdjustScreen() {
     return (
       <Screen scroll={false} backLabel="LEAVE" onBack={requestLeave}>
         <View style={styles.loading}>
-          <ActivityIndicator color={colors.ink} />
-          <Text style={styles.copy}>{error || 'Preparing both parts…'}</Text>
+          <ActivityIndicator color={world.colors.text} />
+          <Text style={[styles.copy, { color: world.colors.muted }]}>
+            {error || 'Preparing both parts…'}
+          </Text>
         </View>
         {leaveModal}
       </Screen>
@@ -357,8 +364,12 @@ export default function OnlineAdjustScreen() {
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="LEAVE" onBack={requestLeave} decorations="none">
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.kicker}>LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}</Text>
-          <Text style={[styles.title, compact && styles.titleCompact]}>Make it connect.</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>
+            LIVE ADJUSTMENT · YOUR {partLabel.toUpperCase()}
+          </Text>
+          <Text style={[styles.title, { color: world.colors.text }, compact && styles.titleCompact]}>
+            Make it connect.
+          </Text>
         </View>
         <View style={styles.headerActions}>
           <CountdownBadge remaining={secondsLeft} label="ADJUST" />
@@ -372,7 +383,7 @@ export default function OnlineAdjustScreen() {
         </View>
       </View>
 
-      <Text style={styles.copy}>
+      <Text style={[styles.copy, { color: world.colors.muted }]}>
         {round?.prompt_term ? `DRAW · ${round.prompt_term} · ` : ''}
         Drag only your {partLabel.toLowerCase()}. Both players are adjusting at the same time.
       </Text>
@@ -402,7 +413,9 @@ export default function OnlineAdjustScreen() {
         </View>
 
         <View style={styles.readyGroup}>
-          <Text style={styles.readyCount}>{readyCount}/{Math.max(1, players.length)} READY</Text>
+          <Text style={[styles.readyCount, { color: world.colors.muted }]}>
+            {readyCount}/{Math.max(1, players.length)} READY
+          </Text>
           <Pressable
             accessibilityRole="button"
             disabled={readyBusy || !me}
@@ -414,7 +427,11 @@ export default function OnlineAdjustScreen() {
         </View>
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
       {leaveModal}
     </Screen>
   );
