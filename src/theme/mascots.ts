@@ -236,11 +236,11 @@ export const MASCOT_COLOR_OPTIONS: MascotColorOption[] = [
   },
   {
     key: 'ember',
-    label: 'EMBER',
+    label: 'BLOOD',
     hex: crocatPalette.emberWorld,
-    ink: crocatPalette.ink,
+    ink: crocatPalette.haloWhite,
     worldKey: 'ember',
-    worldLabel: 'EMBER',
+    worldLabel: 'BLOOD',
   },
   {
     key: 'shadow',
@@ -249,6 +249,14 @@ export const MASCOT_COLOR_OPTIONS: MascotColorOption[] = [
     ink: crocatPalette.haloWhite,
     worldKey: 'shadow',
     worldLabel: 'SHADOW',
+  },
+  {
+    key: 'royal',
+    label: 'ROYAL',
+    hex: crocatPalette.royalWorld,
+    ink: crocatPalette.royalNavy,
+    worldKey: 'royal',
+    worldLabel: 'ROYAL',
   },
   { key: 'blue', label: 'SKY', hex: crocatPalette.skySoft, ink: crocatPalette.ink },
   { key: 'mint', label: 'MINT', hex: crocatPalette.mint, ink: crocatPalette.ink },
@@ -309,6 +317,6 @@ export function legacyMascotCharacterForTheme(
   if (themeKey === 'moon' || themeKey === 'ink') return 'dreamy';
   if (themeKey === 'candy') return 'playful';
   if (themeKey === 'halo') return 'sunny';
-  if (themeKey === 'ember' || themeKey === 'shadow') return 'cool';
+  if (themeKey === 'ember' || themeKey === 'shadow' || themeKey === 'royal') return 'cool';
   return 'gentle';
 }
