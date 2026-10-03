@@ -54,7 +54,7 @@ function FallingFragment({
   glyph: string;
   color: string;
   height: number;
-  left: string;
+  left: `${number}%`;
   delay: number;
   duration: number;
   drift: number;
