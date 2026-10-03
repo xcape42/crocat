@@ -28,6 +28,7 @@ export type MascotCharacter = {
   key: MascotCharacterKey;
   label: string;
   description: string;
+  traits: readonly string[];
   faces: Record<MascotState, string>;
   idle: {
     style: MascotIdleStyle;
@@ -127,6 +128,7 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
     key: 'gentle',
     label: 'GENTLE',
     description: 'Calm, warm and a little shy.',
+    traits: ['CALM', 'WARM', 'SHY'],
     faces: gentleFaces,
     idle: {
       style: 'sway',
@@ -141,6 +143,7 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
     key: 'dreamy',
     label: 'DREAMY',
     description: 'Curious, soft and slightly spacey.',
+    traits: ['DREAMY', 'CURIOUS', 'SOFT'],
     faces: dreamyFaces,
     idle: {
       style: 'float',
@@ -155,6 +158,7 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
     key: 'playful',
     label: 'PLAYFUL',
     description: 'Bouncy, bright and a little cheeky.',
+    traits: ['PLAYFUL', 'BRIGHT', 'CHEEKY'],
     faces: playfulFaces,
     idle: {
       style: 'bounce',
@@ -169,6 +173,7 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
     key: 'sunny',
     label: 'SUNNY',
     description: 'Open, cheerful and quietly enthusiastic.',
+    traits: ['SUNNY', 'OPEN', 'CHEERFUL'],
     faces: sunnyFaces,
     idle: {
       style: 'bounce',
@@ -183,6 +188,7 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
     key: 'cool',
     label: 'COOL',
     description: 'Relaxed, confident and softly amused.',
+    traits: ['RELAXED', 'COOL', 'CONFIDENT'],
     faces: coolFaces,
     idle: {
       style: 'float',

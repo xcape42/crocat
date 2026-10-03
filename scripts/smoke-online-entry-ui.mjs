@@ -47,6 +47,7 @@ const handoff = read('app/handoff.tsx');
 const localReveal = read('app/reveal.tsx');
 const result = read('app/result.tsx');
 const currentProfileVisual = read('src/hooks/useCurrentProfileVisual.ts');
+const profileCharacterPicker = read('src/components/ProfileCharacterPicker.tsx');
 
 assert(
   play.includes("router.push('/online')"),
@@ -400,6 +401,25 @@ assert(
 );
 
 assert(
+  profile.includes('<ProfileCharacterPicker')
+    && !profile.includes('MASCOT_CHARACTERS.map')
+    && profileCharacterPicker.includes('PanResponder.create')
+    && profileCharacterPicker.includes('gesture.dx <= -36')
+    && profileCharacterPicker.includes('gesture.dx >= 36')
+    && profileCharacterPicker.includes('Previous mascot character')
+    && profileCharacterPicker.includes('Next mascot character')
+    && profileCharacterPicker.includes('TRY AN EMOTION')
+    && profileCharacterPicker.includes("state: 'happy'")
+    && profileCharacterPicker.includes("state: 'shy'")
+    && profileCharacterPicker.includes("state: 'curious'")
+    && profileCharacterPicker.includes("state: 'excited'")
+    && profileCharacterPicker.includes("state: 'proud'")
+    && profileCharacterPicker.includes("state: 'celebrate'")
+    && mascots.includes('traits: readonly string[]'),
+  'Profile character selection must use the large swipe/arrow explorer with character traits and interactive emotion previews.',
+);
+
+assert(
   mascots.includes("key: 'sunny'")
     && mascots.includes("key: 'cool'")
     && mascots.includes("worldKey: 'moss'")
@@ -429,4 +449,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.1 color-character polish, profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.2 character explorer, color-character polish, profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
