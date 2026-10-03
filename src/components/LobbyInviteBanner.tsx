@@ -15,6 +15,7 @@ import {
 import type { LobbyInviteSummary } from '@/src/features/social/types';
 import { socialProfileVisual } from '@/src/features/social/types';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import { crocatWorld } from '@/src/theme/worlds';
 
 export function LobbyInviteBanner() {
@@ -112,7 +113,7 @@ export function LobbyInviteBanner() {
           },
         ]}
       >
-        <Text style={[styles.actionText, { color: world.colors.text }]}>JOIN</Text>
+        <Text style={[styles.actionText, { color: readableTextColor(world.colors.primary) }]}>JOIN</Text>
       </Pressable>
       <Pressable
         disabled={busy}
@@ -126,7 +127,7 @@ export function LobbyInviteBanner() {
           },
         ]}
       >
-        <Text style={[styles.actionText, { color: world.colors.text }]}>NO</Text>
+        <Text style={[styles.actionText, { color: readableTextColor(world.colors.card) }]}>NO</Text>
       </Pressable>
     </View>
   );
