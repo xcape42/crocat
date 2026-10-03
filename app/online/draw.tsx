@@ -376,7 +376,11 @@ export default function OnlineDrawScreen() {
       <CrocatButton disabled={busy || remaining <= 0} onPress={submitCurrent}>
         SUBMIT {partLabel.toUpperCase()}
       </CrocatButton>
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
       {leaveModal}
     </Screen>
   );
