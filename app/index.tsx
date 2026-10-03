@@ -37,12 +37,14 @@ export default function HomeScreen() {
         </Text>
 
         <MascotSlot compact={compact}>
-          <Mascot
-            profile={profile ?? undefined}
-            state="idle"
-            size={compact ? 124 : 158}
-            accessibilityLabel="Your Crocat mascot"
-          />
+          {profile && (
+            <Mascot
+              profile={profile}
+              state="idle"
+              size={compact ? 124 : 158}
+              accessibilityLabel="Your Crocat mascot"
+            />
+          )}
         </MascotSlot>
 
         <CrocatCard variant="accent" style={styles.worldCard}>
