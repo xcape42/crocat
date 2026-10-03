@@ -47,6 +47,7 @@ const handoff = read('app/handoff.tsx');
 const localReveal = read('app/reveal.tsx');
 const result = read('app/result.tsx');
 const currentProfileVisual = read('src/hooks/useCurrentProfileVisual.ts');
+const profileWorldPicker = read('src/components/ProfileWorldPicker.tsx');
 const profileCharacterPicker = read('src/components/ProfileCharacterPicker.tsx');
 
 assert(
@@ -420,6 +421,30 @@ assert(
 );
 
 assert(
+  profile.includes('<ProfileWorldPicker')
+    && !profile.includes('PROFILE_THEMES.map')
+    && profileWorldPicker.includes('PanResponder.create')
+    && profileWorldPicker.includes('Previous Crocat World')
+    && profileWorldPicker.includes('Next Crocat World')
+    && profileWorldPicker.includes('gesture.dx <= -36')
+    && profileWorldPicker.includes('gesture.dx >= 36')
+    && profileWorldPicker.includes('world.background.fragments')
+    && worlds.includes('fragments: readonly string[]')
+    && worlds.includes('falling: readonly string[]'),
+  'Profile World selection must use the larger swipe/arrow explorer and every World must expose richer fragment data.',
+);
+
+assert(
+  decoration.includes("depth?: 'back' | 'front'")
+    && decoration.includes('FallingFragment')
+    && decoration.includes('world.background.falling')
+    && decoration.includes('!reducedMotion')
+    && screen.includes('depth="back"')
+    && screen.includes('depth="front"'),
+  'World ambience must render subtle background and foreground fragments while Reduced Motion disables falling motion.',
+);
+
+assert(
   mascots.includes("key: 'sunny'")
     && mascots.includes("key: 'cool'")
     && mascots.includes("worldKey: 'moss'")
@@ -449,4 +474,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.2 character explorer, color-character polish, profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.3 World atmosphere, character explorer, color-character polish, profile-mascot-world, drawing-guide, theme-bootstrap, reliable phase-sync and UI contracts passed');
