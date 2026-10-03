@@ -26,6 +26,7 @@ import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 import type { CrocatDrawing, GameRole, PartTransform } from '@/src/types/game';
@@ -426,7 +427,11 @@ export default function OnlineAdjustScreen() {
         </View>
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
       {leaveModal}
     </Screen>
   );
