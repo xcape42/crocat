@@ -11,9 +11,9 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
+import { ProfileCharacterPicker } from '@/src/components/ProfileCharacterPicker';
 import { Screen } from '@/src/components/Screen';
 import {
-  MASCOT_CHARACTERS,
   MASCOT_COLORS,
   MASCOT_SHAPES,
   MASCOT_SYMBOLS,
@@ -230,30 +230,12 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT CHARACTER · 1 OF {MASCOT_CHARACTERS.length}</Text>
-        <View style={styles.options}>
-          {MASCOT_CHARACTERS.map((item) => (
-            <Pressable
-              key={item.key}
-              onPress={() => setCharacterKey(item.key)}
-              style={[
-                styles.characterOption,
-                { borderColor: world.colors.line, backgroundColor: world.colors.card },
-                characterKey === item.key && { borderWidth: 3, borderColor: world.colors.text },
-              ]}
-            >
-              <Mascot
-                profile={{ ...preview, mascotCharacterKey: item.key }}
-                animated={false}
-                size={58}
-              />
-              <View style={styles.characterCopy}>
-                <Text style={[styles.optionLabel, { color: world.colors.text }]}>{item.label}</Text>
-                <Text style={[styles.characterDescription, { color: world.colors.muted }]}>{item.description}</Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT CHARACTER</Text>
+        <ProfileCharacterPicker
+          profile={preview}
+          characterKey={characterKey}
+          onCharacterChange={setCharacterKey}
+        />
       </View>
 
       <View style={styles.section}>
@@ -376,21 +358,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   optionLabel: { color: colors.ink, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
-  characterOption: {
-    minWidth: 154,
-    flexGrow: 1,
-    minHeight: 86,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.md,
-    backgroundColor: colors.card,
-  },
-  characterCopy: { flex: 1, minWidth: 0, gap: 3 },
-  characterDescription: { color: colors.muted, fontSize: 9, lineHeight: 12, fontWeight: '700' },
   symbolOption: {
     width: 48,
     height: 48,
