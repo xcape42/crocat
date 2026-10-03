@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.3 — World atmosphere and Profile World explorer
+
+- Replace the compact Profile World grid with one larger World card in the same position
+- Cycle all six Worlds with previous/next arrows or a horizontal swipe gesture
+- Show the selected World with its own surfaces, accents, fragment language and palette preview
+- Enrich every World with additional theme-specific background fragments and subtle ambient movement
+- Add layered foreground/background ambience so selected fragments can pass visually behind and in front of UI content without intercepting touch
+- Give Moss falling leaf-like fragments; extend Moon, Candy, Halo, Ember and Colorful Shadow with matching stars, clouds, sparks and geometric pieces
+- Keep ambience intentionally restrained and disable falling motion under Reduced Motion
+- Keep Screen, CrocatCard and CrocatButton World-aware and bring remaining Friends/Artwork text inputs and detail surfaces onto active World colors
+- Preserve all existing World identities, profile persistence, mascot independence and gameplay
+- Version Crocat as 1.8.3
+
 ## 1.8.2 — Profile character explorer
 
 - Replace the compact five-card mascot character grid with one larger focused character explorer in the same Profile position
