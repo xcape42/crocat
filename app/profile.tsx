@@ -12,12 +12,12 @@ import * as Clipboard from 'expo-clipboard';
 import { CrocatButton } from '@/src/components/CrocatButton';
 import { Mascot } from '@/src/components/Mascot';
 import { ProfileCharacterPicker } from '@/src/components/ProfileCharacterPicker';
+import { ProfileWorldPicker } from '@/src/components/ProfileWorldPicker';
 import { Screen } from '@/src/components/Screen';
 import {
   MASCOT_COLORS,
   MASCOT_SHAPES,
   MASCOT_SYMBOLS,
-  PROFILE_THEMES,
 } from '@/src/features/profile/options';
 import {
   ensureCurrentProfile,
@@ -254,37 +254,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.label, { color: world.colors.muted }]}>YOUR WORLD · 1 OF {PROFILE_THEMES.length}</Text>
-        <Text style={[styles.themeHint, { color: world.colors.muted }]}>
-          Changes Crocat’s atmosphere, surfaces and background details — not your mascot.
-        </Text>
-        <View style={styles.options}>
-          {PROFILE_THEMES.map((item) => (
-            <Pressable
-              key={item.key}
-              onPress={() => {
-                const nextWorld = normalizeWorldKey(item.key);
-                setThemeKey(nextWorld);
-                setUiThemeKey(nextWorld, { persist: false });
-              }}
-              style={[
-                styles.themeOption,
-                {
-                  backgroundColor: item.background,
-                  borderColor: themeKey === item.key ? item.text : item.line,
-                  borderWidth: themeKey === item.key ? 3 : 1,
-                },
-              ]}
-            >
-              <View style={styles.themePreviewTop}>
-                <Text style={[styles.themeName, { color: item.text }]}>{item.label}</Text>
-                <View style={[styles.themeAccent, { backgroundColor: item.accent, borderColor: item.text }]} />
-              </View>
-              <Text style={[styles.themePattern, { color: item.text }]}>{item.pattern}</Text>
-              <Text style={[styles.themeDescription, { color: item.muted }]}>{item.description}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <Text style={[styles.label, { color: world.colors.muted }]}>YOUR WORLD</Text>
+        <ProfileWorldPicker
+          worldKey={themeKey}
+          onWorldChange={(nextWorld) => {
+            setThemeKey(nextWorld);
+            setUiThemeKey(nextWorld, { persist: false });
+          }}
+        />
       </View>
 
       <View style={styles.bottom}>
@@ -369,43 +346,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   symbol: { color: colors.ink, fontSize: 20, fontWeight: '900' },
-  themeHint: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  themeOption: {
-    minWidth: 150,
-    flexGrow: 1,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.md,
-  },
-  themePreviewTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 9,
-  },
-  themeName: { color: colors.ink, fontSize: 11, fontWeight: '900', letterSpacing: 1 },
-  themeAccent: {
-    width: 34,
-    height: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.ink,
-  },
-  themePattern: {
-    marginTop: 12,
-    color: colors.ink,
-    opacity: 0.45,
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 5,
-  },
-  themeDescription: {
-    marginTop: 6,
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: '700',
-  },
   bottom: { marginTop: 'auto', gap: 10, paddingTop: 18 },
   selected: { borderWidth: 3, borderColor: colors.ink },
   notice: { marginTop: 10, textAlign: 'center', color: colors.ink, fontWeight: '900', fontSize: 11 },
