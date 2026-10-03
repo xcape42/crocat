@@ -226,7 +226,11 @@ export default function ArtworkDetailScreen() {
         </CrocatButton>
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
     </Screen>
   );
 }
