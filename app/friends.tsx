@@ -251,7 +251,12 @@ export default function FriendsScreen() {
         <View style={styles.friendMain}>
           <View style={styles.friendTop}>
             <Text style={[styles.name, { color: world.colors.text }]}>{friend.display_name}</Text>
-            <Text style={[styles.presence, friend.online && styles.presenceOnline]}>
+            <Text
+              style={[
+                styles.presence,
+                { color: friend.online ? '#79B975' : world.colors.muted },
+              ]}
+            >
               {lastSeenText(friend)}
             </Text>
           </View>
