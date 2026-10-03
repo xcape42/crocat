@@ -7,7 +7,6 @@ import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
-import type { PlayerProfile } from '@/src/features/profile/types';
 import { createRoom, joinOrCreateRoom, loadRoomById } from '@/src/features/multiplayer/room';
 import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
