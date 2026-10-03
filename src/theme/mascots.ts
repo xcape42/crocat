@@ -263,6 +263,8 @@ export const MASCOT_SHAPE_OPTIONS: Array<{
   { key: 'round', label: 'ROUND' },
   { key: 'ears', label: 'SOFT' },
   { key: 'spiky', label: 'WOBBLY' },
+  { key: 'slim', label: 'SLIM' },
+  { key: 'angular', label: 'ANGULAR' },
 ];
 
 export const MASCOT_SYMBOL_OPTIONS: Array<{
