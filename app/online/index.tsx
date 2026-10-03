@@ -6,7 +6,8 @@ import { CrocatCard } from '@/src/components/CrocatCard';
 import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { ensureCurrentProfile } from '@/src/features/profile/api';
-import { profileToVisual, type PlayerProfile } from '@/src/features/profile/types';
+import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
+import type { PlayerProfile } from '@/src/features/profile/types';
 import { createRoom, joinOrCreateRoom, loadRoomById } from '@/src/features/multiplayer/room';
 import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/recentRoom';
 import { hasSupabaseConfig } from '@/src/lib/supabase';
@@ -19,7 +20,7 @@ export default function OnlineEntryScreen() {
   const router = useRouter();
   const { setDisplayName, setIdentity } = useOnlineGameStore();
   const themeKey = useUiThemeStore((state) => state.themeKey);
-  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const profile = useCurrentProfileVisual();
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
@@ -34,7 +35,6 @@ export default function OnlineEntryScreen() {
     ]).then(([savedCode, identity]) => {
       if (cancelled) return;
       if (savedCode) setCode((current) => current || savedCode);
-      setProfile(identity.profile);
     }).catch(() => undefined);
 
     return () => {
@@ -45,7 +45,6 @@ export default function OnlineEntryScreen() {
   const prepare = async () => {
     if (!hasSupabaseConfig) throw new Error('Supabase is not configured yet.');
     const identity = await ensureCurrentProfile();
-    setProfile(identity.profile);
     setDisplayName(identity.profile.display_name);
     return identity;
   };
@@ -102,11 +101,13 @@ export default function OnlineEntryScreen() {
             Create a room or enter a code. When another player arrives, both worlds meet in the lobby.
           </Text>
         </View>
-        <Mascot
-          profile={profile ? profileToVisual(profile) : undefined}
-          state={busy ? 'happy' : 'idle'}
-          size={88}
-        />
+        {profile && (
+          <Mascot
+            profile={profile}
+            state={busy ? 'happy' : 'idle'}
+            size={88}
+          />
+        )}
       </View>
 
       {!hasSupabaseConfig && (
