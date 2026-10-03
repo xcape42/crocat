@@ -34,6 +34,7 @@ import type {
 } from '@/src/features/profile/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { legacyMascotCharacterForTheme } from '@/src/theme/mascots';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld, normalizeWorldKey } from '@/src/theme/worlds';
 
@@ -270,7 +271,11 @@ export default function ProfileScreen() {
         </CrocatButton>
 
         {!!notice && <Text style={[styles.notice, { color: world.colors.text }]}>{notice}</Text>}
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && (
+          <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+            {error}
+          </Text>
+        )}
       </View>
     </Screen>
   );
