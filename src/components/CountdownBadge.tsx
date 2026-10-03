@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import { crocatWorld } from '@/src/theme/worlds';
 
 type Props = {
@@ -23,7 +24,7 @@ export function CountdownBadge({ remaining, label }: Props) {
     : warning
       ? world.colors.primary
       : world.colors.text;
-  const foreground = warning ? world.colors.text : world.colors.card;
+  const foreground = readableTextColor(backgroundColor);
 
   return (
     <View
