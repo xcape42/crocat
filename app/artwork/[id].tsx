@@ -21,6 +21,7 @@ import { exportArtwork } from '@/src/features/artworks/export';
 import type { SavedArtwork } from '@/src/features/artworks/types';
 import type { ProfileSnapshot } from '@/src/features/profile/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -135,7 +136,11 @@ export default function ArtworkDetailScreen() {
     return (
       <Screen backLabel="GALLERY">
         {!error && <ActivityIndicator style={{ marginTop: 80 }} color={world.colors.text} />}
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
       </Screen>
     );
   }
