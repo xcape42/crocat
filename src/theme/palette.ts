@@ -10,8 +10,9 @@ export const crocatPalette = {
   moon: '#B9B8E9',
   candy: '#FFB49E',
   haloWhite: '#FFFDF8',
-  emberWorld: '#C68A9E',
-  shadowInk: '#1C1722',
+  emberWorld: '#B30F2E',
+  shadowInk: '#151119',
+  royalWorld: '#D7B34A',
 
   // Supporting colors tuned to sit beside the World anchors.
   lime: '#D9DD8A',
@@ -35,13 +36,23 @@ export const crocatPalette = {
   emberSoft: '#D88A83',
 
   // Colorful Shadow accents.
-  shadowSurface: '#241D2C',
-  shadowCard: '#2E2538',
-  shadowLine: '#574A63',
-  shadowMint: '#75D9C6',
-  shadowPink: '#E66BAE',
-  shadowViolet: '#8D75E8',
-  shadowGold: '#E7BD67',
+  shadowSurface: '#17131D',
+  shadowCard: '#211A29',
+  shadowLine: '#453B4D',
+  shadowViolet: '#8A55C7',
+  shadowLilac: '#B77AE2',
+  shadowGray: '#8E8796',
+
+  // Royal Gem accents.
+  royalNavy: '#0B1020',
+  royalSurface: '#141B2F',
+  royalCard: '#1D2740',
+  royalLine: '#46516B',
+  royalGold: '#D7B34A',
+  royalSapphire: '#2866B5',
+  royalRuby: '#C92D4A',
+  royalEmerald: '#2F8A63',
+  royalDiamond: '#F7FBFF',
 
   muted: '#68756E',
   line: '#D8D1C5',
