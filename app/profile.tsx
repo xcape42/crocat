@@ -201,7 +201,7 @@ export default function ProfileScreen() {
               <Text style={[styles.colorName, { color: world.colors.text }]}>{item.label}</Text>
               {!!item.worldLabel && (
                 <Text style={[styles.colorWorld, { color: world.colors.muted }]}>
-                  {item.worldLabel} WORLD
+                  WORLDS
                 </Text>
               )}
             </Pressable>
