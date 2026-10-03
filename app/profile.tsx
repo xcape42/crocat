@@ -156,13 +156,13 @@ export default function ProfileScreen() {
           value={name}
           onChangeText={(value) => setName(value.slice(0, 18))}
           placeholder="Your name"
-          placeholderTextColor={world.colors.muted}
+          placeholderTextColor={colors.muted}
           style={[
             styles.input,
             {
-              borderColor: world.colors.text,
+              borderColor: colors.ink,
               backgroundColor: world.colors.canvas,
-              color: world.colors.text,
+              color: colors.ink,
             },
           ]}
           maxLength={18}
