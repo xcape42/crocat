@@ -78,7 +78,7 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       background: '#EBEAF7',
       surface: '#F8F6FF',
       card: '#FCFAFF',
-      primary: '#B9B8E9',
+      primary: crocatPalette.moon,
       secondary: crocatPalette.moonSoft,
       accent: '#F0B86E',
       text: '#26243A',
@@ -107,7 +107,7 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
       background: '#FFF0EA',
       surface: '#FFF8F4',
       card: '#FFFCFA',
-      primary: '#FFB49E',
+      primary: crocatPalette.candy,
       secondary: '#FFD5A8',
       accent: '#E98AC2',
       text: '#3A2430',
@@ -135,14 +135,14 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
     colors: {
       background: '#F2F7FB',
       surface: '#FFFEFA',
-      card: '#FFFFFF',
+      card: crocatPalette.white,
       primary: '#D9EAF4',
       secondary: '#FFF0C8',
       accent: crocatPalette.gold,
       text: '#20303A',
       muted: '#6E7C84',
       line: '#D3E0E8',
-      canvas: '#FFFDF8',
+      canvas: crocatPalette.haloWhite,
       pattern: '#AFC8D9',
     },
     shapes: {
@@ -185,6 +185,35 @@ export const CROCAT_WORLDS: Record<CrocatWorldKey, CrocatWorld> = {
     motion: { ambientMs: 8200, floatDistance: 4, rotateDegrees: 2 },
     canvas: { cornerGlyphs: ['◆', '✦'] },
   },
+  shadow: {
+    key: 'shadow',
+    label: 'COLORFUL SHADOW',
+    shortLabel: 'SHADOW',
+    description: 'Deep night surfaces with vivid neon sparks and soft color.',
+    colors: {
+      background: '#17131D',
+      surface: crocatPalette.shadowSurface,
+      card: crocatPalette.shadowCard,
+      primary: crocatPalette.shadowMint,
+      secondary: '#352A43',
+      accent: crocatPalette.shadowPink,
+      text: '#FFF8F0',
+      muted: '#C6B8CD',
+      line: crocatPalette.shadowLine,
+      canvas: crocatPalette.haloWhite,
+      pattern: crocatPalette.shadowViolet,
+    },
+    shapes: {
+      cardRadius: 30,
+      buttonRadius: 22,
+      canvasRadius: 28,
+      borderWidth: 2,
+      organicCards: false,
+    },
+    background: { glyphs: ['✦', '◆', '●'] },
+    motion: { ambientMs: 8800, floatDistance: 5, rotateDegrees: 2.2 },
+    canvas: { cornerGlyphs: ['✦', '◆'] },
+  },
 };
 
 export const WORLD_OPTIONS = Object.values(CROCAT_WORLDS);
@@ -194,6 +223,7 @@ export function normalizeWorldKey(key?: ProfileThemeKey | null): CrocatWorldKey 
   if (key === 'candy') return 'candy';
   if (key === 'halo') return 'halo';
   if (key === 'ember') return 'ember';
+  if (key === 'shadow') return 'shadow';
   return 'moss';
 }
 
