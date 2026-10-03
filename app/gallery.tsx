@@ -19,6 +19,7 @@ import {
   setArtworkFavorite,
 } from '@/src/features/artworks/api';
 import type { SavedArtwork } from '@/src/features/artworks/types';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -146,7 +147,11 @@ export default function GalleryScreen() {
         </View>
       )}
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && (
+        <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+          {error}
+        </Text>
+      )}
     </Screen>
   );
 }
