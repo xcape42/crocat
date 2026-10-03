@@ -12,6 +12,7 @@ import type {
   ProfileVisual,
 } from '@/src/features/profile/types';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import {
   MASCOT_CHARACTER_OPTIONS,
   type MascotState,
@@ -145,7 +146,7 @@ export function ProfileCharacterPicker({
               },
             ]}
           >
-            <Text style={[styles.traitText, { color: world.colors.text }]}>
+            <Text style={[styles.traitText, { color: readableTextColor(world.colors.secondary) }]}>
               {trait}
             </Text>
           </View>
@@ -188,7 +189,9 @@ export function ProfileCharacterPicker({
                 style={[
                   styles.emotionText,
                   {
-                    color: world.colors.text,
+                    color: readableTextColor(
+                      selected ? world.colors.primary : world.colors.surface,
+                    ),
                     opacity: selected ? 1 : 0.72,
                   },
                 ]}
