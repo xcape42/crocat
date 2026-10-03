@@ -32,7 +32,9 @@ export default function ResultScreen() {
           <Text style={styles.kicker}>CROCAT COMPLETE</Text>
           <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
         </View>
-        <Mascot profile={profile ?? undefined} state="celebrate" size={compact ? 54 : 66} />
+        {profile && (
+          <Mascot profile={profile} state="celebrate" size={compact ? 54 : 66} />
+        )}
       </View>
 
       <View style={styles.previewArea}>
