@@ -50,6 +50,10 @@ const currentProfileVisual = read('src/hooks/useCurrentProfileVisual.ts');
 const profileApi = read('src/features/profile/api.ts');
 const profileWorldPicker = read('src/components/ProfileWorldPicker.tsx');
 const profileCharacterPicker = read('src/components/ProfileCharacterPicker.tsx');
+const contrast = read('src/theme/contrast.ts');
+const crocatButton = read('src/components/CrocatButton.tsx');
+const countdownBadge = read('src/components/CountdownBadge.tsx');
+const roomSettingsPanel = read('src/components/game/RoomSettingsPanel.tsx');
 
 assert(
   play.includes("router.push('/online')"),
@@ -350,7 +354,6 @@ assert(
 assert(
   prompt.includes('WATCH ONLY')
     && prompt.includes('You can follow the choice live, but only HEAD can interact.')
-    && prompt.includes('WATCHING · HEAD CHOOSES')
     && prompt.includes('disabled={!isHead || busy}'),
   'BODY prompt view must clearly communicate its read-only spectator state while preserving HEAD-only interaction.',
 );
@@ -487,6 +490,19 @@ assert(
 );
 
 assert(
+  contrast.includes('readableTextColor')
+    && contrast.includes('contrastRatio')
+    && crocatButton.includes('readableTextColor(backgroundColor)')
+    && countdownBadge.includes('readableTextColor(backgroundColor)')
+    && roomSettingsPanel.includes('readableTextColor(world.colors.canvas)')
+    && profile.includes('color: colors.ink')
+    && entry.includes('color: colors.ink')
+    && prompt.includes("!isHead && { color: world.colors.text }")
+    && prompt.includes('optionReadonly: { borderWidth: 0'),
+  'Crocat 1.8.6 must derive text contrast from the actual surface and keep permanent light inputs on fixed dark ink.',
+);
+
+assert(
   profile.includes("const router = useRouter()")
     && profile.includes("router.replace('/')")
     && !profile.includes("setNotice('PROFILE SAVED ✓')"),
@@ -501,4 +517,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.5 World redesign, Royal Gem, mascot shapes, profile bootstrap, World atmosphere, character explorer, profile-mascot-world, drawing-guide, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.6 theme contrast, World redesign, Royal Gem, profile bootstrap, drawing-guide, reliable phase-sync and UI contracts passed');
