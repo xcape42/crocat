@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.1 — Color, World and character polish
+
+- Preserve the established Moss Garden, Moon Milk and Candy Blob signature mascot colors exactly
+- Mark mascot colors that belong to a Crocat World directly in Profile
+- Add Halo off-white, Ember velvet and near-black Shadow mascot colors with automatic readable face contrast
+- Retune the remaining Sky, Mint, Peach and Lime mascot colors to sit more naturally beside the established palette
+- Add the new dark COLORFUL SHADOW World with colorful mint, pink, violet and gold accents
+- Add SUNNY and COOL mascot characters, each with a complete friendly emotion set, idle behavior and motion profile
+- Keep blinking idle-only and preserve emotional left/right gaze behavior
+- Align the eight Drawing colors with the same Crocat palette while keeping brush widths and per-stroke data unchanged
+- Improve Profile preview contrast so the dark World remains readable
+- Expand profile validation without adding any new database fields
+- Version Crocat as 1.8.1
+
 ## 1.8.0 — Unified profile mascot, independent Worlds and shared color system
 
 - Make the personal mascot the single player identity throughout Profile, Friends, Invites, Lobby, PlayerPod and artwork partner presentation
