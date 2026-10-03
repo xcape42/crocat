@@ -12,7 +12,7 @@ import { loadLastRoomCode, rememberRoomCode } from '@/src/features/multiplayer/r
 import { hasSupabaseConfig } from '@/src/lib/supabase';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
-import { radius, spacing } from '@/src/theme/tokens';
+import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
 export default function OnlineEntryScreen() {
@@ -133,14 +133,14 @@ export default function OnlineEntryScreen() {
           value={code}
           onChangeText={(value) => setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
           placeholder="CROC42"
-          placeholderTextColor={world.colors.muted}
+          placeholderTextColor={colors.muted}
           maxLength={6}
           style={[
             styles.input,
             styles.code,
             {
-              borderColor: world.colors.text,
-              color: world.colors.text,
+              borderColor: colors.ink,
+              color: colors.ink,
               backgroundColor: world.colors.canvas,
               borderRadius: world.shapes.cardRadius,
             },
