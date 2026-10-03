@@ -21,6 +21,7 @@ import { useDeadlineCountdown } from '@/src/hooks/useDeadlineCountdown';
 import { useReliablePhaseSync } from '@/src/hooks/useReliablePhaseSync';
 import { useOnlineGameStore } from '@/src/store/onlineGameStore';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 import type { PromptOption } from '@/src/features/multiplayer/types';
@@ -281,7 +282,11 @@ export default function OnlinePromptScreen() {
             You are BODY this round. Watch the choice happen live.
           </Text>
         )}
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && (
+          <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+            {error}
+          </Text>
+        )}
       </View>
 
       <ConfirmActionModal
