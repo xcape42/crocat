@@ -26,6 +26,7 @@ import {
   DEFAULT_DRAWING_BRUSH_WIDTH,
   DEFAULT_DRAWING_COLOR,
 } from '@/src/theme/drawingTools';
+import { readableErrorTextColor } from '@/src/theme/contrast';
 import { colors, radius } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 import { getPromptPartLabel } from '@/src/features/multiplayer/types';
@@ -314,7 +315,11 @@ export default function OnlineDrawScreen() {
         >
           BACK TO DRAWING
         </CrocatButton>
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && (
+          <Text style={[styles.error, { color: readableErrorTextColor(world.colors.background) }]}>
+            {error}
+          </Text>
+        )}
         {leaveModal}
       </Screen>
     );
