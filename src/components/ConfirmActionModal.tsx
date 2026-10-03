@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
+import { readableTextColor } from '@/src/theme/contrast';
 import { spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
@@ -72,7 +73,14 @@ export function ConfirmActionModal({
                 busy && styles.disabled,
               ]}
             >
-              <Text style={[styles.buttonText, { color: world.colors.text }]}>{cancelLabel}</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: readableTextColor(world.colors.surface) },
+                ]}
+              >
+                {cancelLabel}
+              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -89,7 +97,12 @@ export function ConfirmActionModal({
                 busy && styles.disabled,
               ]}
             >
-              <Text style={[styles.buttonText, { color: world.colors.text }]}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: readableTextColor(world.colors.accent) },
+                ]}
+              >
                 {busy ? '…' : confirmLabel}
               </Text>
             </Pressable>
