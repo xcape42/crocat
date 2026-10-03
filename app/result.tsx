@@ -6,7 +6,9 @@ import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useGameStore } from '@/src/store/gameStore';
+import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors } from '@/src/theme/tokens';
+import { crocatWorld } from '@/src/theme/worlds';
 
 export default function ResultScreen() {
   const router = useRouter();
@@ -14,6 +16,8 @@ export default function ResultScreen() {
   const compact = height < 720;
   const { head, body, headTransform, bodyTransform, resetRound, setPhase } = useGameStore();
   const profile = useCurrentProfileVisual();
+  const themeKey = useUiThemeStore((state) => state.themeKey);
+  const world = crocatWorld(themeKey);
 
   const replay = () => {
     resetRound();
@@ -29,8 +33,10 @@ export default function ResultScreen() {
     <Screen scroll={false} contentStyle={[styles.screen, compact && styles.screenCompact]} backLabel="HOME" onBack={home} decorations="full" celebrate>
       <View style={styles.header}>
         <View>
-          <Text style={styles.kicker}>CROCAT COMPLETE</Text>
-          <Text style={[styles.title, compact && styles.titleCompact]}>Look what you made.</Text>
+          <Text style={[styles.kicker, { color: world.colors.accent }]}>CROCAT COMPLETE</Text>
+          <Text style={[styles.title, { color: world.colors.text }, compact && styles.titleCompact]}>
+            Look what you made.
+          </Text>
         </View>
         {profile && (
           <Mascot profile={profile} state="celebrate" size={compact ? 54 : 66} />
@@ -51,7 +57,9 @@ export default function ResultScreen() {
         <CrocatButton variant="secondary" style={styles.flex} onPress={home}>HOME</CrocatButton>
       </View>
       {!compact && (
-        <Text style={styles.note}>Saving, sharing and the Crocat gallery are prepared as next-step features.</Text>
+        <Text style={[styles.note, { color: world.colors.muted }]}>
+          Saving, sharing and the Crocat gallery are prepared as next-step features.
+        </Text>
       )}
     </Screen>
   );
