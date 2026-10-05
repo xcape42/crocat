@@ -8,6 +8,7 @@ import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { spacing } from '@/src/theme/tokens';
+import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
 export default function HomeScreen() {
@@ -49,7 +50,7 @@ export default function HomeScreen() {
 
         <CrocatCard variant="accent" style={styles.worldCard}>
           <Text style={[styles.worldKicker, { color: world.colors.muted }]}>YOUR WORLD</Text>
-          <Text style={[styles.worldName, { color: world.colors.text }]}>{world.label}</Text>
+          <Text style={[styles.worldName, { color: colors.ink }]}>{world.label}</Text>
           <Text style={[styles.worldCopy, { color: world.colors.muted }]}>{world.description}</Text>
         </CrocatCard>
       </View>
