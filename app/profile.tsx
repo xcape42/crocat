@@ -169,6 +169,21 @@ export default function ProfileScreen() {
           maxLength={18}
         />
       </View>
+      
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
+        <View style={styles.options}>
+          {MASCOT_SYMBOLS.map((item) => (
+            <Pressable
+              key={item.key}
+              onPress={() => setSymbolKey(item.key)}
+              style={[styles.symbolOption, { borderColor: world.colors.line, backgroundColor: world.colors.card }, symbolKey === item.key && { borderWidth: 3, borderColor: world.colors.text }]}
+            >
+              <Text style={[styles.symbol, { color: world.colors.text }]}>{item.glyph}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       <View style={styles.section}>
         <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT COLOR · 1 OF {MASCOT_COLORS.length}</Text>
@@ -237,21 +252,6 @@ export default function ProfileScreen() {
           characterKey={characterKey}
           onCharacterChange={setCharacterKey}
         />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT SYMBOL · 1 OF {MASCOT_SYMBOLS.length}</Text>
-        <View style={styles.options}>
-          {MASCOT_SYMBOLS.map((item) => (
-            <Pressable
-              key={item.key}
-              onPress={() => setSymbolKey(item.key)}
-              style={[styles.symbolOption, { borderColor: world.colors.line, backgroundColor: world.colors.card }, symbolKey === item.key && { borderWidth: 3, borderColor: world.colors.text }]}
-            >
-              <Text style={[styles.symbol, { color: world.colors.text }]}>{item.glyph}</Text>
-            </Pressable>
-          ))}
-        </View>
       </View>
 
       <View style={styles.section}>
