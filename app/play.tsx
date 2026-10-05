@@ -7,6 +7,7 @@ import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { spacing } from '@/src/theme/tokens';
+import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
 export default function PlayScreen() {
@@ -31,7 +32,7 @@ export default function PlayScreen() {
       <View style={styles.stack}>
         <CrocatCard variant="accent" style={styles.card}>
           <Text style={[styles.badge, { color: world.colors.muted }]}>ONLINE</Text>
-          <Text style={[styles.mode, { color: world.colors.ink }]}>Split Online</Text>
+          <Text style={[styles.mode, { color: colors.ink }]}>Split Online</Text>
           <Text style={[styles.modeCopy, { color: world.colors.muted }]}>
             Create a fresh room or enter a room code. Meet another Crocat and create your own world.
           </Text>
