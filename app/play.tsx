@@ -36,8 +36,8 @@ export default function PlayScreen() {
             Create a fresh room or enter a room code. Meet another Crocat and create your own world.
           </Text>
           <View style={styles.metaRow}>
-            <Text style={[styles.meta, { color: world.colors.ink, borderColor: world.colors.line }]}>2 DEVICES</Text>
-            <Text style={[styles.meta, { color: world.colors.ink, borderColor: world.colors.line }]}>REALTIME</Text>
+            <Text style={[styles.meta, { color: world.colors.ink, borderColor: world.colors.muted }]}>2 DEVICES</Text>
+            <Text style={[styles.meta, { color: world.colors.ink, borderColor: world.colors.muted }]}>REALTIME</Text>
           </View>
           <CrocatButton variant="coral" onPress={() => router.push('/online')}>
             PLAY ONLINE
