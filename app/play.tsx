@@ -6,7 +6,6 @@ import { Mascot } from '@/src/components/Mascot';
 import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
-import { spacing } from '@/src/theme/tokens';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { crocatWorld } from '@/src/theme/worlds';
 
