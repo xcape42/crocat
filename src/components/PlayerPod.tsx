@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   podCompact: {
     flexBasis: 0,
-    minHeight: 130,
+    minHeight: 140,
     padding: 9,
   },
   identity: {
