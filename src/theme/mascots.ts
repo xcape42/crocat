@@ -7,6 +7,7 @@ import type {
   ProfileThemeKey,
 } from '@/src/features/profile/types';
 import { crocatPalette } from '@/src/theme/palette';
+import { readableTextColor } from '@/src/theme/contrast';
 
 export type MascotState =
   | 'idle'
@@ -201,67 +202,34 @@ export const MASCOT_CHARACTERS: Record<MascotCharacterKey, MascotCharacter> = {
   },
 };
 
+// Existing profile keys retain their original swatches; new keys never reinterpret saved colors.
 export const MASCOT_COLOR_OPTIONS: MascotColorOption[] = [
-  {
-    key: 'moss',
-    label: 'MOSS',
-    hex: crocatPalette.mossSoft,
-    ink: crocatPalette.ink,
-    worldKey: 'moss',
-    worldLabel: 'MOSS',
-  },
-  {
-    key: 'violet',
-    label: 'MOON',
-    hex: crocatPalette.moon,
-    ink: crocatPalette.ink,
-    worldKey: 'moon',
-    worldLabel: 'MOON',
-  },
-  {
-    key: 'coral',
-    label: 'CANDY',
-    hex: crocatPalette.candy,
-    ink: crocatPalette.ink,
-    worldKey: 'candy',
-    worldLabel: 'CANDY',
-  },
-  {
-    key: 'halo',
-    label: 'HALO',
-    hex: crocatPalette.haloWhite,
-    ink: crocatPalette.ink,
-    worldKey: 'halo',
-    worldLabel: 'HALO',
-  },
-  {
-    key: 'ember',
-    label: 'BLOOD',
-    hex: crocatPalette.emberWorld,
-    ink: crocatPalette.haloWhite,
-    worldKey: 'ember',
-    worldLabel: 'BLOOD',
-  },
-  {
-    key: 'shadow',
-    label: 'SHADOW',
-    hex: crocatPalette.shadowInk,
-    ink: crocatPalette.haloWhite,
-    worldKey: 'shadow',
-    worldLabel: 'SHADOW',
-  },
-  {
-    key: 'royal',
-    label: 'ROYAL',
-    hex: crocatPalette.royalWorld,
-    ink: crocatPalette.royalNavy,
-    worldKey: 'royal',
-    worldLabel: 'ROYAL',
-  },
-  { key: 'blue', label: 'SKY', hex: crocatPalette.skySoft, ink: crocatPalette.ink },
-  { key: 'mint', label: 'MINT', hex: crocatPalette.mint, ink: crocatPalette.ink },
-  { key: 'peach', label: 'PEACH', hex: crocatPalette.peach, ink: crocatPalette.ink },
-  { key: 'lime', label: 'LIME', hex: crocatPalette.lime, ink: crocatPalette.ink },
+  { key: 'moss', label: 'MOSS', hex: crocatPalette.mossSoft, ink: crocatPalette.ink, worldKey: 'moss', worldLabel: 'MOSS' },
+  { key: 'lime', label: 'LIME', hex: crocatPalette.lime, ink: crocatPalette.ink, worldKey: 'moss', worldLabel: 'MOSS' },
+  { key: 'mint', label: 'MINT', hex: crocatPalette.mint, ink: crocatPalette.ink, worldKey: 'moss', worldLabel: 'MOSS' },
+  { key: 'violet', label: 'MOON', hex: crocatPalette.moon, ink: crocatPalette.ink, worldKey: 'moon', worldLabel: 'MOON' },
+  { key: 'blue', label: 'SKY', hex: crocatPalette.skySoft, ink: crocatPalette.ink, worldKey: 'moon', worldLabel: 'MOON' },
+  { key: 'moon-plum', label: 'PLUM', hex: crocatPalette.moonPlum, ink: readableTextColor(crocatPalette.moonPlum), worldKey: 'moon', worldLabel: 'MOON' },
+  { key: 'coral', label: 'CANDY', hex: crocatPalette.candy, ink: crocatPalette.ink, worldKey: 'candy', worldLabel: 'CANDY' },
+  { key: 'peach', label: 'PEACH', hex: crocatPalette.peach, ink: crocatPalette.ink, worldKey: 'candy', worldLabel: 'CANDY' },
+  { key: 'candy-pink', label: 'PINK', hex: crocatPalette.candyPink, ink: readableTextColor(crocatPalette.candyPink), worldKey: 'candy', worldLabel: 'CANDY' },
+  { key: 'halo', label: 'CLOUD', hex: crocatPalette.haloWhite, ink: crocatPalette.ink, worldKey: 'halo', worldLabel: 'HALO' },
+  { key: 'halo-sky', label: 'SKY', hex: crocatPalette.haloSky, ink: readableTextColor(crocatPalette.haloSky), worldKey: 'halo', worldLabel: 'HALO' },
+  { key: 'halo-lilac', label: 'LILAC', hex: crocatPalette.haloLilac, ink: readableTextColor(crocatPalette.haloLilac), worldKey: 'halo', worldLabel: 'HALO' },
+  { key: 'halo-blush', label: 'BLUSH', hex: crocatPalette.haloBlush, ink: readableTextColor(crocatPalette.haloBlush), worldKey: 'halo', worldLabel: 'HALO' },
+  { key: 'ember', label: 'BLOOD', hex: crocatPalette.emberWorld, ink: crocatPalette.haloWhite, worldKey: 'ember', worldLabel: 'BLOOD' },
+  { key: 'ember-wine', label: 'WINE', hex: crocatPalette.emberWine, ink: readableTextColor(crocatPalette.emberWine), worldKey: 'ember', worldLabel: 'BLOOD' },
+  { key: 'ember-rose', label: 'ROSE', hex: crocatPalette.emberRose, ink: readableTextColor(crocatPalette.emberRose), worldKey: 'ember', worldLabel: 'BLOOD' },
+  { key: 'shadow', label: 'SHADOW', hex: crocatPalette.shadowInk, ink: crocatPalette.haloWhite, worldKey: 'shadow', worldLabel: 'SHADOW' },
+  { key: 'shadow-violet', label: 'VIOLET', hex: crocatPalette.shadowViolet, ink: readableTextColor(crocatPalette.shadowViolet), worldKey: 'shadow', worldLabel: 'SHADOW' },
+  { key: 'shadow-lilac', label: 'LILAC', hex: crocatPalette.shadowLilac, ink: readableTextColor(crocatPalette.shadowLilac), worldKey: 'shadow', worldLabel: 'SHADOW' },
+  { key: 'shadow-smoke', label: 'SMOKE', hex: crocatPalette.shadowGray, ink: readableTextColor(crocatPalette.shadowGray), worldKey: 'shadow', worldLabel: 'SHADOW' },
+  { key: 'royal', label: 'GOLD', hex: crocatPalette.royalWorld, ink: crocatPalette.royalNavy, worldKey: 'royal', worldLabel: 'ROYAL' },
+  { key: 'royal-sapphire', label: 'SAPPHIRE', hex: crocatPalette.royalSapphire, ink: readableTextColor(crocatPalette.royalSapphire), worldKey: 'royal', worldLabel: 'ROYAL' },
+  { key: 'royal-ruby', label: 'RUBY', hex: crocatPalette.royalRuby, ink: readableTextColor(crocatPalette.royalRuby), worldKey: 'royal', worldLabel: 'ROYAL' },
+  { key: 'royal-emerald', label: 'EMERALD', hex: crocatPalette.royalEmerald, ink: readableTextColor(crocatPalette.royalEmerald), worldKey: 'royal', worldLabel: 'ROYAL' },
+  { key: 'black', label: 'BLACK', hex: crocatPalette.neutralBlack, ink: crocatPalette.white },
+  { key: 'white', label: 'WHITE', hex: crocatPalette.white, ink: crocatPalette.ink },
 ];
 
 export const MASCOT_SHAPE_OPTIONS: Array<{
