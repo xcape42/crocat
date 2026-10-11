@@ -7,6 +7,7 @@ import { Screen } from '@/src/components/Screen';
 import { useCurrentProfileVisual } from '@/src/hooks/useCurrentProfileVisual';
 import { useUiThemeStore } from '@/src/store/uiThemeStore';
 import { colors, radius, spacing } from '@/src/theme/tokens';
+import { readableTextColor } from '@/src/theme/contrast';
 import { crocatWorld } from '@/src/theme/worlds';
 
 export default function PlayScreen() {
@@ -30,14 +31,14 @@ export default function PlayScreen() {
 
       <View style={styles.stack}>
         <CrocatCard variant="accent" style={styles.card}>
-          <Text style={[styles.badge, { color: world.colors.muted }]}>ONLINE</Text>
-          <Text style={[styles.mode, { color: colors.ink }]}>Split Online</Text>
+          <Text style={[styles.badge, { color: readableTextColor(world.colors.secondary) }]}>ONLINE</Text>
+          <Text style={[styles.mode, { color: readableTextColor(world.colors.secondary) }]}>Split Online</Text>
           <Text style={[styles.modeCopy, { color: world.colors.muted }]}>
             Create a fresh room or enter a room code. Meet another Crocat and create your own world.
           </Text>
           <View style={styles.metaRow}>
-            <Text style={[styles.meta, { color: world.colors.ink, borderColor: world.colors.muted }]}>2 DEVICES</Text>
-            <Text style={[styles.meta, { color: world.colors.ink, borderColor: world.colors.muted }]}>REALTIME</Text>
+            <Text style={[styles.meta, { color: readableTextColor(world.colors.secondary), borderColor: world.colors.line }]}>2 DEVICES</Text>
+            <Text style={[styles.meta, { color: readableTextColor(world.colors.secondary), borderColor: world.colors.line }]}>REALTIME</Text>
           </View>
           <CrocatButton variant="coral" onPress={() => router.push('/online')}>
             PLAY ONLINE
