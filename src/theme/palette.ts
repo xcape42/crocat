@@ -52,6 +52,7 @@ export const crocatPalette = {
   royalSapphire: '#2866B5',
   royalRuby: '#C92D4A',
   royalEmerald: '#2F8A63',
+  royalEmeraldMascot: '#297E59',
   royalDiamond: '#F7FBFF',
 
   // Mascot palette additions; older color keys and hex values remain unchanged.
