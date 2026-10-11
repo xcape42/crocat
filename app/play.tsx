@@ -33,7 +33,7 @@ export default function PlayScreen() {
         <CrocatCard variant="accent" style={styles.card}>
           <Text style={[styles.badge, { color: readableTextColor(world.colors.secondary) }]}>ONLINE</Text>
           <Text style={[styles.mode, { color: readableTextColor(world.colors.secondary) }]}>Split Online</Text>
-          <Text style={[styles.modeCopy, { color: world.colors.muted }]}>
+          <Text style={[styles.modeCopy, { color: readableTextColor(world.colors.secondary) }]}>
             Create a fresh room or enter a room code. Meet another Crocat and create your own world.
           </Text>
           <View style={styles.metaRow}>
