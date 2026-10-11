@@ -227,7 +227,7 @@ export const MASCOT_COLOR_OPTIONS: MascotColorOption[] = [
   { key: 'royal', label: 'GOLD', hex: crocatPalette.royalWorld, ink: crocatPalette.royalNavy, worldKey: 'royal', worldLabel: 'ROYAL' },
   { key: 'royal-sapphire', label: 'SAPPHIRE', hex: crocatPalette.royalSapphire, ink: readableTextColor(crocatPalette.royalSapphire), worldKey: 'royal', worldLabel: 'ROYAL' },
   { key: 'royal-ruby', label: 'RUBY', hex: crocatPalette.royalRuby, ink: readableTextColor(crocatPalette.royalRuby), worldKey: 'royal', worldLabel: 'ROYAL' },
-  { key: 'royal-emerald', label: 'EMERALD', hex: crocatPalette.royalEmerald, ink: readableTextColor(crocatPalette.royalEmerald), worldKey: 'royal', worldLabel: 'ROYAL' },
+  { key: 'royal-emerald', label: 'EMERALD', hex: crocatPalette.royalEmeraldMascot, ink: readableTextColor(crocatPalette.royalEmeraldMascot), worldKey: 'royal', worldLabel: 'ROYAL' },
   { key: 'black', label: 'BLACK', hex: crocatPalette.neutralBlack, ink: crocatPalette.white },
   { key: 'white', label: 'WHITE', hex: crocatPalette.white, ink: crocatPalette.ink },
 ];
