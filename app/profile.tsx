@@ -15,7 +15,7 @@ import { ProfileCharacterPicker } from '@/src/components/ProfileCharacterPicker'
 import { ProfileWorldPicker } from '@/src/components/ProfileWorldPicker';
 import { Screen } from '@/src/components/Screen';
 import {
-  MASCOT_COLORS,
+  mascotColorsForWorld,
   MASCOT_SHAPES,
   MASCOT_SYMBOLS,
 } from '@/src/features/profile/options';
@@ -53,6 +53,7 @@ export default function ProfileScreen() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const world = crocatWorld(themeKey);
+  const colorOptions = mascotColorsForWorld(themeKey, colorKey);
 
   const apply = (next: PlayerProfile) => {
     const normalizedWorld = normalizeWorldKey(next.theme_key);
@@ -186,15 +187,37 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT COLOR · 1 OF {MASCOT_COLORS.length}</Text>
+        <Text style={[styles.label, { color: world.colors.muted }]}>YOUR WORLD</Text>
+        <ProfileWorldPicker
+          worldKey={themeKey}
+          onWorldChange={(nextWorld) => {
+            setThemeKey(nextWorld);
+            setUiThemeKey(nextWorld, { persist: false });
+          }}
+        />
+      </View>
+
+
+      <View style={styles.section}>
+        <Text style={[styles.label, { color: world.colors.muted }]}>MASCOT COLOR · {world.shortLabel} · {colorOptions.length} COLORS</Text>
         <Text style={[styles.colorHint, { color: world.colors.muted }]}>
-          WORLD colors are the signature colors of their matching Crocat World.
+          Choose a World color or Black / White. Previously selected colors stay available.
         </Text>
         <View style={styles.options}>
-          {MASCOT_COLORS.map((item) => (
+          {colorOptions.map((item) => { 
+            const keptFromAnotherWorld = Boolean(
+              item.worldKey && item.worldKey !== themeKey,
+            );
+            return (
             <Pressable
               key={item.key}
-              accessibilityLabel={item.worldLabel ? item.label + ' · ' + item.worldLabel + ' World' : item.label}
+              accessibilityRole="button"
+              accessibilityState={{ selected: colorKey === item.key }}
+              accessibilityLabel={
+                keptFromAnotherWorld
+                  ? item.label + ' · saved from another World'
+                  : item.label + (item.worldLabel ? ' · ' + item.worldLabel + ' World' : ' · all Worlds')
+              }
               onPress={() => setColorKey(item.key)}
               style={[
                 styles.colorOption,
@@ -215,13 +238,12 @@ export default function ProfileScreen() {
                 ]}
               />
               <Text style={[styles.colorName, { color: world.colors.text }]}>{item.label}</Text>
-              {!!item.worldLabel && (
-                <Text style={[styles.colorWorld, { color: world.colors.muted }]}>
-                  WORLDS
-                </Text>
-              )}
+              <Text style={[styles.colorWorld, { color: world.colors.muted }]}>
+                {keptFromAnotherWorld ? 'KEPT' : item.worldLabel ?? 'ALL'}
+              </Text>
             </Pressable>
-          ))}
+            );
+          })}
         </View>
       </View>
 
@@ -254,16 +276,6 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: world.colors.muted }]}>YOUR WORLD</Text>
-        <ProfileWorldPicker
-          worldKey={themeKey}
-          onWorldChange={(nextWorld) => {
-            setThemeKey(nextWorld);
-            setUiThemeKey(nextWorld, { persist: false });
-          }}
-        />
-      </View>
 
       <View style={styles.bottom}>
         <CrocatButton disabled={busy || name.trim().length < 2} onPress={save}>
