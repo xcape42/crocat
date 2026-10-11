@@ -7,9 +7,24 @@ export type ProfileColorKey =
   | 'peach'
   | 'mint'
   | 'halo'
+  | 'halo-sky'
+  | 'halo-lilac'
+  | 'halo-blush'
   | 'ember'
+  | 'ember-wine'
+  | 'ember-rose'
   | 'shadow'
-  | 'royal';
+  | 'shadow-violet'
+  | 'shadow-lilac'
+  | 'shadow-smoke'
+  | 'royal'
+  | 'royal-sapphire'
+  | 'royal-ruby'
+  | 'royal-emerald'
+  | 'moon-plum'
+  | 'candy-pink'
+  | 'black'
+  | 'white';
 
 export type MascotShapeKey = 'round' | 'ears' | 'spiky' | 'slim' | 'angular';
 export type ProfileAvatarKey = MascotShapeKey;

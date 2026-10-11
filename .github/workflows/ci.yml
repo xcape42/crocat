@@ -60,6 +60,9 @@ jobs:
       - name: Verify online entry UX contract
         run: node scripts/smoke-online-entry-ui.mjs
 
+      - name: Verify World mascot palettes
+        run: node scripts/smoke-mascot-palettes.mjs
+
       - name: Online multiplayer smoke test
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/heads/feat/') || startsWith(github.ref, 'refs/heads/fix/')) }}
         run: node scripts/smoke-online.mjs

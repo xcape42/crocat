@@ -484,9 +484,17 @@ assert(
     && mascots.includes("worldKey: 'royal'")
     && worlds.includes("label: 'COLORFUL SHADOW'")
     && worlds.includes("key: 'shadow'")
-    && profile.includes('WORLD colors are the signature colors')
+    && profile.includes('Previously selected colors stay available.')
     && mascot.includes('mascotInk(profile?.colorKey)'),
   'Crocat 1.8.1 must keep World-linked mascot colors visible, add Colorful Shadow and support SUNNY/COOL characters with readable dark mascots.',
+);
+
+assert(
+  profile.includes('mascotColorsForWorld(themeKey, colorKey)')
+    && profile.includes('keptFromAnotherWorld')
+    && profile.includes('accessibilityState={{ selected: colorKey === item.key }}')
+    && profile.includes('onPress={() => setColorKey(item.key)}'),
+  'Crocat 1.8.7 must expose the active World mascot palette while preserving selected legacy colors.',
 );
 
 assert(
@@ -518,4 +526,4 @@ assert(
   'Theme flash prevention must live at app bootstrap; screens must consume the resolved World and profile preview changes must not overwrite the authoritative cache before save.',
 );
 
-console.log('Crocat 1.8.6 theme contrast, World redesign, Royal Gem, profile bootstrap, drawing-guide, reliable phase-sync and UI contracts passed');
+console.log('Crocat 1.8.7 World mascot palettes, theme contrast, World redesign, Royal Gem, profile bootstrap, drawing-guide, reliable phase-sync and UI contracts passed');

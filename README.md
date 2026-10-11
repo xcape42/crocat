@@ -2,9 +2,11 @@
 
 Crocat is a social drawing game: two people draw separate parts of one creature and only see the combined result at the reveal.
 
-## Stable version: 1.8.6
+## Stable version: 1.8.7
 
 Public app: https://xcape42.github.io/crocat/
+
+Crocat 1.8.7 adds a World-specific mascot palette: each of the seven Worlds offers at least three themed colors plus universal Black and White. All previous mascot colors keep their saved appearance; on World changes, any selected color from another World remains available as a kept choice. Face ink remains contrast-aware for new colors.
 
 Crocat 1.8.6 consolidates contrast across all Worlds: text on changing World surfaces follows the active World, while permanently light canvases, inputs and gameplay controls keep fixed dark ink. Shared buttons, timer badges and action chips now derive readable text from their actual fill color.
 

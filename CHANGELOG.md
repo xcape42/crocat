@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.7 — World mascot palettes
+
+- Give every World at least three distinctive mascot body colors plus Black and White across all Worlds
+- Preserve the original eleven color keys and their exact hex values for existing profiles and saved artwork
+- Show World-specific swatches in Profile without globally cluttering the picker; retain selected cross-World colors as KEPT
+- Move World selection before mascot color selection for a clear customization flow
+- Assign readable face ink to every new color and validate contrast and palette membership with regression tests
+- Extend Supabase profile constraints and update_profile RPC to accept new color keys without changing auth or access rules
+- Bump Crocat to 1.8.7
+
+
 ## 1.8.6 — Theme contrast consolidation
 
 - Make screen-level copy follow the active World text and muted colors on dynamic backgrounds
